@@ -22,9 +22,9 @@ body{min-height:100svh;display:flex;align-items:center;justify-content:center;pa
 .actions{display:flex;gap:7px;align-items:center}.wallet-pill{display:flex;align-items:center;gap:5px;min-height:35px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,209,102,.32);background:linear-gradient(145deg,rgba(255,209,102,.16),rgba(8,19,30,.62));color:#ffe59a;font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.08)}.wallet-coin{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#fff1a8,#f0a51a 68%,#a96a09);color:#975b05;font-size:9px;border:1px solid #ffe89a;box-shadow:0 1px 5px rgba(255,191,56,.3)}
 .control{border:1px solid rgba(255,255,255,.14);background:rgba(8,19,30,.48);color:#eaf2fa;border-radius:12px;min-height:35px;padding:0 11px;font-size:10px;font-weight:850;letter-spacing:.07em;cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,transform .15s}
 .control:active{transform:scale(.96)}.control[aria-pressed="true"]{color:var(--gold);border-color:rgba(255,209,102,.45)}.control:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.stage{position:relative;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#131a42;aspect-ratio:420/700;touch-action:manipulation;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
+.stage{position:relative;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#131a42;aspect-ratio:420/700;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
 .about-shade{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:15px;background:rgba(5,8,25,.82);backdrop-filter:blur(10px)}.about-shade[hidden]{display:none}.about-card{width:100%;max-height:100%;overflow:auto;padding:20px 18px 17px;border-radius:22px;border:1px solid rgba(255,218,144,.4);background:linear-gradient(155deg,#23254f,#121c35 75%);box-shadow:0 22px 70px rgba(0,0,0,.45);color:#eef4ff}.about-kicker{color:#f4ca63;font-size:8px;font-weight:900;letter-spacing:.16em;line-height:1.5}.about-card h2{font-size:21px;line-height:1.1;margin:8px 0 13px;color:#fff1c4;letter-spacing:-.035em}.about-card p{font-size:11px;line-height:1.55;color:#d5dcef;margin:0 0 10px}.about-card .about-credit{font-size:9px;color:#9faccb;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}.about-close{display:block;width:100%;min-height:43px;margin-top:12px;border:0;border-radius:13px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#29233a;font-size:11px;font-weight:1000;letter-spacing:.08em;cursor:pointer;touch-action:manipulation}
-canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .hint{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;color:#aebfd0;font-size:10px;letter-spacing:.02em;padding:9px 2px 1px}
 .dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block}
 .footer{max-width:440px;text-align:center;color:#8297ab;font-size:9px;line-height:1.5;padding:0 12px}.footer b{color:#c7d5e2;font-weight:750}
@@ -77,8 +77,8 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
   'use strict';
   const W = 420, H = 700, FLOOR = 632;
   const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d', { alpha: false });
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   canvas.width = W * dpr; canvas.height = H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const soundBtn = document.getElementById('soundBtn');
@@ -91,9 +91,6 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
   const menuMusic = document.getElementById('menuMusic');
 
   const bgVideo = document.getElementById('bgVideo');
-  const bgCache = document.createElement('canvas'); bgCache.width = W; bgCache.height = H;
-  const bgCacheCtx = bgCache.getContext('2d', { alpha: false });
-  let lastCachedVideoTime = -1;
   const BG_CLIPS = [
     { name: "Night City", src: "assets/backgrounds/night-city.mp4" },
     { name: "Washroom", src: "assets/backgrounds/washroom.mp4" },
@@ -108,38 +105,44 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
   let bgIndex = 0, bgLoops = 0, bgReady = false, bgPlaybackFailed = false;
   function setBackground(index) {
     bgIndex = (index + BG_CLIPS.length) % BG_CLIPS.length;
-    bgLoops = 0; bgReady = false; bgPlaybackFailed = false; lastCachedVideoTime = -1;
+    bgLoops = 0;
+    bgReady = false;
+    bgPlaybackFailed = false;
     bgVideo.pause();
     bgVideo.onended = null;
+
+    // Register handlers before loading to avoid missing fast local-file events.
     bgVideo.onerror = () => { bgPlaybackFailed = true; };
-    bgVideo.src = BG_CLIPS[bgIndex].src;
-    bgVideo.load();
     bgVideo.onloadeddata = () => {
       bgReady = true;
-      try { bgVideo.playbackRate = currentDifficulty(); } catch (_) {}
-      bgVideo.play().catch(() => { bgPlaybackFailed = true; });
+      try { bgVideo.playbackRate = 1; } catch (_) {}
+      const playAttempt = bgVideo.play();
+      if (playAttempt && playAttempt.catch) {
+        playAttempt.catch(() => { bgPlaybackFailed = true; });
+      }
     };
     bgVideo.onended = () => {
       if (state === 'paused' || document.hidden) return;
       bgLoops++;
       if (bgLoops < 2) {
-        try { bgVideo.currentTime = 0; bgVideo.playbackRate = currentDifficulty(); } catch (_) {}
-        bgVideo.play().catch(() => { bgPlaybackFailed = true; });
+        try { bgVideo.currentTime = 0; bgVideo.playbackRate = 1; } catch (_) {}
+        const playAttempt = bgVideo.play();
+        if (playAttempt && playAttempt.catch) {
+          playAttempt.catch(() => { bgPlaybackFailed = true; });
+        }
       } else {
         setBackground(bgIndex + 1);
       }
     };
+
+    bgVideo.src = BG_CLIPS[bgIndex].src;
+    bgVideo.load();
   }
   function resumeBackgroundPlayback() {
-    if (state === 'paused' || document.hidden || !bgVideo) return;
-    bgPlaybackFailed = false;
-    if (bgVideo.paused) bgVideo.play().catch(() => { bgPlaybackFailed = true; });
-  }
-  function syncBackgroundSpeed() {
-    if (!bgVideo || !Number.isFinite(bgVideo.playbackRate)) return;
-    const rate = currentDifficulty();
-    if (Math.abs(bgVideo.playbackRate - rate) > 0.015) {
-      try { bgVideo.playbackRate = rate; } catch (_) {}
+    if (state === 'paused' || document.hidden || !bgVideo || !bgVideo.paused) return;
+    const playAttempt = bgVideo.play();
+    if (playAttempt && playAttempt.catch) {
+      playAttempt.catch(() => { bgPlaybackFailed = true; });
     }
   }
   const birdSprite = new Image();
@@ -257,7 +260,7 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
     return { x, center, gap, passed: false };
   }
   function currentGap() { return Math.max(158, 190 - Math.min(score, 25) * 1.15); }
-  function currentDifficulty() { return 1 + Math.min(score, 30) * 0.02; }
+  function currentDifficulty() { return 1 + Math.min(score, 20) * 0.006; }
   function startFlight() {
     state = 'playing'; if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{}); bird.vy = -440; tone(460,.055,'triangle',.045); updateLabel();
   }
@@ -280,9 +283,8 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
   }
   function insideBox(point, box) { return point.x >= box.x && point.x <= box.x + box.w && point.y >= box.y && point.y <= box.y + box.h; }
   function startFromMenu() {
-    resumeBackgroundPlayback();
-    if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{});
     startFlight();
+    resumeBackgroundPlayback();
   }
   function returnHome() {
     reset();
@@ -305,14 +307,14 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
       return;
     }
     if (state === 'paused') { togglePause(); return; }
-    if (state === 'playing') { resumeBackgroundPlayback(); flap(); }
+    if (state === 'playing') { flap(); resumeBackgroundPlayback(); }
   }
   function inputFromKeyboard() {
     if (state === 'ready') { startFromMenu(); return; }
     if (state === 'over') { reset(); startFlight(); return; }
     if (state === 'playing') flap();
   }
-  canvas.addEventListener('pointerdown', handleStagePointer);
+  canvas.addEventListener('pointerdown', handleStagePointer, { passive: false });
   document.addEventListener('keydown', e => {
     if (e.repeat) return;
     if (['Space','ArrowUp','Enter'].includes(e.code)) {
@@ -340,45 +342,27 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
     ctx.save(); ctx.globalAlpha=a; ctx.fillStyle='#fff'; ctx.beginPath();
     ctx.ellipse(x,y,31*s,12*s,0,0,Math.PI*2); ctx.ellipse(x-17*s,y-8*s,17*s,14*s,0,0,Math.PI*2); ctx.ellipse(x+5*s,y-14*s,20*s,19*s,0,0,Math.PI*2); ctx.ellipse(x+25*s,y-5*s,17*s,12*s,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
-  function drawFallbackBackground(t) {
-    const sky = ctx.createLinearGradient(0,0,0,H);
-    sky.addColorStop(0,'#080d2c'); sky.addColorStop(.5,'#17245a'); sky.addColorStop(1,'#41245c');
-    ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
-    for(let i=0;i<64;i++){
-      const x=((i*79+13-t*(5+i%4))%470+470)%470-25, y=(i*47+19)%560;
-      ctx.fillStyle=`rgba(255,244,205,${.25+.5*(.5+.5*Math.sin(t*2+i))})`;
-      ctx.beginPath();ctx.arc(x,y,i%7===0?2:1,0,Math.PI*2);ctx.fill();
-    }
-    ctx.fillStyle='rgba(255,220,146,.12)';ctx.beginPath();ctx.arc(315,155,90,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#ffe6ad';ctx.beginPath();ctx.arc(315,155,48,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#18204a';ctx.beginPath();ctx.arc(338,140,42,0,Math.PI*2);ctx.fill();
-  }
-  function drawBackground(t) {
+  function drawBackground() {
     const usable = bgReady && !bgPlaybackFailed && bgVideo.readyState >= 2 && bgVideo.videoWidth > 0;
-    if (!usable) { drawFallbackBackground(t); return; }
-    // Rebuild the blurred/letterbox background only when the video presents a new frame.
-    if (bgVideo.currentTime !== lastCachedVideoTime) {
-      const c = bgCacheCtx;
-      const vw = bgVideo.videoWidth, vh = bgVideo.videoHeight;
-      const cover = Math.max(W / vw, H / vh), bw = vw * cover, bh = vh * cover;
-      c.clearRect(0,0,W,H);
-      c.save();
-      c.filter = 'blur(17px) brightness(.58) saturate(1.12)';
-      c.drawImage(bgVideo, (W-bw)/2, (H-bh)/2, bw, bh);
-      c.filter = 'none';
-      c.fillStyle = 'rgba(5,9,26,.22)'; c.fillRect(0,0,W,H);
-      const bandH = W * vh / vw, bandY = (H-bandH)/2;
-      c.drawImage(bgVideo, 0, bandY, W, bandH);
-      const topFade = c.createLinearGradient(0,bandY-24,0,bandY+28);
-      topFade.addColorStop(0,'rgba(7,10,30,.54)'); topFade.addColorStop(1,'rgba(7,10,30,0)');
-      c.fillStyle=topFade; c.fillRect(0,bandY-24,W,52);
-      const botFade = c.createLinearGradient(0,bandY+bandH-28,0,bandY+bandH+24);
-      botFade.addColorStop(0,'rgba(7,10,30,0)'); botFade.addColorStop(1,'rgba(7,10,30,.55)');
-      c.fillStyle=botFade; c.fillRect(0,bandY+bandH-28,W,52);
-      c.restore();
-      lastCachedVideoTime = bgVideo.currentTime;
+    if (!usable) {
+      // Wait on a plain dark fill. Never recreate the old synthetic night background.
+      ctx.fillStyle = '#101b31';
+      ctx.fillRect(0, 0, W, H);
+      return;
     }
-    ctx.drawImage(bgCache,0,0,W,H);
+
+    // Render the uploaded video directly, cropped to fill the game viewport.
+    // The old per-frame blur and extra canvas pass have been removed for mobile GPUs.
+    const vw = bgVideo.videoWidth;
+    const vh = bgVideo.videoHeight;
+    const scale = Math.max(W / vw, H / vh);
+    const sourceWidth = W / scale;
+    const sourceHeight = H / scale;
+    const sourceX = (vw - sourceWidth) / 2;
+    const sourceY = (vh - sourceHeight) / 2;
+    ctx.drawImage(bgVideo, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, W, H);
+    ctx.fillStyle = 'rgba(5,9,26,.18)';
+    ctx.fillRect(0, 0, W, H);
   }
   function drawCoinGlyph(x, y, radius, rotation = 0) {
     ctx.save();
@@ -591,7 +575,7 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
   function update(dt) {
     if (state === 'over') { deathAnim += dt; return; }
     if (state !== 'playing') return;
-    elapsed += dt; groundOffset = (groundOffset + 90*dt*currentDifficulty()) % 34; syncBackgroundSpeed();
+    elapsed += dt; groundOffset = (groundOffset + 90*dt*currentDifficulty()) % 34;
     const speed = 188 * currentDifficulty();
     worldDistance += speed * dt;
     bird.vy = Math.min(650,bird.vy + 1280*dt); bird.y += bird.vy*dt;
@@ -618,7 +602,7 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
     if (bird.y-bird.radius<0 || bird.y+bird.radius>FLOOR) endFlight();
   }
   function draw() {
-    drawBackground(elapsed); drawGround();
+    drawBackground(); drawGround();
     if (state === 'ready') { drawMenu(); return; }
     drawWorldCoins();
     for (const p of pipes) drawPipe(p);
@@ -627,9 +611,29 @@ canvas{display:block;width:100%;height:100%;touch-action:manipulation}
     else if (state === 'over') { ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore(); }
     else if (state === 'paused') drawPause();
   }
+  const FIXED_STEP = 1 / 60;
+  let updateAccumulator = 0;
   function loop(now) {
-    const dt = lastTime ? Math.min((now-lastTime)/1000,.033) : 0;
-    lastTime=now; if(state!=='paused') visualTime += dt; update(dt); draw(); requestAnimationFrame(loop);
+    const frameDt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0;
+    lastTime = now;
+
+    if (state !== 'paused') {
+      visualTime += frameDt;
+      updateAccumulator += frameDt;
+      let steps = 0;
+      while (updateAccumulator >= FIXED_STEP && steps < 3) {
+        update(FIXED_STEP);
+        updateAccumulator -= FIXED_STEP;
+        steps++;
+      }
+      // Drop excess backlog after a long stall instead of producing a burst of catch-up motion.
+      if (steps === 3 && updateAccumulator > FIXED_STEP * 2) updateAccumulator = 0;
+    } else {
+      updateAccumulator = 0;
+    }
+
+    draw();
+    requestAnimationFrame(loop);
   }
   updateWallet(); setSound(soundOn); reset(); setBackground(0); requestAnimationFrame(loop);
 })();
