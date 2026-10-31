@@ -7,30 +7,49 @@
 <meta name="description" content="A self-contained arcade game with animated backgrounds, your Fatty Bird character, and offline audio.">
 <title>FATTY BIRD — Big Feathers. Bad Decisions.</title>
 <style>
-:root{color-scheme:dark;--ink:#f4f7fb;--muted:#a8b8c9;--gold:#ffd166;--mint:#8ce6cb;--panel:#17283a;--line:rgba(255,255,255,.11)}
+:root{color-scheme:dark;--ink:#f4f7fb;--muted:#a8b8c9;--gold:#ffd166;--mint:#8ce6cb;--panel:#17283a;--line:rgba(255,255,255,.11);--vh:100vh;--chrome:255px}
+@supports (height:100svh){:root{--vh:100svh}}
 *{box-sizing:border-box}
+html{overscroll-behavior:none}
 html,body{margin:0;min-height:100%;background:#0c1723;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-body{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:15px 12px 18px;background:radial-gradient(ellipse at 50% -10%,#28435b 0%,#14283b 39%,#0b1724 78%);overscroll-behavior:none}
+body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:15px 12px 18px;background:radial-gradient(ellipse at 50% -10%,#28435b 0%,#14283b 39%,#0b1724 78%);overscroll-behavior:none}
 .app{width:min(100%,520px);display:flex;flex-direction:column;align-items:center;gap:11px}
 .brand{width:min(100%,460px);display:flex;align-items:center;gap:12px;padding:0 3px}
 .mark{width:54px;height:54px;flex:0 0 54px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#fff1b4,#ffb84d);box-shadow:0 8px 24px rgba(255,190,82,.25);transform:rotate(-5deg);overflow:visible}.mark img{width:65px;height:58px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.28));transform:rotate(5deg)}
 .brand-copy{min-width:0}.eyebrow{font-size:9px;letter-spacing:.22em;font-weight:800;color:var(--mint);text-transform:uppercase}.brand h1{font-size:clamp(22px,5.8vw,29px);line-height:1;margin:4px 0 0;font-weight:950;letter-spacing:-.055em}.brand h1 span{color:var(--gold)}
 .tagline{margin:5px 0 0;font-size:11px;color:var(--muted);letter-spacing:.015em}
-.game-shell{width:min(100%,460px);padding:10px;border-radius:26px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.035));box-shadow:0 28px 80px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.1)}
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:1px 2px 9px}
-.hud-label{font-size:9px;font-weight:850;letter-spacing:.18em;text-transform:uppercase;color:#a8bed1}.hud-label strong{display:block;color:#fff;font-size:13px;letter-spacing:.02em;margin-top:3px}
-.actions{display:flex;gap:7px;align-items:center}.wallet-pill{display:flex;align-items:center;gap:5px;min-height:35px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,209,102,.32);background:linear-gradient(145deg,rgba(255,209,102,.16),rgba(8,19,30,.62));color:#ffe59a;font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.08)}.wallet-coin{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#fff1a8,#f0a51a 68%,#a96a09);color:#975b05;font-size:9px;border:1px solid #ffe89a;box-shadow:0 1px 5px rgba(255,191,56,.3)}
+/* The shell is sized so the whole game (toolbar + 420:700 stage) fits the visible viewport instead of forcing the page to scroll. */
+.game-shell{width:min(100%,460px,max(200px,calc((var(--vh) - var(--chrome)) * .6 + 22px)));padding:10px;border-radius:26px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.035));box-shadow:0 28px 80px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.1)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:1px 2px 9px;min-height:46px}
+.hud-label{flex:1 1 auto;min-width:0;font-size:9px;font-weight:850;letter-spacing:.18em;text-transform:uppercase;color:#a8bed1}.hud-label strong{display:block;color:#fff;font-size:13px;letter-spacing:.02em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{flex:0 0 auto;display:flex;gap:7px;align-items:center}.wallet-pill{display:flex;align-items:center;gap:5px;min-height:35px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,209,102,.32);background:linear-gradient(145deg,rgba(255,209,102,.16),rgba(8,19,30,.62));color:#ffe59a;font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.08)}.wallet-coin{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#fff1a8,#f0a51a 68%,#a96a09);color:#975b05;font-size:9px;border:1px solid #ffe89a;box-shadow:0 1px 5px rgba(255,191,56,.3)}
 .control{border:1px solid rgba(255,255,255,.14);background:rgba(8,19,30,.48);color:#eaf2fa;border-radius:12px;min-height:35px;padding:0 11px;font-size:10px;font-weight:850;letter-spacing:.07em;cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,transform .15s}
 .control:active{transform:scale(.96)}.control[aria-pressed="true"]{color:var(--gold);border-color:rgba(255,209,102,.45)}.control:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.stage{position:relative;isolation:isolate;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#131a42;aspect-ratio:420/700;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
-.about-shade{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:15px;background:rgba(5,8,25,.82);backdrop-filter:blur(10px)}.about-shade[hidden]{display:none}.about-card{width:100%;max-height:100%;overflow:auto;padding:20px 18px 17px;border-radius:22px;border:1px solid rgba(255,218,144,.4);background:linear-gradient(155deg,#23254f,#121c35 75%);box-shadow:0 22px 70px rgba(0,0,0,.45);color:#eef4ff}.about-kicker{color:#f4ca63;font-size:8px;font-weight:900;letter-spacing:.16em;line-height:1.5}.about-card h2{font-size:21px;line-height:1.1;margin:8px 0 13px;color:#fff1c4;letter-spacing:-.035em}.about-card p{font-size:11px;line-height:1.55;color:#d5dcef;margin:0 0 10px}.about-card .about-credit{font-size:9px;color:#9faccb;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}.about-close{display:block;width:100%;min-height:43px;margin-top:12px;border:0;border-radius:13px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#29233a;font-size:11px;font-weight:1000;letter-spacing:.08em;cursor:pointer;touch-action:manipulation}
-video.game-background{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;filter:brightness(.84) saturate(1.03)}
-canvas{position:relative;z-index:1;display:block;width:100%;height:100%;background:transparent;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+/* Stage layers, bottom to top: background video (0) -> optional dark shade (1) -> game canvas (2) -> About panel (5).
+   The video and shade never receive pointer events, so taps always reach the canvas or the About panel. */
+.stage{position:relative;isolation:isolate;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#101b31;aspect-ratio:420/700;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
+.bg-video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;background:transparent}
+.bg-shade{position:absolute;inset:0;z-index:1;display:none;background:rgba(5,9,26,.18);pointer-events:none}
+.stage.has-video .bg-video{opacity:1}
+.stage.has-video .bg-shade{display:block}
+.about-shade{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:15px;background:rgba(5,8,25,.92)}.about-shade[hidden]{display:none}.about-card{width:100%;max-height:100%;overflow:auto;touch-action:pan-y;padding:20px 18px 17px;border-radius:22px;border:1px solid rgba(255,218,144,.4);background:linear-gradient(155deg,#23254f,#121c35 75%);box-shadow:0 22px 70px rgba(0,0,0,.45);color:#eef4ff}.about-kicker{color:#f4ca63;font-size:8px;font-weight:900;letter-spacing:.16em;line-height:1.5}.about-card h2{font-size:21px;line-height:1.1;margin:8px 0 13px;color:#fff1c4;letter-spacing:-.035em}.about-card p{font-size:11px;line-height:1.55;color:#d5dcef;margin:0 0 10px}.about-card .about-credit{font-size:9px;color:#9faccb;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}.about-close{display:block;width:100%;min-height:43px;margin-top:12px;border:0;border-radius:13px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#29233a;font-size:11px;font-weight:1000;letter-spacing:.08em;cursor:pointer;touch-action:manipulation}
+canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .hint{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;color:#aebfd0;font-size:10px;letter-spacing:.02em;padding:9px 2px 1px}
 .dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block}
 .footer{max-width:440px;text-align:center;color:#8297ab;font-size:9px;line-height:1.5;padding:0 12px}.footer b{color:#c7d5e2;font-weight:750}
-@media(max-height:720px){body{padding-top:8px;padding-bottom:8px}.app{gap:7px}.brand{gap:9px}.mark{width:43px;height:43px;flex-basis:43px;border-radius:13px}.mark img{width:55px;height:51px}.brand h1{font-size:22px}.tagline{font-size:10px;margin-top:3px}.game-shell{padding:8px}.toolbar{padding-bottom:6px}.hint{padding-top:6px}.footer{font-size:8px}}
-@media(max-width:390px){.brand h1{font-size:22px}.actions{gap:5px}.wallet-pill{padding:0 7px}.control{padding:0 8px;font-size:9px}}
+@media(max-height:720px){:root{--chrome:205px}body{padding-top:8px;padding-bottom:8px}.app{gap:7px}.brand{gap:9px}.mark{width:43px;height:43px;flex-basis:43px;border-radius:13px}.mark img{width:55px;height:51px}.brand h1{font-size:22px}.tagline{font-size:10px;margin-top:3px}.game-shell{padding:8px}.toolbar{padding-bottom:6px;min-height:42px}.hint{padding-top:6px}.footer{font-size:8px}}
+@media(max-width:390px){.brand h1{font-size:22px}.actions{gap:5px}.wallet-pill{padding:0 7px}.control{padding:0 8px;font-size:9px}.hud-label strong{font-size:11px}}
+/* Short landscape phones: the controls move beside the stage and the decorative blocks are hidden so the whole game stays visible without scrolling. */
+@media(orientation:landscape) and (max-height:520px){
+  body{padding:8px 12px}
+  .brand,.hint,.footer{display:none}
+  .game-shell{display:flex;flex-direction:row;align-items:flex-start;gap:10px;width:auto;max-width:100%;padding:8px}
+  .toolbar{flex-direction:column;align-items:stretch;justify-content:flex-start;width:150px;min-height:0;padding:0}
+  .hud-label{flex:0 0 auto}
+  .hud-label strong{white-space:normal}
+  .actions{flex-direction:column;align-items:stretch}
+  .stage{flex:0 0 auto;width:calc((var(--vh) - 40px) * .6)}
+}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -54,8 +73,9 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
       </div>
     </div>
     <div class="stage" id="stage">
-      <video id="bgVideo" class="game-background" muted playsinline preload="auto" aria-hidden="true"></video>
-      <canvas id="game" width="840" height="1400" aria-label="Fatty Bird arcade game. Use the on-screen menu, or tap to flap during a flight." role="img"></canvas>
+      <video id="bgVideo" class="bg-video" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-hidden="true"></video>
+      <div class="bg-shade" aria-hidden="true"></div>
+      <canvas id="game" width="420" height="700" aria-label="Fatty Bird arcade game. Use the on-screen menu, or tap to flap during a flight." role="img"></canvas>
       <div class="about-shade" id="aboutPanel" hidden role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
         <div class="about-card">
           <div class="about-kicker">A NOTE FROM THE AIR-POTATO DEPARTMENT</div>
@@ -68,7 +88,7 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
         </div>
       </div>
     </div>
-    <div class="hint"><span class="dot"></span><b>TAP TO FLAP <span class="dot"></span> SPACE / ↑ ON KEYBOARD <span class="dot"></span> AVOID THE GATES</div>
+    <div class="hint"><span class="dot"></span><b>TAP TO FLAP <span class="dot"></span> SPACE / ↑ ON KEYBOARD <span class="dot"></span> AVOID THE GATES</b></div>
   </section>
   <footer class="footer"><b>GitHub Pages edition.</b> All game art, backgrounds and three audio tracks load from local project files. Scores and coins stay on this device.</footer>
 </main>
@@ -77,11 +97,21 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
 (() => {
   'use strict';
   const W = 420, H = 700, FLOOR = 632;
+  const PIPE_W = 76, CAP_H = 19, COIN_R = 11.5;
+  // Physics runs in fixed 1/60 s steps (the same step the original tuning was made at); rendering interpolates between steps.
+  const FIXED_STEP = 1 / 60, MAX_FRAME = 0.1, MAX_STEPS = 6;
+  const MAX_RENDER_SCALE = 1.5;
+  const stage = document.getElementById('stage');
   const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
-  canvas.width = W * dpr; canvas.height = H * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const ctx = canvas.getContext('2d');
+  // Older Android WebViews lack roundRect; a minimal fallback keeps the UI drawing instead of throwing every frame.
+  if (typeof ctx.roundRect !== 'function' && typeof CanvasRenderingContext2D !== 'undefined') {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      r = Math.max(0, Math.min(r || 0, w / 2, h / 2));
+      this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath();
+    };
+  }
   const soundBtn = document.getElementById('soundBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   const runLabel = document.getElementById('runLabel');
@@ -90,62 +120,81 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
   const aboutCloseBtn = document.getElementById('aboutCloseBtn');
   const brandBirdIcon = document.getElementById('brandBirdIcon');
   const menuMusic = document.getElementById('menuMusic');
-
   const bgVideo = document.getElementById('bgVideo');
+
+  /* ---------- Canvas sizing (backing store follows the real CSS size and device pixel ratio) ---------- */
+  const coinSprites = new Map();
+  let renderScale = 1, scaleX = 1, scaleY = 1, resizeNeeded = false, staticFrameDrawn = false;
+  function resizeCanvas() {
+    resizeNeeded = false;
+    const cssW = stage.clientWidth || W;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const scale = Math.max(1, Math.min(cssW * dpr / W, MAX_RENDER_SCALE));
+    const pw = Math.round(W * scale), ph = Math.round(H * scale);
+    if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
+    if (scale !== renderScale) { renderScale = scale; coinSprites.clear(); }
+    scaleX = pw / W; scaleY = ph / H;
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    staticFrameDrawn = false;
+  }
+  function queueResize() { resizeNeeded = true; }
+  window.addEventListener('resize', queueResize);
+  window.addEventListener('orientationchange', queueResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', queueResize);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(queueResize).observe(stage);
+
+  /* ---------- Background videos (real <video> element behind the canvas; the canvas no longer copies video frames) ---------- */
   const BG_CLIPS = [
     { name: "Night City", src: "assets/backgrounds/night-city.mp4" },
     { name: "Washroom", src: "assets/backgrounds/washroom.mp4" },
     { name: "G. B. Road / Sonagachi City", src: "assets/backgrounds/gb-road-city.mp4" },
     { name: "Stadium", src: "assets/backgrounds/stadium.mp4" }
-  ];;
+  ];
   /* bundled background assets are loaded from this project's assets folder */
-  /* old inline background data removed */
-  /* END BG_CLIPS */
-  /* end of legacy clip data removed */
 
-  let bgIndex = 0, bgLoops = 0, bgReady = false, bgPlaybackFailed = false;
+  let bgIndex = 0, bgLoops = 0, bgFailures = 0;
+  function bgMayPlay() { return state !== 'paused' && !document.hidden; }
+  function playBackground() {
+    if (!bgMayPlay()) return;
+    try { bgVideo.playbackRate = 1; } catch (_) {}
+    const playAttempt = bgVideo.play();
+    if (playAttempt && playAttempt.catch) playAttempt.catch(() => {});
+  }
   function setBackground(index) {
     bgIndex = (index + BG_CLIPS.length) % BG_CLIPS.length;
     bgLoops = 0;
-    bgReady = false;
-    bgPlaybackFailed = false;
-    bgVideo.pause();
-    bgVideo.onended = null;
-
-    // Register handlers before loading to avoid missing fast local-file events.
-    bgVideo.onerror = () => { bgPlaybackFailed = true; };
-    bgVideo.onloadeddata = () => {
-      bgReady = true;
-      try { bgVideo.playbackRate = 1; } catch (_) {}
-      const playAttempt = bgVideo.play();
-      if (playAttempt && playAttempt.catch) {
-        playAttempt.catch(() => { bgPlaybackFailed = true; });
-      }
-    };
-    bgVideo.onended = () => {
-      if (state === 'paused' || document.hidden) return;
-      bgLoops++;
-      if (bgLoops < 2) {
-        try { bgVideo.currentTime = 0; bgVideo.playbackRate = 1; } catch (_) {}
-        const playAttempt = bgVideo.play();
-        if (playAttempt && playAttempt.catch) {
-          playAttempt.catch(() => { bgPlaybackFailed = true; });
-        }
-      } else {
-        setBackground(bgIndex + 1);
-      }
-    };
-
+    stage.classList.remove('has-video');
     bgVideo.src = BG_CLIPS[bgIndex].src;
     bgVideo.load();
   }
   function resumeBackgroundPlayback() {
-    if (state === 'paused' || document.hidden || !bgVideo || !bgVideo.paused) return;
-    const playAttempt = bgVideo.play();
-    if (playAttempt && playAttempt.catch) {
-      playAttempt.catch(() => { bgPlaybackFailed = true; });
-    }
+    if (!bgVideo.paused) return;
+    playBackground();
   }
+  // Handlers are attached once (not on every clip change).
+  bgVideo.muted = true; bgVideo.defaultMuted = true;
+  bgVideo.addEventListener('loadeddata', () => {
+    bgFailures = 0;
+    stage.classList.add('has-video');
+    playBackground();
+  });
+  bgVideo.addEventListener('error', () => {
+    // A missing/broken clip falls back to the plain dark stage; try the next clip, but stop once every clip has failed.
+    stage.classList.remove('has-video');
+    bgFailures++;
+    if (bgFailures < BG_CLIPS.length) setBackground(bgIndex + 1);
+  });
+  bgVideo.addEventListener('ended', () => {
+    bgLoops++;
+    if (bgLoops < 2) {
+      try { bgVideo.currentTime = 0; } catch (_) {}
+      playBackground();
+    } else {
+      setBackground(bgIndex + 1);
+    }
+  });
+
+  /* ---------- Images ---------- */
   const birdSprite = new Image();
   birdSprite.decoding = 'async';
   birdSprite.src = 'assets/character/fatty-bird.webp';
@@ -156,6 +205,8 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
   const packCoinSprite = new Image();
   packCoinSprite.decoding = 'async';
   packCoinSprite.src = 'assets/ui/coin.png';
+  // Cached coin sprites are rebuilt once the real coin artwork has finished loading.
+  packCoinSprite.addEventListener('load', () => { coinSprites.clear(); staticFrameDrawn = false; });
 
   const safeStore = {
     get(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (_) { return fallback; } },
@@ -168,14 +219,16 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
   let best = Math.max(0, Number(safeStore.get('fattyBirdBest', '0')) || 0);
   let audio = null;
   let state = 'ready';
-  let score = 0, elapsed = 0, visualTime = 0, groundOffset = 0, lastTime = 0, overAt = 0, deathAnim = 0;
-  let worldCoins = [], worldDistance = 0, nextCoinWaveAt = 300;
-  const bird = { x: 126, y: 318, vy: 0, angle: 0, radius: 27 };
+  let score = 0, elapsed = 0, prevElapsed = 0, visualTime = 0, groundOffset = 0, prevGround = 0, lastTime = 0, overAt = 0, deathAnim = 0;
+  let updateAccumulator = 0, renderAlpha = 1, loopStarted = false;
+  let pipesUntilCoins = 0;
+  const bird = { x: 126, y: 318, py: 318, vy: 0, angle: 0, pangle: 0, radius: 27 };
   let pipes = [];
   let lastGapY = 350;
   const menuHit = { play: {x:84,y:490,w:252,h:62}, about: {x:143,y:565,w:134,h:38} };
-  const overHit = { retry: {x:69,y:394,w:282,h:58}, home: {x:99,y:468,w:222,h:48} };
+  const overHit = { retry: {x:69,y:436,w:282,h:56}, home: {x:99,y:504,w:222,h:46} };
 
+  function lerp(a, b, t) { return a + (b - a) * t; }
 
   function updateWallet() {
     if (walletLabel) walletLabel.textContent = String(totalCoins);
@@ -196,7 +249,8 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
       try {
         track.pause(); track.currentTime = 0;
         const promise = track.play();
-        if (promise && promise.catch) promise.catch(() => tone(fallbackFreq, .13, 'triangle', .045));
+        // An AbortError only means a newer play() replaced this one; it must not trigger an extra fallback beep.
+        if (promise && promise.catch) promise.catch(err => { if (!err || err.name !== 'AbortError') tone(fallbackFreq, .13, 'triangle', .045); });
         return;
       } catch (_) {}
     }
@@ -221,17 +275,19 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
   function playScore() { tone(660,.09,'sine',.05); tone(880,.13,'sine',.045,.08); }
   function setSound(value) {
     soundOn = value; safeStore.set('fattyBirdMusic', value ? '1' : '0');
-    if (value && state !== 'over') { const promise=menuMusic.play(); if(promise) promise.catch(()=>{}); }
+    if (value && state !== 'over' && state !== 'paused') { const promise=menuMusic.play(); if(promise) promise.catch(()=>{}); }
     else { menuMusic.pause(); for (const track of Object.values(effectTracks)) { try { track.pause(); } catch (_) {} } }
     soundBtn.textContent = value ? 'AUDIO ON' : 'AUDIO OFF';
     soundBtn.setAttribute('aria-pressed', value ? 'true' : 'false');
     soundBtn.setAttribute('aria-label', value ? 'Turn music and effects off' : 'Turn music and effects on');
   }
   function tryStartMusic() {
-    if (!soundOn || state === 'over' || !menuMusic) return;
+    if (!soundOn || state === 'over' || state === 'paused' || !menuMusic) return;
     try { const p = menuMusic.play(); if (p && p.catch) p.catch(() => {}); } catch (_) {}
   }
+  // Android Chrome only treats pointerup (not touch pointerdown) as a user gesture for audio, so unlock on both.
   document.addEventListener('pointerdown', tryStartMusic, { once: true });
+  document.addEventListener('pointerup', tryStartMusic, { once: true });
   document.addEventListener('keydown', tryStartMusic, { once: true });
   function setPauseButton() {
     const paused = state === 'paused';
@@ -245,13 +301,19 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     runLabel.textContent = state === 'ready' ? 'Awaiting take-off clearance' : state === 'playing' ? 'In the air — stay sharp' : state === 'paused' ? 'Taking a tiny break' : 'Flight ended';
     setPauseButton();
   }
+  // Copies "current" values into the "previous" slots so interpolation never blends across a restart, resume or spawn.
+  function syncPrev() {
+    bird.py = bird.y; bird.pangle = bird.angle; prevElapsed = elapsed; prevGround = groundOffset;
+    for (const p of pipes) p.px = p.x;
+  }
   function reset() {
-    updateAccumulator = 0;
     for (const track of Object.values(effectTracks)) { try { track.pause(); track.currentTime = 0; } catch (_) {} }
-    score = 0; coinsRun = 0; coinParticles = []; worldCoins = []; worldDistance = 0; nextCoinWaveAt = 300 + Math.random()*160; deathAnim = 0; elapsed = 0; pipes = []; lastGapY = 350;
+    score = 0; coinsRun = 0; coinParticles = []; deathAnim = 0; elapsed = 0; groundOffset = 0; pipes = []; lastGapY = 350;
+    pipesUntilCoins = 0; updateAccumulator = 0; renderAlpha = 1;
     bird.y = 318; bird.vy = 0; bird.angle = 0;
     pipes.push(makePipe(W + 40));
-    state = 'ready'; updateLabel();
+    syncPrev();
+    state = 'ready'; staticFrameDrawn = false; updateLabel();
   }
   function makePipe(x) {
     const gap = currentGap();
@@ -259,12 +321,40 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     const drift = (Math.random() * 2 - 1) * 82;
     const center = Math.max(min, Math.min(max, lastGapY + drift));
     lastGapY = center;
-    return { x, center, gap, passed: false };
+    return { x, px: x, center, gap, passed: false, coins: null };
+  }
+  // Coins belong to the pipe they were created for, so they scroll with it and are positioned from its real gap coordinates.
+  function addCoinFormation(p) {
+    const gapTop = p.center - p.gap / 2, gapBottom = p.center + p.gap / 2;
+    const margin = COIN_R + 19;                    // coin edge stays ~17px clear of both pipe lips
+    const half = p.gap / 2 - margin;
+    if (half < 8) return false;                    // no safe room: skip the formation
+    const arc = Math.random() < .5;                // short row or gentle arc
+    const lift = arc ? Math.min(16, half * 2) : 0;
+    const coins = [];
+    for (let i = 0; i < 3; i++) {
+      const u = (i - 1) * (i - 1);                 // 1 at the ends, 0 in the middle
+      const y = p.center + lift / 2 - lift * (1 - u);
+      const dx = PIPE_W / 2 + (i - 1) * 26;
+      const safe = y >= gapTop + margin && y <= gapBottom - margin && y - COIN_R > 0 && y + COIN_R < FLOOR && dx - COIN_R >= 0 && dx + COIN_R <= PIPE_W;
+      if (!safe) return false;
+      coins.push({ dx, y, collected: false, spinSeed: Math.random() * Math.PI * 2 });
+    }
+    p.coins = coins;
+    return true;
+  }
+  function spawnPipe(x) {
+    const p = makePipe(x);
+    // Formations are intentionally sparse: one every two or three pipes.
+    if (pipesUntilCoins > 0) pipesUntilCoins--;
+    else if (addCoinFormation(p)) pipesUntilCoins = 1 + Math.floor(Math.random() * 2);
+    return p;
   }
   function currentGap() { return Math.max(158, 190 - Math.min(score, 25) * 1.15); }
   function currentDifficulty() { return 1 + Math.min(score, 20) * 0.006; }
   function startFlight() {
-    state = 'playing'; if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{}); bird.vy = -440; tone(460,.055,'triangle',.045); updateLabel();
+    state = 'playing'; if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{}); bird.vy = -440; tone(460,.055,'triangle',.045);
+    updateAccumulator = 0; syncPrev(); updateLabel();
   }
   function flap() {
     if (state === 'ready') { startFlight(); return; }
@@ -293,8 +383,10 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{});
   }
   function handleStagePointer(e) {
-    if (e.button !== undefined && e.button !== 0) return;
+    if (e.isPrimary === false) return;                                  // extra fingers never create extra actions
+    if (e.pointerType === 'mouse' && e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
+    if (!aboutPanel.hidden) return;
     const rect = canvas.getBoundingClientRect();
     const point = { x: (e.clientX - rect.left) * W / rect.width, y: (e.clientY - rect.top) * H / rect.height };
     if (state === 'ready') {
@@ -317,25 +409,36 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     if (state === 'playing') flap();
   }
   canvas.addEventListener('pointerdown', handleStagePointer, { passive: false });
+  stage.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('keydown', e => {
     if (e.repeat) return;
+    if (e.code === 'Escape' && !aboutPanel.hidden) { aboutPanel.hidden = true; return; }
+    if (!aboutPanel.hidden) return;                                     // keyboard must not start the game behind the About panel
     if (['Space','ArrowUp','Enter'].includes(e.code)) {
       e.preventDefault();
       if (e.code === 'Enter' && state === 'paused') togglePause();
       else { resumeBackgroundPlayback(); inputFromKeyboard(); }
       if (soundOn && menuMusic.paused && (state === 'ready' || state === 'over')) menuMusic.play().catch(()=>{});
     }
-    if (e.code === 'Escape' && !aboutPanel.hidden) aboutPanel.hidden = true;
   });
   aboutCloseBtn.addEventListener('click', () => { aboutPanel.hidden = true; });
   soundBtn.addEventListener('click', () => setSound(!soundOn));
   function togglePause() {
-    if (state === 'playing') { state = 'paused'; bgVideo.pause(); menuMusic.pause(); }
-    else if (state === 'paused') { state = 'playing'; resumeBackgroundPlayback(); if(soundOn) menuMusic.play().catch(()=>{}); }
+    if (state === 'playing') { state = 'paused'; staticFrameDrawn = false; bgVideo.pause(); menuMusic.pause(); }
+    else if (state === 'paused') { state = 'playing'; updateAccumulator = 0; lastTime = 0; syncPrev(); resumeBackgroundPlayback(); if(soundOn) menuMusic.play().catch(()=>{}); }
     updateLabel();
   }
   pauseBtn.addEventListener('click', togglePause);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) { if (state === 'playing') togglePause(); else bgVideo.pause(); } else if (state !== 'paused') bgVideo.play().catch(()=>{bgPlaybackFailed=true;}); });
+  document.addEventListener('visibilitychange', () => {
+    lastTime = 0; updateAccumulator = 0;                                // no catch-up burst after returning from the background
+    if (document.hidden) {
+      if (state === 'playing') togglePause();
+      bgVideo.pause(); menuMusic.pause();
+    } else {
+      if (soundOn && state !== 'over' && state !== 'paused') menuMusic.play().catch(()=>{});
+      playBackground();
+    }
+  });
 
   function roundRect(x,y,w,h,r) {
     ctx.beginPath(); ctx.roundRect(x,y,w,h,r); ctx.fill();
@@ -344,97 +447,100 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     ctx.save(); ctx.globalAlpha=a; ctx.fillStyle='#fff'; ctx.beginPath();
     ctx.ellipse(x,y,31*s,12*s,0,0,Math.PI*2); ctx.ellipse(x-17*s,y-8*s,17*s,14*s,0,0,Math.PI*2); ctx.ellipse(x+5*s,y-14*s,20*s,19*s,0,0,Math.PI*2); ctx.ellipse(x+25*s,y-5*s,17*s,12*s,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   }
-  function drawBackground() {
-    // The uploaded MP4 is rendered by the browser in its own layer behind the
-    // transparent game canvas, avoiding a full-size video copy on every frame.
+
+  /* ---------- Coin artwork (painted once per size into a small cached sprite; no per-frame gradients or shadow blur) ---------- */
+  function paintCoin(g, cx, cy, radius) {
+    g.save();
+    g.translate(cx, cy);
+    g.shadowColor = 'rgba(255,190,45,.55)'; g.shadowBlur = radius * .85;
+    const grad = g.createRadialGradient(-radius*.3,-radius*.42,1,radius*.1,radius*.12,radius*1.12);
+    grad.addColorStop(0,'#fff7bc'); grad.addColorStop(.35,'#ffd95c'); grad.addColorStop(.74,'#efa51d'); grad.addColorStop(1,'#9d5b08');
+    g.fillStyle = grad; g.strokeStyle = '#fff0a0'; g.lineWidth = Math.max(1.2,radius*.12);
+    g.beginPath(); g.arc(0,0,radius,0,Math.PI*2); g.fill(); g.stroke();
+    g.shadowBlur = 0; g.strokeStyle = 'rgba(130,75,8,.6)'; g.lineWidth = Math.max(1,radius*.09);
+    g.beginPath(); g.arc(0,0,radius*.69,0,Math.PI*2); g.stroke();
+    if (packCoinSprite.complete && packCoinSprite.naturalWidth) {
+      g.imageSmoothingEnabled = false;
+      const iconSize = radius * 1.48;
+      g.drawImage(packCoinSprite, -iconSize/2, -iconSize/2, iconSize, iconSize);
+      g.imageSmoothingEnabled = true;
+    } else {
+      g.fillStyle = '#a96609'; g.font = `900 ${radius*1.05}px system-ui`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('F',0,1);
+    }
+    g.restore();
+  }
+  function getCoinSprite(radius) {
+    let sprite = coinSprites.get(radius);
+    if (sprite) return sprite;
+    const half = Math.ceil(radius * 2.4);
+    const px = Math.max(1, Math.ceil(half * 2 * renderScale));
+    const c = document.createElement('canvas'); c.width = px; c.height = px;
+    const g = c.getContext('2d');
+    g.setTransform(px / (half * 2), 0, 0, px / (half * 2), 0, 0);
+    paintCoin(g, half, half, radius);
+    sprite = { canvas: c, half };
+    coinSprites.set(radius, sprite);
+    return sprite;
   }
   function drawCoinGlyph(x, y, radius, rotation = 0) {
+    const s = getCoinSprite(radius);
     ctx.save();
-    ctx.translate(x, y); ctx.rotate(rotation);
-    ctx.shadowBlur = 0;
-    const g = ctx.createRadialGradient(-radius*.3,-radius*.42,1,radius*.1,radius*.12,radius*1.12);
-    g.addColorStop(0,'#fff7bc'); g.addColorStop(.35,'#ffd95c'); g.addColorStop(.74,'#efa51d'); g.addColorStop(1,'#9d5b08');
-    ctx.fillStyle = g; ctx.strokeStyle = '#fff0a0'; ctx.lineWidth = Math.max(1.2,radius*.12);
-    ctx.beginPath(); ctx.arc(0,0,radius,0,Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(130,75,8,.6)'; ctx.lineWidth = Math.max(1,radius*.09);
-    ctx.beginPath(); ctx.arc(0,0,radius*.69,0,Math.PI*2); ctx.stroke();
-    if (packCoinSprite.complete && packCoinSprite.naturalWidth) {
-      ctx.imageSmoothingEnabled = false;
-      const iconSize = radius * 1.48;
-      ctx.drawImage(packCoinSprite, -iconSize/2, -iconSize/2, iconSize, iconSize);
-      ctx.imageSmoothingEnabled = true;
-    } else {
-      ctx.fillStyle = '#a96609'; ctx.font = `900 ${radius*1.05}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('F',0,1);
-    }
+    ctx.translate(x, y); if (rotation) ctx.rotate(rotation);
+    ctx.drawImage(s.canvas, -s.half, -s.half, s.half * 2, s.half * 2);
     ctx.restore();
   }
-  function collectCoin(coin) {
+  function collectCoin(coin, worldX) {
+    if (coin.collected) return;
     coin.collected = true;
     coinsRun += 1; totalCoins += 1;
     safeStore.set('fattyBirdCoins', totalCoins); updateWallet();
     for (let i=0;i<10;i++) {
       const a = Math.PI*2*i/10, speed = 42 + (i%3)*14;
-      coinParticles.push({x:coin.x,y:coin.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:.48,max:.48});
+      coinParticles.push({x:worldX,y:coin.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:.48,max:.48});
     }
     playEffect('coin', 880);
   }
-  function spawnCoinWave() {
-    // Bind a short, tidy coin row to the next pipe that the bird will encounter.
-    const targetPipe = pipes
-      .filter(p => p.x > bird.x + 150)
-      .sort((a, b) => a.x - b.x)[0];
-
-    // Wait for a pipe with enough approach space instead of placing coins loosely.
-    if (!targetPipe) {
-      nextCoinWaveAt = worldDistance + 70;
-      return;
-    }
-
-    const count = 4;
-    const spacing = 30;
-    const startX = targetPipe.x - 34;
-    const safeY = targetPipe.center;
-    for (let i = 0; i < count; i++) {
-      worldCoins.push({
-        x: startX + i * spacing,
-        y: safeY,
-        collected: false,
-        spinSeed: Math.random() * Math.PI * 2
-      });
-    }
-
-    // Leave a visible break before the next formation.
-    nextCoinWaveAt = worldDistance + 420 + Math.random() * 130;
-  }
-  function drawCoinParticles(dt) {
+  function drawCoinParticles() {
     for (const part of coinParticles) {
-      part.x += part.vx * dt; part.y += part.vy * dt; part.vy += 80 * dt; part.life -= dt;
       if (part.life > 0) {
-        ctx.save(); ctx.globalAlpha = Math.max(0,part.life/part.max); ctx.fillStyle = '#ffe27a';
-        ctx.beginPath(); ctx.arc(part.x,part.y,2.2,0,Math.PI*2); ctx.fill(); ctx.restore();
+        ctx.globalAlpha = Math.max(0,part.life/part.max); ctx.fillStyle = '#ffe27a';
+        ctx.beginPath(); ctx.arc(part.x,part.y,2.2,0,Math.PI*2); ctx.fill();
       }
     }
-    coinParticles = coinParticles.filter(part => part.life > 0);
+    ctx.globalAlpha = 1;
   }
   function drawWorldCoins() {
-    for (const coin of worldCoins) {
-      if (coin.collected || coin.x < -24 || coin.x > W+24) continue;
-      const spin = Math.cos(visualTime*7 + coin.spinSeed);
-      ctx.save(); ctx.translate(coin.x,coin.y); ctx.scale(Math.max(.22,Math.abs(spin)),1);
-      drawCoinGlyph(0,0,11.5,visualTime*1.15); ctx.restore();
+    for (const p of pipes) {
+      if (!p.coins) continue;
+      const px = lerp(p.px, p.x, renderAlpha);
+      for (const coin of p.coins) {
+        if (coin.collected) continue;
+        const cx = px + coin.dx;
+        if (cx < -24 || cx > W+24) continue;
+        const spin = Math.cos(visualTime*7 + coin.spinSeed);
+        ctx.save(); ctx.translate(cx,coin.y); ctx.scale(Math.max(.22,Math.abs(spin)),1);
+        drawCoinGlyph(0,0,COIN_R,visualTime*1.15); ctx.restore();
+      }
     }
   }
 
+  /* ---------- Pipes (gradients are created once and reused through a translate) ---------- */
+  const pipeBodyGrad = ctx.createLinearGradient(0,0,PIPE_W,0);
+  pipeBodyGrad.addColorStop(0,'#175c2b'); pipeBodyGrad.addColorStop(.22,'#71d45c'); pipeBodyGrad.addColorStop(.58,'#2e9a42'); pipeBodyGrad.addColorStop(1,'#124a29');
+  const pipeCapGrad = ctx.createLinearGradient(0,0,PIPE_W,0);
+  pipeCapGrad.addColorStop(0,'#1d642f'); pipeCapGrad.addColorStop(.28,'#a2ec71'); pipeCapGrad.addColorStop(1,'#16552b');
   function drawPipe(p) {
-    const gapTop = p.center - p.gap/2, gapBottom = p.center + p.gap/2, pw=76, cap=19;
-    const grad = ctx.createLinearGradient(p.x,0,p.x+pw,0); grad.addColorStop(0,'#175c2b'); grad.addColorStop(.22,'#71d45c'); grad.addColorStop(.58,'#2e9a42'); grad.addColorStop(1,'#124a29');
-    const capGrad = ctx.createLinearGradient(p.x,0,p.x+pw,0); capGrad.addColorStop(0,'#1d642f'); capGrad.addColorStop(.28,'#a2ec71'); capGrad.addColorStop(1,'#16552b');
-    ctx.save(); ctx.shadowBlur=0; ctx.shadowOffsetX=0;
-    ctx.fillStyle=grad; roundRect(p.x+5,0,pw-10,Math.max(1,gapTop),8); roundRect(p.x+5,gapBottom,pw-10,FLOOR-gapBottom,8);
-    ctx.fillStyle=capGrad; roundRect(p.x,gapTop-cap+2,pw,cap,7); roundRect(p.x,gapBottom-2,pw,cap,7);
+    const x = lerp(p.px, p.x, renderAlpha);
+    const gapTop = p.center - p.gap/2, gapBottom = p.center + p.gap/2, pw=PIPE_W, cap=CAP_H;
+    ctx.save(); ctx.translate(x, 0);
+    ctx.save(); ctx.shadowColor='rgba(17,65,65,.18)'; ctx.shadowBlur=7; ctx.shadowOffsetX=2;
+    ctx.fillStyle=pipeBodyGrad; roundRect(5,0,pw-10,Math.max(1,gapTop),8); roundRect(5,gapBottom,pw-10,FLOOR-gapBottom,8);
+    ctx.fillStyle=pipeCapGrad; roundRect(0,gapTop-cap+2,pw,cap,7); roundRect(0,gapBottom-2,pw,cap,7);
     ctx.restore();
-    ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(p.x+13,Math.max(11,gapTop-cap+7),5,Math.max(0,gapTop-20),3); roundRect(p.x+13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3);
-    ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(p.x+pw-12,Math.max(0,gapTop-cap+4),4,Math.max(1,gapTop)); ctx.fillRect(p.x+pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom));
+    // Highlight and shade strips stay inside each pipe body (they previously ran down into the open gap and below the floor).
+    ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,11,5,Math.max(0,gapTop-22),3); roundRect(13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3);
+    ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,0,4,Math.max(1,gapTop-cap+2)); ctx.fillRect(pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom-4));
+    ctx.restore();
   }
   function drawBirdArtwork(x, y, drawWidth, tilt, phase, dazed=false) {
     const drawHeight = drawWidth * 769 / 1024;
@@ -456,7 +562,7 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
       ctx.drawImage(rightWingFeathers,807,312); ctx.restore();
     }
     if (birdSprite.complete && birdSprite.naturalWidth) {
-      ctx.shadowBlur=0;
+      ctx.shadowColor='rgba(5,8,20,.28)'; ctx.shadowBlur=10;
       ctx.drawImage(birdSprite,0,0,1024,769);
     } else {
       ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.ellipse(512,384,270,220,0,0,Math.PI*2); ctx.fill();
@@ -484,17 +590,21 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     ctx.restore();
   }
   function drawBird() {
-    const bob = Math.sin(elapsed * 7.5) * 2.2;
-    drawBirdArtwork(bird.x, bird.y+bob, 148, bird.angle*.62, visualTime, state==='over' && deathAnim<.76);
+    const y = lerp(bird.py, bird.y, renderAlpha), angle = lerp(bird.pangle, bird.angle, renderAlpha), t = lerp(prevElapsed, elapsed, renderAlpha);
+    const bob = Math.sin(t * 7.5) * 2.2;
+    drawBirdArtwork(bird.x, y+bob, 163, angle*.62, visualTime, state==='over' && deathAnim<.76);
   }
 
   function drawGround() {
+    // The ground pattern scrolls left with the world (it previously drifted to the right).
+    let travel = groundOffset - prevGround; if (travel < 0) travel += 34;
+    const go = (prevGround + travel * renderAlpha) % 34;
     ctx.fillStyle='#d9bd7d'; ctx.fillRect(0,FLOOR,W,H-FLOOR);
     ctx.fillStyle='#86ba63'; ctx.fillRect(0,FLOOR,W,13);
     ctx.fillStyle='#a6d17a'; ctx.fillRect(0,FLOOR,W,4);
     ctx.save(); ctx.beginPath(); ctx.rect(0,FLOOR+14,W,H-FLOOR-14); ctx.clip();
     ctx.fillStyle='rgba(125,91,51,.16)';
-    for(let x=-30+(groundOffset%34);x<W+35;x+=34){ctx.beginPath();ctx.moveTo(x,FLOOR+19);ctx.lineTo(x+15,FLOOR+19);ctx.lineTo(x-4,FLOOR+26);ctx.fill();}
+    for(let x=-30-go;x<W+35;x+=34){ctx.beginPath();ctx.moveTo(x,FLOOR+19);ctx.lineTo(x+15,FLOOR+19);ctx.lineTo(x-4,FLOOR+26);ctx.fill();}
     ctx.restore();
   }
   function drawHud() {
@@ -514,22 +624,24 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
   }
   function drawGameOver() {
     ctx.fillStyle='rgba(7,8,29,.65)'; ctx.fillRect(0,0,W,H);
-    ctx.save(); ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=28; ctx.fillStyle='#191d49'; roundRect(32,170,356,394,27); ctx.restore();
-    ctx.strokeStyle='rgba(255,220,136,.58)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(32.5,170.5,355,393,27); ctx.stroke();
+    // The panel is taller than before so the wallet row sits above the buttons instead of underneath them.
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=28; ctx.fillStyle='#191d49'; roundRect(32,170,356,410,27); ctx.restore();
+    ctx.strokeStyle='rgba(255,220,136,.58)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(32.5,170.5,355,409,27); ctx.stroke();
     ctx.textAlign='center'; ctx.fillStyle='#ffcf60'; ctx.font='900 10px system-ui'; ctx.letterSpacing='2px'; ctx.fillText('FLIGHT REPORT',210,203);
     ctx.fillStyle='#fff'; ctx.font='1000 31px system-ui'; ctx.letterSpacing='-.7px'; ctx.fillText('YOU BONKED!',210,244);
     ctx.fillStyle='#c8d1ef'; ctx.font='600 11px system-ui'; ctx.letterSpacing='0px'; ctx.fillText('The sky won this round. Your legend survives.',210,267);
     ctx.fillStyle='rgba(255,255,255,.07)'; roundRect(53,291,314,75,17);
     ctx.fillStyle='#aebbe2'; ctx.font='850 8px system-ui'; ctx.letterSpacing='1.2px'; ctx.fillText('SCORE',104,311); ctx.fillText('COINS THIS RUN',210,311); ctx.fillText('BEST',316,311);
     ctx.fillStyle='#fff'; ctx.font='1000 24px system-ui'; ctx.letterSpacing='0px'; ctx.fillText(String(score),104,344); ctx.fillText(String(coinsRun),210,344); ctx.fillText(String(best),316,344);
-    ctx.fillStyle='#ffe7a3'; ctx.font='850 10px system-ui'; ctx.fillText('TOTAL WALLET',210,386);
-    drawCoinGlyph(169,408,11,elapsed); ctx.fillStyle='#fff2bd'; ctx.font='1000 21px system-ui'; ctx.textAlign='left'; ctx.fillText(String(totalCoins),188,415);
-    ctx.fillStyle='#ffe08b'; roundRect(overHit.retry.x,overHit.retry.y,overHit.retry.w,overHit.retry.h,17);
-    ctx.fillStyle='#30233a'; ctx.textAlign='center'; ctx.font='1000 16px system-ui'; ctx.fillText('↻  TRY AGAIN',210,431);
-    ctx.fillStyle='rgba(255,255,255,.11)'; roundRect(overHit.home.x,overHit.home.y,overHit.home.w,overHit.home.h,14);
-    ctx.strokeStyle='rgba(225,226,255,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(overHit.home.x+.5,overHit.home.y+.5,overHit.home.w-1,overHit.home.h-1,14); ctx.stroke();
-    ctx.fillStyle='#f1edff'; ctx.font='900 11px system-ui'; ctx.fillText('⌂  HOME / MAIN MENU',210,497);
-    ctx.fillStyle='#9eacd0'; ctx.font='600 9px system-ui'; ctx.fillText('YOUR COINS ARE SAVED ON THIS DEVICE',210,535);
+    ctx.fillStyle='#ffe7a3'; ctx.font='850 10px system-ui'; ctx.fillText('TOTAL WALLET',210,388);
+    drawCoinGlyph(169,409,11,elapsed); ctx.fillStyle='#fff2bd'; ctx.font='1000 21px system-ui'; ctx.textAlign='left'; ctx.fillText(String(totalCoins),188,416);
+    const r = overHit.retry, h = overHit.home;
+    ctx.fillStyle='#ffe08b'; roundRect(r.x,r.y,r.w,r.h,17);
+    ctx.fillStyle='#30233a'; ctx.textAlign='center'; ctx.font='1000 16px system-ui'; ctx.fillText('↻  TRY AGAIN',210,r.y+r.h/2+7);
+    ctx.fillStyle='rgba(255,255,255,.11)'; roundRect(h.x,h.y,h.w,h.h,14);
+    ctx.strokeStyle='rgba(225,226,255,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(h.x+.5,h.y+.5,h.w-1,h.h-1,14); ctx.stroke();
+    ctx.fillStyle='#f1edff'; ctx.font='900 11px system-ui'; ctx.fillText('⌂  HOME / MAIN MENU',210,h.y+h.h/2+5);
+    ctx.fillStyle='#9eacd0'; ctx.font='600 9px system-ui'; ctx.fillText('YOUR COINS ARE SAVED ON THIS DEVICE',210,568);
     ctx.textAlign='left'; ctx.letterSpacing='0px';
   }
   function drawMenu() {
@@ -561,87 +673,91 @@ canvas{position:relative;z-index:1;display:block;width:100%;height:100%;backgrou
     ctx.restore();
   }
   function drawPause() { ctx.fillStyle='rgba(9,27,43,.68)'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.font='950 31px system-ui'; ctx.fillText('PAUSED',210,328); ctx.fillStyle='#c4d7e2'; ctx.font='500 13px system-ui'; ctx.fillText('Tap RESUME above to keep flying.',210,358); ctx.textAlign='left'; }
+
+  /* ---------- Simulation (called only from the fixed-step loop) ---------- */
   function update(dt) {
     if (state === 'over') { deathAnim += dt; return; }
     if (state !== 'playing') return;
-    elapsed += dt; groundOffset = (groundOffset + 90*dt*currentDifficulty()) % 34;
+    syncPrev();
+    elapsed += dt;
     const speed = 188 * currentDifficulty();
-    worldDistance += speed * dt;
+    groundOffset = (groundOffset + speed*dt) % 34;
     bird.vy = Math.min(650,bird.vy + 1280*dt); bird.y += bird.vy*dt;
     const targetAngle = Math.max(-.48,Math.min(1.08,bird.vy/850));
     bird.angle += (targetAngle - bird.angle) * Math.min(1,dt*13);
+    const pickup = bird.radius + COIN_R;
     for (const p of pipes) {
       p.x -= speed*dt;
       const top = p.center-p.gap/2, bottom=p.center+p.gap/2;
-      if (!p.passed && p.x+76 < bird.x) { p.passed=true; score++; if(score>best){best=score; safeStore.set('fattyBirdBest',best);} playScore(); }
-      if (hitRectCircle(bird.x,bird.y,bird.radius,p.x,0,76,top) || hitRectCircle(bird.x,bird.y,bird.radius,p.x,bottom,FLOOR-bottom)) { endFlight(); break; }
+      if (!p.passed && p.x+PIPE_W < bird.x) { p.passed=true; score++; if(score>best){best=score; safeStore.set('fattyBirdBest',best);} playScore(); }
+      if (hitRectCircle(bird.x,bird.y,bird.radius,p.x,0,PIPE_W,top) || hitRectCircle(bird.x,bird.y,bird.radius,p.x,bottom,FLOOR-bottom)) { endFlight(); break; }
+      if (p.coins) {
+        for (const coin of p.coins) {
+          if (coin.collected) continue;
+          const cx = p.x + coin.dx, dx = cx - bird.x, dy = coin.y - bird.y;
+          if (dx*dx + dy*dy < pickup*pickup) collectCoin(coin, cx);
+        }
+      }
     }
     if (state !== 'playing') return;
-    for (const coin of worldCoins) {
-      if (coin.collected) continue;
-      coin.x -= speed*dt;
-      if (Math.hypot(coin.x-bird.x, coin.y-bird.y) < bird.radius+10) collectCoin(coin);
+    for (let i = coinParticles.length - 1; i >= 0; i--) {
+      const part = coinParticles[i];
+      part.x += part.vx*dt; part.y += part.vy*dt; part.vy += 80*dt; part.life -= dt;
+      if (part.life <= 0) coinParticles.splice(i, 1);
     }
-    worldCoins = worldCoins.filter(coin => !coin.collected && coin.x > -24);
-    coinParticles.forEach(part => { part.x += part.vx*dt; part.y += part.vy*dt; part.vy += 80*dt; part.life -= dt; });
-    coinParticles = coinParticles.filter(part => part.life > 0);
-    pipes = pipes.filter(p=>p.x>-100);
-    if (!pipes.length || pipes[pipes.length-1].x < W-235) pipes.push(makePipe(W+8));
-    if (worldDistance >= nextCoinWaveAt) spawnCoinWave();
+    while (pipes.length && pipes[0].x <= -100) pipes.shift();
+    if (!pipes.length || pipes[pipes.length-1].x < W-235) pipes.push(spawnPipe(W+8));
     if (bird.y-bird.radius<0 || bird.y+bird.radius>FLOOR) endFlight();
   }
   function draw() {
-    drawBackground(); drawGround();
+    // Reset every piece of drawing state that persisted between screens, so no screen inherits another screen's font, alignment or alpha.
+    ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px'; ctx.imageSmoothingEnabled = true;
+    // The canvas is transparent: the background video (or the dark stage colour) shows through behind it.
+    ctx.clearRect(0, 0, W, H);
+    drawGround();
     if (state === 'ready') { drawMenu(); return; }
     drawWorldCoins();
     for (const p of pipes) drawPipe(p);
-    drawCoinParticles(0); drawBird(); drawHud();
+    drawCoinParticles(); drawBird(); drawHud();
     if (state === 'over' && deathAnim >= .76) drawGameOver();
     else if (state === 'over') { ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore(); }
     else if (state === 'paused') drawPause();
   }
-  // A 120 Hz fixed simulation keeps flap/gravity and pipe speed consistent on
-  // 60/90/120 Hz screens. The catch-up budget covers ordinary dropped frames.
-  // Fixed-rate physics prevents gameplay speed from depending on display frame rate.
-  const FIXED_STEP = 1 / 120;
-  const MAX_FRAME_DELTA = 0.25;
-  const MAX_STEPS_PER_FRAME = 30;
-  let updateAccumulator = 0;
+  // A single requestAnimationFrame loop: fixed-step physics, interpolated rendering.
   function loop(now) {
-    const rawFrameDt = lastTime ? Math.max(0, (now - lastTime) / 1000) : 0;
+    requestAnimationFrame(loop);
+    const frameDt = lastTime ? Math.min(Math.max((now - lastTime) / 1000, 0), MAX_FRAME) : 0;
     lastTime = now;
-    const frameDt = Math.min(rawFrameDt, MAX_FRAME_DELTA);
+    if (resizeNeeded) resizeCanvas();
 
     if (state !== 'paused') {
       visualTime += frameDt;
       updateAccumulator += frameDt;
       let steps = 0;
-      while (updateAccumulator >= FIXED_STEP && steps < MAX_STEPS_PER_FRAME) {
+      while (updateAccumulator >= FIXED_STEP && steps < MAX_STEPS) {
         update(FIXED_STEP);
         updateAccumulator -= FIXED_STEP;
         steps++;
       }
-      // The 30-step budget covers the 250ms frame cap at 120Hz. Normal frame
-      // time is retained instead of being discarded after a dropped frame.
+      // Drop any backlog after a long stall instead of producing a burst of catch-up motion.
+      if (updateAccumulator >= FIXED_STEP) updateAccumulator = 0;
+      renderAlpha = state === 'playing' ? Math.min(1, updateAccumulator / FIXED_STEP) : 1;
+      staticFrameDrawn = false;
     } else {
-      updateAccumulator = 0;
+      updateAccumulator = 0; renderAlpha = 1;
+      if (staticFrameDrawn) return;                       // paused screen is static: draw it once, then stop repainting
     }
-
-    ctx.clearRect(0, 0, W, H);
     draw();
+    if (state === 'paused') staticFrameDrawn = true;
+  }
+  function startLoop() {
+    if (loopStarted) return;                              // never more than one animation loop
+    loopStarted = true;
     requestAnimationFrame(loop);
   }
-  document.addEventListener('visibilitychange', () => {
-    // Do not simulate time spent in another app or a locked phone screen.
-    lastTime = 0;
-    updateAccumulator = 0;
-    if (document.hidden) {
-      try { bgVideo.pause(); } catch (_) {}
-    } else if (state !== 'paused') {
-      resumeBackgroundPlayback();
-    }
-  });
-  updateWallet(); setSound(soundOn); reset(); setBackground(0); requestAnimationFrame(loop);
+  updateWallet(); setSound(soundOn); reset(); resizeCanvas(); setBackground(0); startLoop();
 })();
 </script>
 </body>
