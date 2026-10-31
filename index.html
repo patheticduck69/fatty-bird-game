@@ -25,10 +25,11 @@ body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-
 .actions{flex:0 0 auto;display:flex;gap:7px;align-items:center}.wallet-pill{display:flex;align-items:center;gap:5px;min-height:35px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,209,102,.32);background:linear-gradient(145deg,rgba(255,209,102,.16),rgba(8,19,30,.62));color:#ffe59a;font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.08)}.wallet-coin{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#fff1a8,#f0a51a 68%,#a96a09);color:#975b05;font-size:9px;border:1px solid #ffe89a;box-shadow:0 1px 5px rgba(255,191,56,.3)}
 .control{border:1px solid rgba(255,255,255,.14);background:rgba(8,19,30,.48);color:#eaf2fa;border-radius:12px;min-height:35px;padding:0 11px;font-size:10px;font-weight:850;letter-spacing:.07em;cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,transform .15s}
 .control:active{transform:scale(.96)}.control[aria-pressed="true"]{color:var(--gold);border-color:rgba(255,209,102,.45)}.control:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-/* Stage layers, bottom to top: background video (0) -> optional dark shade (1) -> game canvas (2) -> About panel (5).
+/* The video keeps its own 16:9 shape and is scaled up evenly until it covers the stage, centred (same centre-crop as before, never stretched).
+   Stage layers, bottom to top: background video (0) -> optional dark shade (1) -> game canvas (2) -> About panel (5).
    The video and shade never receive pointer events, so taps always reach the canvas or the About panel. */
 .stage{position:relative;isolation:isolate;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#101b31;aspect-ratio:420/700;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
-.bg-video{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;pointer-events:none;opacity:0;background:transparent}
+.bg-video{position:absolute;top:50%;left:50%;z-index:0;width:auto;height:auto;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;pointer-events:none;opacity:0;background:transparent}
 .bg-shade{position:absolute;inset:0;z-index:1;display:none;background:rgba(5,9,26,.18);pointer-events:none}
 .stage.has-video .bg-video{opacity:1}
 .stage.has-video .bg-shade{display:block}
@@ -98,6 +99,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   'use strict';
   const W = 420, H = 700, FLOOR = 632;
   const PIPE_W = 76, CAP_H = 19, COIN_R = 11.5;
+  const PIPE_SPACING = 243;   // distance from one pipe's left edge to the next (pipes spawn at W+8 once the last one passes W-235)
   // Physics runs in fixed 1/60 s steps (the same step the original tuning was made at); rendering interpolates between steps.
   const FIXED_STEP = 1 / 60, MAX_FRAME = 0.1, MAX_STEPS = 6;
   const MAX_RENDER_SCALE = 1.5;
@@ -221,7 +223,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let state = 'ready';
   let score = 0, elapsed = 0, prevElapsed = 0, visualTime = 0, groundOffset = 0, prevGround = 0, lastTime = 0, overAt = 0, deathAnim = 0;
   let updateAccumulator = 0, renderAlpha = 1, loopStarted = false;
-  let pipesUntilCoins = 0;
+  let pipesUntilCoins = 0, nextCenter = null;
   const bird = { x: 126, y: 318, py: 318, vy: 0, angle: 0, pangle: 0, radius: 27 };
   let pipes = [];
   let lastGapY = 350;
@@ -308,23 +310,31 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
   function reset() {
     for (const track of Object.values(effectTracks)) { try { track.pause(); track.currentTime = 0; } catch (_) {} }
-    score = 0; coinsRun = 0; coinParticles = []; deathAnim = 0; elapsed = 0; groundOffset = 0; pipes = []; lastGapY = 350;
+    score = 0; coinsRun = 0; coinParticles = []; deathAnim = 0; elapsed = 0; groundOffset = 0; pipes = []; lastGapY = 350; nextCenter = null;
     pipesUntilCoins = 0; updateAccumulator = 0; renderAlpha = 1;
     bird.y = 318; bird.vy = 0; bird.angle = 0;
     pipes.push(makePipe(W + 40));
     syncPrev();
     state = 'ready'; staticFrameDrawn = false; updateLabel();
   }
-  function makePipe(x) {
-    const gap = currentGap();
+  function rollCenter(gap) {
     const min = 205 + gap/2, max = FLOOR - 75 - gap/2;
     const drift = (Math.random() * 2 - 1) * 82;
     const center = Math.max(min, Math.min(max, lastGapY + drift));
     lastGapY = center;
-    return { x, px: x, center, gap, passed: false, coins: null };
+    return center;
+  }
+  function makePipe(x) {
+    const gap = currentGap();
+    // The following pipe's gap height is decided one pipe early, so coins on the route between the two can follow the real path.
+    // (The gap only ever shrinks as score rises, so a centre chosen now stays valid for the later, smaller gap.)
+    const center = nextCenter !== null ? nextCenter : rollCenter(gap);
+    nextCenter = rollCenter(gap);
+    return { x, px: x, center, gap, passed: false, coins: null, nextCenter };
   }
   // Coins belong to the pipe they were created for, so they scroll with it and are positioned from its real gap coordinates.
-  function addCoinFormation(p) {
+  // Formation A: 3 coins in the pipe's own opening. Formation B: 4 coins along the route from this gap to the next one.
+  function addGapFormation(p) {
     const gapTop = p.center - p.gap / 2, gapBottom = p.center + p.gap / 2;
     const margin = COIN_R + 19;                    // coin edge stays ~17px clear of both pipe lips
     const half = p.gap / 2 - margin;
@@ -343,11 +353,29 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     p.coins = coins;
     return true;
   }
+  function addRouteFormation(p) {
+    if (p.nextCenter == null) return false;
+    const bump = Math.random() < .5 ? 0 : 14;      // straight run along the route, or a gentle arc above it
+    const coins = [];
+    for (let i = 0; i < 4; i++) {
+      const dx = 114 + i * 30;                     // 114..204: >=26px clear of this pipe and >=24px clear of the next (spacing 240-243)
+      const t = (dx - PIPE_W / 2) / PIPE_SPACING;  // 0 at this gap's centre, 1 at the next gap's centre
+      const y = p.center + (p.nextCenter - p.center) * t - bump * Math.sin(Math.PI * (i + .5) / 4);
+      const safe = y - COIN_R > 40 && y + COIN_R < FLOOR - 30 && dx - COIN_R >= PIPE_W + 20 && dx + COIN_R <= PIPE_SPACING - 3.6 - 20;
+      if (!safe) return false;
+      coins.push({ dx, y, collected: false, spinSeed: Math.random() * Math.PI * 2 });
+    }
+    p.coins = coins;
+    return true;
+  }
   function spawnPipe(x) {
     const p = makePipe(x);
-    // Formations are intentionally sparse: one every two or three pipes.
+    // Formations are intentionally sparse: one every two or three pipes, mostly on the route between pipes.
     if (pipesUntilCoins > 0) pipesUntilCoins--;
-    else if (addCoinFormation(p)) pipesUntilCoins = 1 + Math.floor(Math.random() * 2);
+    else {
+      const route = Math.random() < .65;
+      if ((route ? addRouteFormation(p) : addGapFormation(p)) || (route ? addGapFormation(p) : addRouteFormation(p))) pipesUntilCoins = 1 + Math.floor(Math.random() * 2);
+    }
     return p;
   }
   function currentGap() { return Math.max(158, 190 - Math.min(score, 25) * 1.15); }
@@ -690,7 +718,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       p.x -= speed*dt;
       const top = p.center-p.gap/2, bottom=p.center+p.gap/2;
       if (!p.passed && p.x+PIPE_W < bird.x) { p.passed=true; score++; if(score>best){best=score; safeStore.set('fattyBirdBest',best);} playScore(); }
-      if (hitRectCircle(bird.x,bird.y,bird.radius,p.x,0,PIPE_W,top) || hitRectCircle(bird.x,bird.y,bird.radius,p.x,bottom,FLOOR-bottom)) { endFlight(); break; }
+      if (hitRectCircle(bird.x,bird.y,bird.radius,p.x,0,PIPE_W,top) || hitRectCircle(bird.x,bird.y,bird.radius,p.x,bottom,PIPE_W,FLOOR-bottom)) { endFlight(); break; }
       if (p.coins) {
         for (const coin of p.coins) {
           if (coin.collected) continue;
@@ -705,7 +733,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       part.x += part.vx*dt; part.y += part.vy*dt; part.vy += 80*dt; part.life -= dt;
       if (part.life <= 0) coinParticles.splice(i, 1);
     }
-    while (pipes.length && pipes[0].x <= -100) pipes.shift();
+    while (pipes.length && pipes[0].x <= -260) pipes.shift();   // route coins sit up to ~215px right of their pipe
     if (!pipes.length || pipes[pipes.length-1].x < W-235) pipes.push(spawnPipe(W+8));
     if (bird.y-bird.radius<0 || bird.y+bird.radius>FLOOR) endFlight();
   }
