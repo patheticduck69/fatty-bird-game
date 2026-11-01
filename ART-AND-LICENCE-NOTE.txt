@@ -1,0 +1,5 @@
+ART / LICENCE NOTE
+
+The guide illustrations were extracted from the artwork PDF supplied by the user and composited with the game's own original character sprites. The new cave/skill icons are custom pixel-art assets made for this update. No third-party character sprites were copied into the release.
+
+A public CC0 pixel-platformer pack by Kenney was reviewed as a visual/reference option only; it was not bundled as a third-party asset source in this update. Official asset page: https://kenney.nl/assets/pixel-platformer (the page identifies the pack as CC0). Optional secondary CC0 pack: https://kenney.nl/assets/pixel-platformer-blocks.
