@@ -43,8 +43,8 @@ body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-
 .stage:fullscreen .stage-board canvas, .stage:-webkit-full-screen .stage-board canvas{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none;margin:0;aspect-ratio:420/700}
 @media(orientation:landscape) and (max-height:520px){.stage:fullscreen .stage-board,.stage:-webkit-full-screen .stage-board{width:min(100%,60dvh);height:min(100%,166.6667vw)}}
 
-/* Double-buffered background videos */
-.bg-video{position:absolute;top:50%;left:50%;z-index:0;width:auto;height:auto;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;pointer-events:none;opacity:0;transition:opacity 0.85s ease-in-out;background:transparent}
+/* Double-buffered background media (MP4 + animated GIF) */
+.bg-video,.bg-image{position:absolute;top:50%;left:50%;z-index:0;width:auto;height:auto;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;pointer-events:none;opacity:0;transition:opacity 0.85s ease-in-out;background:transparent}
 .bg-video.is-active{opacity:1}
 .bg-shade{position:absolute;inset:0;z-index:1;background:rgba(5,9,26,.18);pointer-events:none}
 
@@ -322,7 +322,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const ROYAL_BEAT_FRACTION = 0.8;            // Royal Double Beat = 80% of a normal flap
   const SHIELD_DURATION = 14.0;               // Main Shield, exactly 14 s
   const SHIELD_BREAKS_ON_HIT = false;         // false: shield absorbs hits for its full 14 s; true: pops after one hit
-  const GLIDE_GRAVITY_MULT = 0.12, GLIDE_MAX_FALL = 85, GLIDE_DURATION = 8.0; // Sky Glide
+  const GLIDE_TARGET_FALL = 40, GLIDE_DURATION = 8.0; // Sky Glide: steady parachute descent at 40 px/s
   const TELEPORT_FORWARD_DISTANCE = 270;      // px of real world displacement (was 135); single place to tune
   const TELEPORT_ARRIVAL_SHIELD = 5.0;        // separate 5 s shield after a teleport
   let collisionDebugActive = false; // developer-only collision outline, toggled with the H key
@@ -474,12 +474,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       iconEmoji: '🪂',
       abilityName: 'Sky Glide',
       description: 'Sky-blue round body with long pointed tail and swept wings.',
-      abilityDesc: 'Parachute glide: cancels strong upward drift and slows descent for 8.0s. (24s CD)',
+      abilityDesc: 'Parachute glide: holds a gentle, steady 40 px/s descent for 8.0s. (25s CD)',
       previewSrc: 'assets/characters/blueberry-blimp/preview.png',
       bodySrc: 'assets/characters/blueberry-blimp/body.png',
       wingLeftSrc: 'assets/characters/blueberry-blimp/wing-left.png',
       wingRightSrc: 'assets/characters/blueberry-blimp/wing-right.png',
-      cooldown: 24,
+      cooldown: 25,
       duration: 8.0,
       collision: { headR: 27, bodyR: 31, tailOffset: -42, tailR: 15 }
     },
@@ -642,64 +642,224 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   document.addEventListener('fullscreenchange', () => { queueResize(); updateFullscreenButton(); });
   document.addEventListener('webkitfullscreenchange', () => { queueResize(); updateFullscreenButton(); });
 
-  /* ---------- Double-Buffered Background Videos & Dynamic Manifest ---------- */
+  /* ---------- Double-Buffered Background Media (MP4 + animated GIF) ---------- */
   let BG_CLIPS = [
     { id: "night-city", name: "Night City", src: "assets/backgrounds/night-city.mp4", playsPerClip: 2 },
+    { id: "railway-station", name: "Railway Station", src: "assets/backgrounds/Railway_station_game_background_4c4de770.gif", type: "gif", playsPerClip: 2 },
     { id: "washroom", name: "Washroom", src: "assets/backgrounds/washroom.mp4", playsPerClip: 2 },
+    { id: "camera-racing-exploding", name: "Camera Racing Through Exploding Scene", src: "assets/backgrounds/Camera_racing_through_exploding_…_128e91d1.gif", type: "gif", playsPerClip: 2 },
     { id: "gb-road-city", name: "G. B. Road / Sonagachi City", src: "assets/backgrounds/gb-road-city.mp4", playsPerClip: 2 },
+    { id: "inshot-animation", name: "InShot Animation", src: "assets/backgrounds/InShot_20261101_163109258.gif", type: "gif", playsPerClip: 2 },
     { id: "stadium", name: "Stadium", src: "assets/backgrounds/stadium.mp4", playsPerClip: 2 }
   ];
 
   let bgIndex = 0, bgLoops = 0;
   const bgVideoA = document.getElementById('bgVideoA');
   const bgVideoB = document.getElementById('bgVideoB');
-  let activeBgVideo = bgVideoA;
-  let standbyBgVideo = bgVideoB;
-  const bgFailed = new Set();          // clip indexes that failed to load: never retried, always skipped
-  let standbyIndex = -1;               // which clip the standby element holds (or is loading)
-  let crossfading = false, waitingForStandby = false, bgFadeTimer = 0;
-  const BG_EARLY_FADE_S = 0.9;         // start the fade this long before the last play ends, so both clips are moving
+  function makeBgSlot(video) {
+    return { video, image: null, element: video, kind: 'video', clipIndex: -1, ready: false, gifDurationMs: 0 };
+  }
+  const bgSlots = [makeBgSlot(bgVideoA), makeBgSlot(bgVideoB)];
+  let activeBgSlot = bgSlots[0];
+  let standbyBgSlot = bgSlots[1];
+  const bgFailed = new Set();
+  let standbyIndex = -1;
+  let crossfading = false, waitingForStandby = false, bgFadeTimer = 0, gifAdvanceTimer = 0;
+  const BG_EARLY_FADE_S = 0.9;
+  const gifDurationCache = new Map();
 
   function bgMayPlay() { return state !== 'paused' && !document.hidden; }
   function clipPlays() { return (BG_CLIPS[bgIndex] && BG_CLIPS[bgIndex].playsPerClip) || 2; }
+  function clipIsGif(clip) { return clip.type === 'gif' || /\.gif(?:$|[?#])/i.test(clip.src || ''); }
   function nextPlayableIndex() {
     for (let i = 1; i < BG_CLIPS.length; i++) {
       const idx = (bgIndex + i) % BG_CLIPS.length;
       if (!bgFailed.has(idx)) return idx;
     }
-    return -1;                                       // nothing else usable: keep looping the current clip
+    return -1;
   }
-  // Only the NEXT clip is loaded, into the hidden element; the visible clip keeps playing meanwhile.
+  function clearBgSlot(slot) {
+    try { slot.video.pause(); slot.video.removeAttribute('src'); slot.video.load(); } catch (_) {}
+    slot.video.classList.remove('is-active');
+    if (slot.image) {
+      slot.image.onload = null; slot.image.onerror = null;
+      slot.image.classList.remove('is-active');
+      slot.image.removeAttribute('src');
+    }
+    slot.element = slot.video; slot.kind = 'video'; slot.clipIndex = -1;
+    slot.ready = false; slot.gifDurationMs = 0;
+  }
+  function parseGifDurationMs(buffer) {
+    const b = new Uint8Array(buffer);
+    if (b.length < 13 || String.fromCharCode(...b.slice(0, 3)) !== 'GIF') return 0;
+    let i = 6, total = 0, pendingDelay = 0, frames = 0;
+    const packed = b[i + 4]; i += 7;
+    if (packed & 0x80) i += 3 * (1 << ((packed & 7) + 1));
+    const skipBlocks = () => {
+      while (i < b.length) { const n = b[i++]; if (!n) break; i += n; }
+    };
+    while (i < b.length) {
+      const marker = b[i++];
+      if (marker === 0x3B) break;
+      if (marker === 0x21) {
+        const label = b[i++];
+        if (label === 0xF9) {
+          const size = b[i++];
+          if (size >= 4 && i + size <= b.length) pendingDelay = ((b[i + 2] << 8) | b[i + 1]) * 10;
+          i += size; if (b[i] === 0) i++;
+        } else {
+          skipBlocks();
+        }
+      } else if (marker === 0x2C) {
+        if (i + 9 > b.length) break;
+        const imagePacked = b[i + 8]; i += 9;
+        if (imagePacked & 0x80) i += 3 * (1 << ((imagePacked & 7) + 1));
+        i++; // LZW minimum code size
+        skipBlocks();
+        total += pendingDelay > 0 ? pendingDelay : 100;
+        pendingDelay = 0; frames++;
+      } else {
+        break;
+      }
+    }
+    return frames ? total : 0;
+  }
+  function getGifDurationMs(clip) {
+    if (clip.durationMs > 0) return Promise.resolve(clip.durationMs);
+    if (gifDurationCache.has(clip.src)) return gifDurationCache.get(clip.src);
+    const promise = fetch(clip.src, { cache: 'force-cache' })
+      .then(r => { if (!r.ok) throw new Error('GIF duration fetch failed'); return r.arrayBuffer(); })
+      .then(parseGifDurationMs)
+      .then(ms => ms > 0 ? ms : (clip.fallbackDurationMs || 10000))
+      .catch(() => clip.fallbackDurationMs || 10000);
+    gifDurationCache.set(clip.src, promise);
+    return promise;
+  }
+  function handleSlotReady(slot) {
+    slot.ready = true;
+    if (slot === activeBgSlot) {
+      if (!crossfading) { playBackgrounds(); prepareStandby(); }
+      if (slot.kind === 'gif') scheduleGifAdvance(slot);
+    } else if (slot === standbyBgSlot && waitingForStandby) {
+      crossfadeToStandby();
+    }
+  }
+  function setupBgSlot(slot, idx) {
+    clearBgSlot(slot);
+    const clip = BG_CLIPS[idx];
+    slot.clipIndex = idx;
+    if (clipIsGif(clip)) {
+      if (!slot.image) {
+        slot.image = document.createElement('img');
+        slot.image.className = 'bg-video bg-image';
+        slot.image.alt = ''; slot.image.draggable = false;
+        slot.image.setAttribute('aria-hidden', 'true');
+        stageBoard.appendChild(slot.image);
+      }
+      slot.kind = 'gif'; slot.element = slot.image;
+      slot.image.onload = () => { if (slot.clipIndex === idx) handleSlotReady(slot); };
+      slot.image.onerror = () => { if (slot.clipIndex === idx) handleSlotError(slot); };
+      slot.image.src = clip.src;
+      getGifDurationMs(clip).then(ms => {
+        if (slot.clipIndex === idx) { slot.gifDurationMs = ms; if (slot === activeBgSlot && slot.ready) scheduleGifAdvance(slot); }
+      });
+      if (slot.image.complete && slot.image.naturalWidth > 0) handleSlotReady(slot);
+    } else {
+      slot.kind = 'video'; slot.element = slot.video;
+      slot.video.src = clip.src;
+      slot.video.load();
+    }
+  }
   function prepareStandby() {
     if (crossfading) return;
     const idx = nextPlayableIndex();
     if (idx < 0 || standbyIndex === idx) return;
     standbyIndex = idx;
-    standbyBgVideo.src = BG_CLIPS[idx].src;
-    standbyBgVideo.load();
+    setupBgSlot(standbyBgSlot, idx);
   }
-  function standbyReady() { return standbyIndex >= 0 && !bgFailed.has(standbyIndex) && standbyBgVideo.readyState >= 2; }
-
+  function standbyReady() { return standbyIndex >= 0 && !bgFailed.has(standbyIndex) && standbyBgSlot.ready; }
   function crossfadeToStandby() {
     if (crossfading || !standbyReady()) return false;
     crossfading = true; waitingForStandby = false;
-    const outgoing = activeBgVideo, incoming = standbyBgVideo;
-    try { incoming.currentTime = 0; incoming.playbackRate = 1; } catch (_) {}
-    const reveal = () => { incoming.classList.add('is-active'); outgoing.classList.remove('is-active'); };
-    // The incoming clip already has a decoded frame (readyState >= 2), so revealing it never shows an empty frame.
-    if (bgMayPlay()) { const pr = incoming.play(); if (pr && pr.catch) pr.catch(() => {}); }
-    reveal();
+    clearTimeout(gifAdvanceTimer);
+    const outgoing = activeBgSlot, incoming = standbyBgSlot;
+    if (incoming.kind === 'video') {
+      try { incoming.video.currentTime = 0; incoming.video.playbackRate = 1; } catch (_) {}
+      if (bgMayPlay()) { const pr = incoming.video.play(); if (pr && pr.catch) pr.catch(() => {}); }
+    }
+    incoming.element.classList.add('is-active');
+    outgoing.element.classList.remove('is-active');
     bgIndex = standbyIndex; bgLoops = 0; standbyIndex = -1;
-    activeBgVideo = incoming; standbyBgVideo = outgoing;
+    activeBgSlot = incoming; standbyBgSlot = outgoing;
     clearTimeout(bgFadeTimer);
-    bgFadeTimer = setTimeout(() => {                 // after the CSS fade (0.85 s): release the old clip, then prepare the next
+    bgFadeTimer = setTimeout(() => {
       crossfading = false;
-      try { outgoing.pause(); outgoing.removeAttribute('src'); outgoing.load(); } catch (_) {}
+      clearBgSlot(outgoing);
       prepareStandby();
+      if (activeBgSlot.kind === 'gif') scheduleGifAdvance(activeBgSlot);
     }, 1000);
     return true;
   }
-
+  function scheduleGifAdvance(slot) {
+    clearTimeout(gifAdvanceTimer);
+    if (slot !== activeBgSlot || slot.kind !== 'gif' || crossfading) return;
+    const clip = BG_CLIPS[bgIndex];
+    const durationPromise = slot.gifDurationMs ? Promise.resolve(slot.gifDurationMs) : getGifDurationMs(clip);
+    durationPromise.then(duration => {
+      if (slot !== activeBgSlot || slot.kind !== 'gif' || crossfading) return;
+      const totalMs = Math.max(500, duration * clipPlays());
+      const waitMs = Math.max(200, totalMs - 900);
+      gifAdvanceTimer = setTimeout(function tryGifAdvance() {
+        if (slot !== activeBgSlot || slot.kind !== 'gif') return;
+        if (!bgMayPlay()) { gifAdvanceTimer = setTimeout(tryGifAdvance, 500); return; }
+        if (!crossfadeToStandby()) {
+          if (nextPlayableIndex() < 0) { bgLoops = 0; scheduleGifAdvance(slot); }
+          else gifAdvanceTimer = setTimeout(tryGifAdvance, 300);
+        }
+      }, waitMs);
+    });
+  }
+  function handleVideoEnded(video) {
+    const slot = bgSlots.find(s => s.video === video);
+    if (slot !== activeBgSlot || crossfading) return;
+    bgLoops++;
+    if (bgLoops < clipPlays()) {
+      try { video.currentTime = 0; if (bgMayPlay()) video.play().catch(() => {}); } catch (_) {}
+      return;
+    }
+    if (!crossfadeToStandby()) {
+      if (nextPlayableIndex() < 0) { bgLoops = 0; try { video.currentTime = 0; if (bgMayPlay()) video.play().catch(() => {}); } catch (_) {} }
+      else { waitingForStandby = true; prepareStandby(); }
+    }
+  }
+  function handleVideoTime(video) {
+    const slot = bgSlots.find(s => s.video === video);
+    if (slot !== activeBgSlot || slot.kind !== 'video' || crossfading || !bgMayPlay()) return;
+    if (bgLoops < clipPlays() - 1 || !video.duration) return;
+    if (video.duration - video.currentTime <= BG_EARLY_FADE_S) crossfadeToStandby();
+  }
+  function handleSlotError(slot) {
+    const failedIndex = slot.clipIndex;
+    if (failedIndex < 0) return;
+    bgFailed.add(failedIndex);
+    if (slot === standbyBgSlot) {
+      standbyIndex = -1; clearBgSlot(slot); prepareStandby();
+      if (waitingForStandby && nextPlayableIndex() < 0) {
+        waitingForStandby = false; bgLoops = 0;
+        if (activeBgSlot.kind === 'video') { try { activeBgSlot.video.currentTime = 0; playBackgrounds(); } catch (_) {} }
+        else scheduleGifAdvance(activeBgSlot);
+      }
+    } else if (slot === activeBgSlot && !crossfading) {
+      clearTimeout(gifAdvanceTimer);
+      if (!crossfadeToStandby()) { waitingForStandby = true; prepareStandby(); }
+    }
+  }
+  bgSlots.forEach(slot => {
+    slot.video.addEventListener('ended', () => handleVideoEnded(slot.video));
+    slot.video.addEventListener('timeupdate', () => handleVideoTime(slot.video));
+    slot.video.addEventListener('loadeddata', () => handleSlotReady(slot));
+    slot.video.addEventListener('error', () => { if (slot.kind === 'video' && slot.clipIndex >= 0) handleSlotError(slot); });
+  });
   function loadBackgroundManifest() {
     fetch('assets/backgrounds/backgrounds.json')
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
@@ -715,63 +875,26 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
   function initBackgrounds() {
     if (!BG_CLIPS.length) return;
-    bgIndex = 0; bgLoops = 0;
-    activeBgVideo.src = BG_CLIPS[0].src;
-    activeBgVideo.load();
-    activeBgVideo.classList.add('is-active');
-    activeBgVideo.playbackRate = 1;
-    standbyBgVideo.classList.remove('is-active');
+    bgIndex = 0; bgLoops = 0; bgFailed.clear();
+    activeBgSlot = bgSlots[0]; standbyBgSlot = bgSlots[1];
+    setupBgSlot(activeBgSlot, 0);
+    activeBgSlot.element.classList.add('is-active');
+    standbyBgSlot.element.classList.remove('is-active');
+    prepareStandby();
   }
-
-  function handleVideoEnded(video) {
-    if (video !== activeBgVideo || crossfading) return;
-    bgLoops++;
-    if (bgLoops < clipPlays()) {
-      try { video.currentTime = 0; if (bgMayPlay()) video.play().catch(() => {}); } catch (_) {}
-      return;
-    }
-    // Last play finished. If the next clip is not ready yet the last frame simply stays on screen (never black).
-    if (!crossfadeToStandby()) {
-      if (nextPlayableIndex() < 0) { bgLoops = 0; try { video.currentTime = 0; if (bgMayPlay()) video.play().catch(() => {}); } catch (_) {} }
-      else { waitingForStandby = true; prepareStandby(); }
-    }
-  }
-  function handleVideoTime(video) {
-    if (video !== activeBgVideo || crossfading || !bgMayPlay()) return;
-    if (bgLoops < clipPlays() - 1 || !video.duration) return;
-    if (video.duration - video.currentTime <= BG_EARLY_FADE_S) crossfadeToStandby();
-  }
-  function handleVideoReady(video) {
-    if (video === activeBgVideo) { if (!crossfading) { playBackgrounds(); prepareStandby(); } }
-    else if (video === standbyBgVideo && waitingForStandby) crossfadeToStandby();
-  }
-  function handleVideoError(video) {
-    if (video === standbyBgVideo && standbyIndex >= 0) {
-      bgFailed.add(standbyIndex); standbyIndex = -1;
-      prepareStandby();
-      if (waitingForStandby && nextPlayableIndex() < 0) { waitingForStandby = false; bgLoops = 0; try { activeBgVideo.currentTime = 0; playBackgrounds(); } catch (_) {} }
-    } else if (video === activeBgVideo && !crossfading && video.getAttribute('src')) {
-      bgFailed.add(bgIndex);
-      if (!crossfadeToStandby()) { waitingForStandby = true; prepareStandby(); }   // current clip unusable: move on, never reload it
-    }
-  }
-  [bgVideoA, bgVideoB].forEach(v => {
-    v.addEventListener('ended', () => handleVideoEnded(v));
-    v.addEventListener('timeupdate', () => handleVideoTime(v));
-    v.addEventListener('loadeddata', () => handleVideoReady(v));
-    v.addEventListener('error', () => handleVideoError(v));
-  });
-
   function playBackgrounds() {
     if (!bgMayPlay()) return;
-    try { activeBgVideo.playbackRate = 1; } catch (_) {}
-    const p = activeBgVideo.paused || activeBgVideo.ended ? activeBgVideo.play() : null;
-    if (p && p.catch) p.catch(() => {});
-    if (crossfading) { const q = standbyBgVideo.play(); if (q && q.catch) q.catch(() => {}); }
+    if (activeBgSlot.kind === 'video') {
+      try { activeBgSlot.video.playbackRate = 1; } catch (_) {}
+      const p = activeBgSlot.video.paused || activeBgSlot.video.ended ? activeBgSlot.video.play() : null;
+      if (p && p.catch) p.catch(() => {});
+    }
+    if (crossfading && standbyBgSlot.kind === 'video') {
+      const q = standbyBgSlot.video.play(); if (q && q.catch) q.catch(() => {});
+    }
   }
   function pauseBackgrounds() {
-    activeBgVideo.pause();
-    standbyBgVideo.pause();
+    bgSlots.forEach(slot => { try { slot.video.pause(); } catch (_) {} });
   }
 
   /* ---------- Audio Setup ---------- */
@@ -1257,9 +1380,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       createAbilityBurst('#ffd166', bird.x, bird.y, 16);
       showToast('Feather Pulse Lift!');
     } else if (char.id === 'blueberry-blimp') {
-      // Sky Glide is a parachute/controlled descent, not an upward boost.
-      // Remove strong upward momentum and soften a fast fall at activation; normal gravity/collisions remain active.
-      bird.vy = Math.max(-18, Math.min(bird.vy, 35));
+      // Sky Glide is a true parachute hold: cancel vertical momentum and begin a gentle downward drift.
+      // It never launches the bird upward. While active, vertical speed is held at 40 px/s.
+      bird.vy = GLIDE_TARGET_FALL;
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
       abilityActiveTimer = char.duration;
       tone(480, .12, 'sine', .05);
@@ -2552,10 +2675,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     groundOffset = (groundOffset + speed*dt) % 34;
 
     const isGliding = (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0);
-    let gravity = isGliding ? 1280 * GLIDE_GRAVITY_MULT : 1280;
-    let maxFallSpeed = isGliding ? GLIDE_MAX_FALL : 650;
-
-    bird.vy = Math.min(maxFallSpeed, bird.vy + gravity * dt);
+    if (isGliding) {
+      // Parachute mode gently carries the bird downward at a near-constant rate.
+      // This replaces gravity during the 8-second ability and prevents upward launch or a fast fall.
+      bird.vy = GLIDE_TARGET_FALL;
+    } else {
+      bird.vy = Math.min(650, bird.vy + 1280 * dt);
+    }
     bird.y += bird.vy * dt;
     const targetAngle = Math.max(-.48, Math.min(1.08, bird.vy / 850));
     bird.angle += (targetAngle - bird.angle) * Math.min(1, dt * 13);
