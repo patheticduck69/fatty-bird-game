@@ -1,54 +1,208 @@
-# FATTY BIRD — GitHub Pages project
+# 🐦 FATTY BIRD
 
-A mobile-friendly Flappy-style arcade game built with HTML5 Canvas and JavaScript. It runs as a static website: no framework, build step, server, sign-in, tracker or external game service is needed.
+### A browser-based arcade flight game built around skill, timing, and changing hazards.
 
-## Quick start
+**Fly smart. React fast. Master every ability. Survive the unexpected.**
 
-1. Extract `Fatty_Bird_GitHub_Pages.zip`.
-2. Keep the structure unchanged: `index.html` must sit beside the `assets` folder.
-3. All three audio files are already included in `assets/audio/`; no renaming or additional download is required.
-4. Open `index.html` in Chrome to test locally, or publish the project through GitHub Pages.
+Fatty Bird combines six playable birds, character-specific abilities,
+unlockable progression, changing obstacle patterns, and a dedicated Cave
+Zone.
 
-## Controls
+**Play:** https://patheticduck69.github.io/fatty-bird-game/\
+**Repository:** https://github.com/patheticduck69/fatty-bird-game
 
-- Tap / click: start or flap.
-- Space / Arrow Up: start or flap on keyboard.
-- Pause: pause / resume.
-- Audio: toggle the one menu-music track and the two event sounds.
-- About: opens the fictional-purpose disclaimer.
+------------------------------------------------------------------------
 
-## Audio map
+## What makes Fatty Bird stand out
 
-| File | Role | Timing |
-|---|---|---|
-| `assets/audio/menu-music.mp3` | The one existing BGM track from the previous build; already included | Loops on the menu and during flight. Attempts autoplay on page load; if blocked, retries on the first user gesture. Pauses on pause/game-over and resumes on retry/home. |
-| `assets/audio/gopgopgop (mp3cut.net).mp3` | Coin pickup SFX | Plays once for each collected coin. |
-| `assets/audio/annoy rec gali (mp3cut.net).mp3` | Collision/game-over SFX | Plays once immediately after collision, during the drowsy reaction. |
+The latest release brings together a set of mechanics designed to make
+each run more than a repeated obstacle-dodging challenge:
 
-All three MP3 files are physically included in this project. Nothing is fetched from Google Drive or another online music source during gameplay. If you replace a sound later, keep its filename and folder path unchanged; see `AUDIO-SETUP.md`.
+-   Three sustained abilities---Sky Glide, Shadow Phase, and Time
+    Warp---can be manually cancelled with a second tap.
+-   A progression-based Cave Zone with variable ceiling and floor
+    formations.
+-   Safe corridors, warning cues, and reaction windows for major
+    hazards.
+-   Cave coin trails, bombs, and pressure-plate-triggered falling cage
+    traps.
+-   A pipe-retraction event that warns players before pipe pairs
+    retract; the rotor remains hazardous.
+-   A redesigned defeat effect using two red pixel crosses aligned with
+    the bird's eyes.
+-   A built-in, illustrated 12-slide Help & Skill Guide.
+-   New obstacle artwork, guide illustrations, and additional animated
+    backgrounds.
 
-## GitHub Pages publishing
+The ambition is not to claim that no other game has any one of these
+features. It is to bring this particular combination of mechanics,
+visual feedback, and learning tools into one lightweight browser game.
 
-1. Create a new repository on GitHub.
-2. Extract the ZIP on your phone or computer.
-3. Upload the **contents** of the extracted project to the repository root, not the ZIP itself. The root should contain `index.html`, `README.md`, `AUDIO-SETUP.md`, `CREDITS.md`, `.nojekyll` and the `assets` folder.
-4. Open **Settings → Pages**.
-5. Under **Build and deployment**, select **Deploy from a branch**.
-6. Select the `main` branch and `/ (root)`, then Save.
-7. Open the Pages URL shown by GitHub.
+## Meet the birds
 
-All game assets use relative paths, so GitHub Pages serves the HTML, videos, image assets and audio from the same project. No Drive URLs or separate hosting links are required.
+  -----------------------------------------------------------------------
+  Bird                                Ability / trait
+  ----------------------------------- -----------------------------------
+  **Original Fatty**                  Pulse Lift --- a quick upward boost
 
-## Gameplay and animation
+  **Blueberry Blimp**                 Sky Glide --- sustained
+                                      parachute-style descent control
 
-- Previous flight feel preserved: original flap impulse, gravity, obstacle speed curve and smoothed bird pitch are retained.
-- Main bird artwork is approximately 10% smaller in flight, with a reduced hitbox to make collisions fairer.
-- Feather layers animate behind the unchanged face/body artwork. This is a visual wing-flap effect; it does not alter flight physics.
-- A brief white-eyed, wobbling, drowsy reaction appears after a collision before the results panel.
-- Coins spawn in short waves along the flight route, with gaps between waves; they are not restricted to pipe gaps.
-- Run coins and the total coin wallet are saved locally in the browser.
-- Background order: Night City → Washroom → G. B. Road / Sonagachi City → Stadium. Each MP4 plays twice before the next scene. Background playback speed increases with game difficulty.
+  **Chili Puff**                      Ember Burst, with passive arrow
+                                      immunity
 
-## Disclaimer
+  **Mint Mochi**                      Mint Bubble --- a timed protective
+                                      shield
 
-The About screen describes the game's fictional and satirical entertainment purpose. A disclaimer cannot guarantee immunity from legal claims; content and context still matter. Avoid presenting false factual allegations about identifiable people.
+  **Midnight Dumpling**               Shadow Phase --- a sustained phase
+                                      ability
+
+  **Royal Roast**                     Time Warp, plus one extra life per
+                                      run
+  -----------------------------------------------------------------------
+
+### Ability rules
+
+-   **Sky Glide, Shadow Phase, and Time Warp:** tap again to cancel
+    early. Early cancellation does not refund the cooldown.
+-   **Mint Bubble:** remains active for its timed duration; a second tap
+    does not switch it off.
+-   **Pulse Lift and Ember Burst:** instant abilities, not sustained
+    toggles.
+-   **Royal Roast's extra life:** passive run benefit.
+
+Different ability types have deliberately different rules, so players
+can understand which effects are cancellable and which run their full
+duration.
+
+## The Cave Zone
+
+The Cave Zone changes the rhythm of a run. Players navigate
+variable-length formations with shifting ceiling and floor obstacles
+rather than relying only on familiar pipe gaps.
+
+It includes:
+
+-   Variable ceiling and floor formations with a safe passage.
+-   Coin trails that create optional risk-and-reward decisions.
+-   Bomb hazards.
+-   Pressure plates that trigger falling cage traps.
+-   Warning cues and a dodge window before a cage falls.
+-   A controlled cave-entry transition that waits for active projectiles
+    and special hazards to clear while preserving a safe entry band.
+
+Balloons are disabled in the Cave Zone to keep its hazard design
+focused.
+
+## Dynamic pipe-retraction event
+
+An advance warning precedes the retraction of upcoming pipe pairs. The
+rotor remains a hazard, so the event changes the obstacle layout without
+turning the sequence into a free pass.
+
+## Updated defeat effect
+
+The revised death animation uses two red pixel crosses positioned over
+the bird's eye locations, replacing the earlier hazy-eye effect.
+
+## Illustrated Help & Skill Guide
+
+The release includes **12 illustrated slides** explaining controls,
+birds, abilities, cooldowns, manual cancellation, hazards, Cave Zone
+navigation, cave coins, bombs, pressure plates, falling cage traps,
+pipe-retraction events, and survival tips.
+
+The guide is built into the game interface so players can learn the
+mechanics while playing.
+
+## Backgrounds and visual assets
+
+The updated background manifest includes the existing MP4 backgrounds
+alongside three additional GIF backgrounds:
+
+-   `Railway_station_game_background_4c4de770.gif`
+-   `Camera_racing_through_exploding_scene_128e91d1.gif`
+-   `InShot_20261101_163109258.gif`
+
+The file names and letter case must match the manifest exactly.
+
+## Play
+
+Fatty Bird is published as a static browser game through GitHub Pages.
+
+**[▶ Play Fatty
+Bird](https://patheticduck69.github.io/fatty-bird-game/)**
+
+Open the in-game Help / Guide for explanations of the latest mechanics.
+
+## Repository update map
+
+The latest package is a **delta update**, not a complete repository
+replacement.
+
+  -------------------------------------------------------------------------------------------------------
+  Package content                         GitHub destination                      Action
+  --------------------------------------- --------------------------------------- -----------------------
+  `index.html`                            `/index.html`                           Replace existing file
+
+  `assets/backgrounds/backgrounds.json`   `assets/backgrounds/backgrounds.json`   Replace existing
+                                                                                  manifest
+
+  18 obstacle PNG files                   `assets/obstacles/`                     Add the new files
+
+  12 guide PNG files                      `assets/ui/guide/`                      Create folder if
+                                                                                  needed, then add files
+
+  3 GIF backgrounds                       `assets/backgrounds/`                   Add the files
+  -------------------------------------------------------------------------------------------------------
+
+**Do not delete or replace the complete `assets/` directory.** Preserve
+existing character artwork, audio, MP4 background videos, and obstacle
+files unless a future release explicitly says otherwise. The original
+`pixel-arrow.png` and `sky-bomb.png` assets are not duplicated in the
+update package.
+
+## Design principles
+
+-   **Player agency:** sustained abilities can be cancelled where the
+    mechanic supports it.
+-   **Consistent rules:** passive, instant, timed, and toggleable
+    abilities behave differently by design.
+-   **Readable danger:** major hazards use warnings and reaction
+    opportunities.
+-   **Fair transitions:** Cave Zone entry should not place the player
+    directly into an uncleared projectile or special hazard.
+-   **Incremental updates:** new releases should not erase unrelated
+    assets.
+-   **Learnability:** the illustrated guide explains mechanics instead
+    of leaving players to guess.
+
+These are design and implementation goals, not a claim that the game is
+bug-free on every browser or device. Verify the deployed build on the
+target browser and device after each update.
+
+## Post-deployment checklist
+
+-   [ ] Game loads and the main menu works.
+-   [ ] Help / Guide opens and all 12 slides display.
+-   [ ] Previous / Next, page dots, and mobile swipe work.
+-   [ ] Blueberry can activate and cancel Sky Glide.
+-   [ ] Midnight can activate and cancel Shadow Phase.
+-   [ ] Royal Roast can activate and cancel Time Warp.
+-   [ ] Early cancellation does not refund cooldown.
+-   [ ] Mint Bubble remains active for its timed duration.
+-   [ ] Cave Zone appears during progression.
+-   [ ] Cave formations leave a safe route.
+-   [ ] Coins, bombs, pressure plates, and cage warnings behave
+    correctly.
+-   [ ] Cave entry waits for active hazards to clear.
+-   [ ] Pipe-retraction warning appears and the rotor remains hazardous.
+-   [ ] Updated defeat animation is visible.
+-   [ ] All three GIF backgrounds load.
+-   [ ] Existing characters, audio, MP4 backgrounds, and progression
+    remain intact.
+
+------------------------------------------------------------------------
+
+**Learn the pattern. Time the ability. Find the safe line. Keep
+flying.**
