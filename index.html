@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101d2b">
 <title>FATTY BIRD — Big Feathers. Bad Decisions.</title>
-<meta name="description" content="A self-contained arcade game with animated backgrounds, 6 unlockable Fatty Bird characters with special abilities, character store, bubble shield, pixel-art arrows, and offline audio.">
+<meta name="description" content="A pixel-art arcade bird game with six character abilities, illustrated skill guide, dynamic cave passages, bombs, coin routes and boss-like traps.">
 <meta property="og:title" content="FATTY BIRD — Big Feathers. Bad Decisions.">
 <meta property="og:description" content="A self-contained arcade game with animated backgrounds, 6 unlockable Fatty Bird characters with special abilities, character store, bubble shield, pixel-art arrows, and offline audio.">
 <meta property="og:type" content="website">
@@ -71,6 +71,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 @keyframes shieldPillPulse{from{box-shadow:0 0 8px rgba(140,230,203,.4)}to{box-shadow:0 0 16px rgba(140,230,203,.85)}}
 .shield-hud[hidden]{display:none}
 .shield-hud.arrival-hud{background:rgba(100,50,200,.88);border-color:#b08cff}
+.royal-soul-hud{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:10px;background:rgba(102,62,20,.92);border:1px solid #ffd166;color:#fff0ba;font-size:10px;font-weight:950;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.royal-soul-hud[hidden]{display:none}
+.royal-soul-hud img{width:18px;height:18px;image-rendering:pixelated}
 
 /* Store Modal Overlay */
 .store-overlay{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;background:rgba(6,10,24,.95);backdrop-filter:blur(8px);padding:14px 12px 12px;touch-action:pan-y;overflow-y:auto;pointer-events:auto}
@@ -122,6 +125,26 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 .about-card .about-credit{font-size:9px;color:#9faccb;padding-top:4px;border-top:1px solid rgba(255,255,255,.12)}
 .about-close{display:block;width:100%;min-height:43px;margin-top:12px;border:0;border-radius:13px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#29233a;font-size:11px;font-weight:1000;letter-spacing:.08em;cursor:pointer;touch-action:manipulation}
 
+.guide-overlay{position:absolute;inset:0;z-index:12;display:flex;align-items:stretch;justify-content:center;padding:8px;background:rgba(4,8,25,.93);backdrop-filter:blur(7px);pointer-events:auto;touch-action:pan-y}
+.guide-overlay[hidden]{display:none}
+.guide-card{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(135,182,255,.55);border-radius:16px;background:linear-gradient(155deg,#182b58 0%,#101936 54%,#211849 100%);box-shadow:0 12px 34px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.11);padding:9px;gap:7px}
+.guide-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto}
+.guide-heading{display:flex;align-items:center;gap:8px;min-width:0}.guide-book{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(145deg,#ffe59a,#f0a932);font-size:20px;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.guide-heading h2{font-size:clamp(12px,3.3vw,16px);line-height:1.1;margin:0;color:#ffe29a;font-weight:1000;letter-spacing:.015em}.guide-heading p{font-size:8px;font-weight:900;letter-spacing:.14em;color:#8fd8ff;margin:3px 0 0}
+.guide-close{flex:0 0 32px;width:32px;height:32px;border:1px solid rgba(255,255,255,.25);border-radius:9px;background:#b82f48;color:white;font-size:17px;font-weight:1000;cursor:pointer;touch-action:manipulation}
+.guide-progress-row{display:flex;align-items:center;gap:8px;font-size:9px;color:#c5d5ff;font-weight:950;flex:0 0 auto}.guide-progress{height:5px;flex:1;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden}.guide-progress i{display:block;width:10%;height:100%;background:linear-gradient(90deg,#6bd8ff,#ffd166);border-radius:99px;transition:width .2s}
+.guide-art-frame{position:relative;width:100%;aspect-ratio:16/9;max-height:33%;flex:0 1 auto;overflow:hidden;border:1px solid rgba(146,196,255,.6);border-radius:10px;background:#0c1730;box-shadow:0 4px 16px rgba(0,0,0,.28)}
+.guide-art-frame img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+.guide-copy{flex:1 1 auto;min-height:0;overflow:auto;padding:1px 3px 2px;touch-action:pan-y}
+.guide-kicker{font-size:8px;line-height:1.2;letter-spacing:.15em;font-weight:1000;color:#86dcff;margin:0 0 3px;text-transform:uppercase}
+.guide-copy h3{font-size:clamp(15px,4.2vw,20px);line-height:1.08;margin:0 0 5px;color:#fff0bd;font-weight:1000}
+.guide-copy p{font-size:clamp(10px,2.8vw,12px);line-height:1.42;color:#e6edff;margin:0 0 7px}
+.guide-tip{display:grid;grid-template-columns:88px 1fr;gap:6px;padding:7px 8px;border:1px solid rgba(255,209,102,.38);border-radius:9px;background:rgba(255,209,102,.09);font-size:9px;line-height:1.35;color:#fff2c9}
+.guide-tip strong{font-size:8px;letter-spacing:.08em;color:#ffd166}.guide-meta{margin-top:5px;font-size:9px;line-height:1.3;color:#9ddcff;font-weight:850}
+.guide-nav{display:flex;align-items:center;justify-content:space-between;gap:5px;flex:0 0 auto}.guide-nav-btn{min-height:34px;padding:0 10px;border:1px solid rgba(255,255,255,.18);border-radius:9px;font-size:9px;font-weight:1000;letter-spacing:.04em;cursor:pointer;touch-action:manipulation}.guide-nav-btn.secondary{background:rgba(255,255,255,.09);color:#e9f1ff}.guide-nav-btn.primary{background:linear-gradient(145deg,#ffeaa8,#f0b33c);color:#282044;border-color:#ffe18b}.guide-nav-btn:disabled{opacity:.35;cursor:default}
+.guide-dots{display:flex;align-items:center;justify-content:center;gap:4px;flex:1;min-width:0}.guide-dot{width:6px;height:6px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.28);cursor:pointer}.guide-dot[aria-current="step"]{width:16px;border-radius:99px;background:#ffd166}
+.guide-footnote{font-size:7px;line-height:1.2;text-align:center;color:#829bc4;flex:0 0 auto}
+@media(max-height:650px){.guide-card{gap:5px;padding:7px}.guide-art-frame{max-height:29%}.guide-copy p{font-size:9px}.guide-tip{padding:5px 6px}.guide-nav-btn{min-height:30px}}
 .hint{display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;color:#aebfd0;font-size:10px;letter-spacing:.02em;padding:8px 2px 1px;flex-wrap:wrap}
 .dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block}
 .footer{max-width:440px;text-align:center;color:#8297ab;font-size:9px;line-height:1.5;padding:0 12px}.footer b{color:#c7d5e2;font-weight:750}
@@ -155,6 +178,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       <div class="actions">
         <div class="wallet-pill" aria-label="Total coins saved"><span class="wallet-coin">●</span><span id="walletLabel">0</span></div>
         <button class="control store-btn" id="openStoreBtn" type="button" aria-label="Open Bird Collection Store">🛒 STORE</button>
+        <button class="control" id="openGuideBtn" type="button" aria-label="Open Help and Skill Guide">❔ GUIDE</button>
         <button class="control" id="fullscreenBtn" type="button" aria-label="Toggle Fullscreen">FULLSCREEN</button>
         <button class="control" id="soundBtn" type="button" aria-pressed="false" aria-label="Turn music and effects off">AUDIO ON</button>
         <button class="control" id="pauseBtn" type="button" aria-pressed="false" aria-label="Pause game">PAUSE</button>
@@ -181,6 +205,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         <div class="shield-hud arrival-hud" id="arrivalShieldHud" hidden>
           <span>🌀 ARRIVAL SHIELD</span>
           <strong id="arrivalShieldTimerLabel">5.0s</strong>
+        </div>
+        <div class="royal-soul-hud" id="royalSoulHud" hidden>
+          <img src="assets/obstacles/pixel-royal-soul.png" alt="">
+          <strong id="royalSoulLabel">SOUL READY · 1 EXTRA LIFE</strong>
         </div>
       </div>
 
@@ -213,6 +241,34 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
           <span class="hud-sub">SHIELD: S</span>
         </button>
       </div>
+
+      <!-- Interactive picture-led Help & Skill Guide -->
+      <section class="guide-overlay" id="guidePanel" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+        <div class="guide-card">
+          <header class="guide-header">
+            <div class="guide-heading">
+              <span class="guide-book" aria-hidden="true">📖</span>
+              <div><h2 id="guideTitle">HOW TO PLAY &amp; SKILL GUIDE</h2><p id="guideCategory">FLIGHT SCHOOL</p></div>
+            </div>
+            <button class="guide-close" id="guideCloseBtn" type="button" aria-label="Close guide">✕</button>
+          </header>
+          <div class="guide-progress-row"><span id="guideCounter">01 / 10</span><div class="guide-progress"><i id="guideProgressFill"></i></div></div>
+          <div class="guide-art-frame"><img id="guideImage" src="assets/ui/guide/guide-01.png" alt="Pixel-art game tutorial scene"></div>
+          <div class="guide-copy" aria-live="polite">
+            <div class="guide-kicker" id="guideKicker">START HERE</div>
+            <h3 id="guideSlideTitle">Meet your birds</h3>
+            <p id="guideSlideText">Learn the controls, meet your bird and understand when each skill helps.</p>
+            <div class="guide-tip"><strong id="guideTipLabel">WHEN IT HELPS</strong><span id="guideTipText">Use the character skill button when a hazard calls for it.</span></div>
+            <div class="guide-meta" id="guideMeta">6 characters · independent cooldowns</div>
+          </div>
+          <footer class="guide-nav">
+            <button class="guide-nav-btn secondary" id="guidePrevBtn" type="button">← BACK</button>
+            <div class="guide-dots" id="guideDots" aria-label="Guide pages"></div>
+            <button class="guide-nav-btn primary" id="guideNextBtn" type="button">NEXT →</button>
+          </footer>
+          <div class="guide-footnote">TIP: Open GUIDE from the top bar any time to revisit these slides.</div>
+        </div>
+      </section>
 
       <!-- Bird Collection & Power-up Store Overlay -->
       <div class="store-overlay" id="storePanel" hidden role="dialog" aria-modal="true" aria-labelledby="storeTitle">
@@ -318,11 +374,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const PIPE_W = 76, CAP_H = 19, COIN_R = 12;
   const PIPE_SPACING = 243;
   const FLAP_IMPULSE = -440; // restored from the original build (was -398)
-  const PULSE_FRACTION = 0.6;                 // Instant Pulse / Feather Pulse = 60% of a normal flap
-  const ROYAL_BEAT_FRACTION = 0.8;            // Royal Double Beat = 80% of a normal flap
+  const PULSE_FRACTION = 0.6;                 // Consumable Instant Pulse remains independent of bird skills
   const SHIELD_DURATION = 14.0;               // Main Shield, exactly 14 s
   const SHIELD_BREAKS_ON_HIT = false;         // false: shield absorbs hits for its full 14 s; true: pops after one hit
-  const GLIDE_TARGET_FALL = 40, GLIDE_DURATION = 8.0; // Sky Glide: steady parachute descent at 40 px/s
+  const GLIDE_DURATION = 8.0;                 // Blueberry parachute hold duration
+  const GLIDE_DAMPING = 6.5;                  // Damp vertical momentum so the parachute holds current height
+  const GLIDE_DIVE_SPEED = 185;               // Short downward nudge when player taps below the bird
+  const TIME_WARP_DURATION = 4.5;             // Royal Roast slows hazards, never player movement
+  const TIME_WARP_FACTOR = 0.42;               // Hazards move at 42% speed during Time Warp
+  const ROYAL_REVIVE_GRACE = 1.8;             // Brief safe re-entry after the one-time revival
+  const SPECIAL_WARNING_SECONDS = 1.8;        // Clear warning before fire/cannon hazards
+  const SPECIAL_EVENT_PIPE_GAP = 360;         // Generous temporary route so scripted hazards stay fair
   const TELEPORT_FORWARD_DISTANCE = 270;      // px of real world displacement (was 135); single place to tune
   const TELEPORT_ARRIVAL_SHIELD = 5.0;        // separate 5 s shield after a teleport
   let collisionDebugActive = false; // developer-only collision outline, toggled with the H key
@@ -345,6 +407,22 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const pauseBtn = document.getElementById('pauseBtn');
   const fullscreenBtn = document.getElementById('fullscreenBtn');
   const openStoreBtn = document.getElementById('openStoreBtn');
+  const openGuideBtn = document.getElementById('openGuideBtn');
+  const guidePanel = document.getElementById('guidePanel');
+  const guideCloseBtn = document.getElementById('guideCloseBtn');
+  const guidePrevBtn = document.getElementById('guidePrevBtn');
+  const guideNextBtn = document.getElementById('guideNextBtn');
+  const guideImage = document.getElementById('guideImage');
+  const guideCounter = document.getElementById('guideCounter');
+  const guideProgressFill = document.getElementById('guideProgressFill');
+  const guideCategory = document.getElementById('guideCategory');
+  const guideKicker = document.getElementById('guideKicker');
+  const guideSlideTitle = document.getElementById('guideSlideTitle');
+  const guideSlideText = document.getElementById('guideSlideText');
+  const guideTipLabel = document.getElementById('guideTipLabel');
+  const guideTipText = document.getElementById('guideTipText');
+  const guideMeta = document.getElementById('guideMeta');
+  const guideDots = document.getElementById('guideDots');
   const runLabel = document.getElementById('runLabel');
   const walletLabel = document.getElementById('walletLabel');
   const storeWalletLabel = document.getElementById('storeWalletLabel');
@@ -365,6 +443,71 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const aboutCloseBtn = document.getElementById('aboutCloseBtn');
   const brandBirdIcon = document.getElementById('brandBirdIcon');
   const menuMusic = document.getElementById('menuMusic');
+  const GUIDE_SLIDES = [
+    {category:'FLIGHT SCHOOL',kicker:'START HERE',title:'Meet your six birds',image:'assets/ui/guide/guide-01.png',alt:'All six original Fatty Bird characters in a pixel-art obstacle course',text:'Every bird has a distinct active skill. Chili Puff also ignores arrows, while Royal Roast carries one extra life per run.',tipLabel:'REMEMBER',tip:'Use the round E / ABILITY button for your selected bird. Passive traits work automatically; cooldowns are independent.',meta:'6 characters · 6 different strengths'},
+    {category:'BASICS',kicker:'FLIGHT CONTROLS',title:'Tap to rise. Release to descend.',image:'assets/ui/guide/guide-02.png',alt:'Pixel-art flying path between green pipes with up and down arrows',text:'Tap the screen, press Space or ↑ to flap upward. Release to let the bird descend. Keep your eyes on the next gap instead of chasing every coin.',tipLabel:'GOOD TIME TO USE',tip:'Original Fatty’s Feather Pulse gives a stronger upward lift when a cannonball or low route leaves little time to climb.',meta:'E = bird skill · Q / W / S = separate consumables'},
+    {category:'HAZARDS',kicker:'WARNING FIRST',title:'Fire Sweep — move to the lower lane',image:'assets/ui/guide/guide-03.png',alt:'Blueberry Blimp navigating below a horizontal pixel-art fire sweep',text:'A warning and countdown appear before the flames sweep from right to left across the upper lane. Move down into the marked lower safe corridor.',tipLabel:'GOOD TIME TO USE',tip:'Blueberry Blimp’s Sky Glide steadies the bird and slows falling. Tap below the bird for a controlled descent, then hold your height.',meta:'Sky Glide: up to 8s active · 25s cooldown'},
+    {category:'HAZARDS',kicker:'DODGE THE PROJECTILE',title:'Cannonball — change altitude',image:'assets/ui/guide/guide-04.png',alt:'Original Fatty dodging a cannonball fired from the right',text:'A distinct alert appears on the right before a cannonball travels from right to left. Move above or below its flight line; the upper escape route is kept clear during the event.',tipLabel:'GOOD TIME TO USE',tip:'Use Feather Pulse for a fast upward escape. Normal flying controls can still dodge the cannonball with timely movement.',meta:'Feather Pulse: instant lift · 18s cooldown'},
+    {category:'CHARACTER SKILLS',kicker:'PASSIVE + ACTIVE',title:'Chili Puff — arrows cannot hurt you',image:'assets/ui/guide/guide-05.png',alt:'Chili Puff flying through a volley of red pixel-art arrows',text:'Chili Puff is permanently immune to arrow hits. Other birds must dodge the arrow lanes as the volley travels from right to left.',tipLabel:'GOOD TIME TO USE',tip:'Ember Burst clears nearby suitable projectiles, including arrows, bombs and the cannonball. It does not destroy pipes. Arrow immunity is always on.',meta:'Ember Burst: 26s cooldown · arrow immunity is passive'},
+    {category:'CHARACTER SKILLS',kicker:'RARE CHALLENGE',title:'Narrow Pipe — keep your line steady',image:'assets/ui/guide/guide-06.png',alt:'Midnight Dumpling entering a rare narrow pipe gap',text:'The tighter gap appears in about 5% of eligible pipe encounters after the early game. It is difficult at higher speed, but every bird can pass with precise control.',tipLabel:'GOOD TIME TO USE',tip:'Midnight Dumpling’s Shadow Phase bypasses pipes for 1.4 seconds only. Tap the skill button again to end the phase early; arrows, bombs, fire and the sawblade remain dangerous.',meta:'Shadow Phase: 1.4s active · 36s cooldown · tap again to cancel'},
+    {category:'CHARACTER SKILLS',kicker:'CONTROLLED DESCENT',title:'Blueberry Blimp — Sky Glide',image:'assets/ui/guide/guide-07.png',alt:'Blueberry Blimp beneath a parachute in a pixel-art sky',text:'The parachute damps falling momentum and holds the current height for up to 8 seconds. It does not pull the bird down by itself. Flap to rise; tap below the bird or press ↓ to descend in a controlled way.',tipLabel:'GOOD TIME TO USE',tip:'Open Sky Glide when you need to settle into a safe lower lane during a fire sweep. Tap the skill button again to close the parachute immediately; the remaining cooldown is kept.',meta:'8s maximum active · 25s cooldown · tap again to cancel'},
+    {category:'CHARACTER SKILLS',kicker:'HAZARD CONTROL',title:'Royal Roast — Time Warp',image:'assets/ui/guide/guide-08.png',alt:'Royal Roast inside a golden time-warp ring in pixel art',text:'Time Warp slows surrounding moving hazards to 42% speed for 4.5 seconds. Royal Roast’s own flight and touch controls remain responsive at normal speed.',tipLabel:'GOOD TIME TO USE',tip:'Trigger it before a dense moving-hazard sequence. Tap the skill button again to restore normal hazard speed early; cooldown is not refunded.',meta:'4.5s maximum active · 42s cooldown · tap again to cancel'},
+    {category:'ROYAL ROAST PASSIVE',kicker:'ONCE PER RUN',title:'Royal Soul — one extra life',image:'assets/ui/guide/guide-09.png',alt:'Royal Roast inside a golden one-time revival aura in pixel art',text:'Royal Roast automatically revives after its first fatal hit in a run. It returns at a safe height, clears nearby incoming projectiles and gets 1.8 seconds of re-entry protection.',tipLabel:'REMEMBER',tip:'This passive is consumed once and never recharges with Time Warp. A second fatal hit ends the run. Royal Roast costs 6,000 coins.',meta:'1 revival per run · no cooldown'},
+    {category:'SPECIAL EVENT + CHARACTER SKILL',kicker:'PIPE SYSTEM SHIFT',title:'Pipes retract — Mint Mochi shields the route',image:'assets/ui/guide/guide-10.png',alt:'Mint Mochi approaching a spinning cutter while mechanical pipes retract',text:'A PIPE SHIFT warning appears first. The next pipe pairs retract out of the lane as a spinning rotor travels from right to left. Mint Mochi’s active shield protects against pipe and rotor hits for 14 seconds.',tipLabel:'GOOD TIME TO USE',tip:'Activate Mochi Shield just before a dense pipe-shift sequence. Midnight’s Shadow Phase bypasses pipes for 1.4 seconds, but it cannot block the rotor. The event remains dodgeable without a skill.',meta:'Mochi Shield: 14s active · 32s cooldown · rotor event: warning first'},
+    {category:'NEW ENVIRONMENT',kicker:'CAVE ZONE · VARIABLE LENGTH',title:'Cave Run — read the moving walls',image:'assets/ui/guide/guide-11.png',alt:'Blueberry Blimp navigating a pixel-art cave with shifting upper and lower rock walls and coins',text:'After a variable number of pipe passages, pipes give way to a cave passage. The ceiling and floor walls shift up and down, creating a changing but always passable corridor. Cave lengths vary by segment count, not by a fixed clock.',tipLabel:'GOOD TIME TO USE',tip:'Use controlled taps to follow the centre of the safe corridor. Coin trails show optional routes; bombs and wall edges still need to be avoided. Balloons do not spawn in the cave.',meta:'Dynamic walls · optional coin routes · no fixed-time entry'},
+    {category:'CAVE TRAPS + ABILITY CONTROL',kicker:'WATCH THE SWITCH',title:'Pressure plates, cages & manual skill cancel',image:'assets/ui/guide/guide-12.png',alt:'Midnight Dumpling near a pixel-art pressure plate and descending cage trap',text:'A cave pressure plate can trigger a warning and release a cage from above. Move out of the marked cage lane before it closes. Sustained abilities such as Sky Glide, Shadow Phase and Time Warp can be stopped by tapping the skill button again.',tipLabel:'REMEMBER',tip:'Early cancellation does not refund the cooldown. Instant skills and the passive Royal Soul are not toggleable. Mint Mochi’s bubble remains active for its timed protection window.',meta:'A warning precedes the cage · sustained effects can be cancelled'},
+  ];
+  let guideIndex = 0;
+  let guideReturnState = 'ready';
+  function renderGuideSlide() {
+    const slide = GUIDE_SLIDES[guideIndex];
+    guideImage.src = slide.image; guideImage.alt = slide.alt;
+    guideCategory.textContent = slide.category; guideKicker.textContent = slide.kicker;
+    guideSlideTitle.textContent = slide.title; guideSlideText.textContent = slide.text;
+    guideTipLabel.textContent = slide.tipLabel; guideTipText.textContent = slide.tip;
+    guideMeta.textContent = slide.meta;
+    guideCounter.textContent = String(guideIndex + 1).padStart(2,'0') + ' / ' + String(GUIDE_SLIDES.length).padStart(2,'0');
+    guideProgressFill.style.width = ((guideIndex + 1) / GUIDE_SLIDES.length * 100).toFixed(1) + '%';
+    guidePrevBtn.disabled = guideIndex === 0;
+    guideNextBtn.textContent = guideIndex === GUIDE_SLIDES.length - 1 ? 'DONE ✓' : 'NEXT →';
+    Array.from(guideDots.children).forEach((dot,i) => { if (i === guideIndex) dot.setAttribute('aria-current','step'); else dot.removeAttribute('aria-current'); });
+  }
+  GUIDE_SLIDES.forEach((_,i) => {
+    const dot = document.createElement('button'); dot.type = 'button'; dot.className = 'guide-dot';
+    dot.setAttribute('aria-label', `Go to guide page ${i+1}`);
+    dot.addEventListener('click', () => { guideIndex = i; renderGuideSlide(); });
+    guideDots.appendChild(dot);
+  });
+  function openGuide() {
+    if (!guidePanel.hidden) return;
+    guideReturnState = state;
+    storePanel.hidden = true; aboutPanel.hidden = true;
+    if (state === 'playing') { state = 'paused'; pauseBackgrounds(); menuMusic.pause(); updateLabel(); }
+    guideIndex = 0; renderGuideSlide(); guidePanel.hidden = false;
+    guideCloseBtn.focus();
+  }
+  function closeGuide() {
+    if (guidePanel.hidden) return;
+    guidePanel.hidden = true;
+    if (guideReturnState === 'playing' && state === 'paused') { state = 'playing'; updateAccumulator = 0; lastTime = 0; syncPrev(); playBackgrounds(); if (soundOn) menuMusic.play().catch(()=>{}); }
+    updateLabel();
+    if (openGuideBtn) openGuideBtn.focus();
+  }
+  function stepGuide(delta) { guideIndex = Math.max(0, Math.min(GUIDE_SLIDES.length - 1, guideIndex + delta)); renderGuideSlide(); }
+  // Mobile-friendly picture-led guide: swipe horizontally across the illustration to change slides.
+  let guidePointerStart = null;
+  guideImage.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch') return;
+    guidePointerStart = { x: event.clientX, y: event.clientY };
+  }, { passive: true });
+  guideImage.addEventListener('pointerup', (event) => {
+    if (!guidePointerStart || event.pointerType !== 'touch') { guidePointerStart = null; return; }
+    const dx = event.clientX - guidePointerStart.x;
+    const dy = event.clientY - guidePointerStart.y;
+    guidePointerStart = null;
+    if (Math.abs(dx) > 52 && Math.abs(dx) > Math.abs(dy) * 1.25) stepGuide(dx < 0 ? 1 : -1);
+  }, { passive: true });
+  guideImage.addEventListener('pointercancel', () => { guidePointerStart = null; }, { passive: true });
 
   const actionHud = document.getElementById('actionHud');
   const abilityBtn = document.getElementById('abilityBtn');
@@ -382,6 +525,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const shieldTimerLabel = document.getElementById('shieldTimerLabel');
   const arrivalShieldHud = document.getElementById('arrivalShieldHud');
   const arrivalShieldTimerLabel = document.getElementById('arrivalShieldTimerLabel');
+  const royalSoulHud = document.getElementById('royalSoulHud');
+  const royalSoulLabel = document.getElementById('royalSoulLabel');
 
   /* ---------- Safe Storage ---------- */
   const safeStore = {
@@ -457,7 +602,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       iconEmoji: '⚡',
       abilityName: 'Feather Pulse',
       description: 'Classic golden round silhouette with snack-powered aerodynamics.',
-      abilityDesc: 'Upward boost equal to 60% of a flap. (18s CD)',
+      abilityDesc: 'Strong upward burst to escape sudden hazards. (18s CD)',
       previewSrc: 'assets/characters/original-fatty/preview.png',
       bodySrc: 'assets/characters/original-fatty/body.png',
       wingLeftSrc: 'assets/characters/original-fatty/wing-left.png',
@@ -474,7 +619,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       iconEmoji: '🪂',
       abilityName: 'Sky Glide',
       description: 'Sky-blue round body with long pointed tail and swept wings.',
-      abilityDesc: 'Parachute glide: holds a gentle, steady 40 px/s descent for 8.0s. (25s CD)',
+      abilityDesc: 'Parachute hold: stabilises height; tap below the bird to descend. (25s CD)',
       previewSrc: 'assets/characters/blueberry-blimp/preview.png',
       bodySrc: 'assets/characters/blueberry-blimp/body.png',
       wingLeftSrc: 'assets/characters/blueberry-blimp/wing-left.png',
@@ -504,17 +649,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'chili-puff',
       name: 'Chili Puff',
       rarity: 'Rare',
-      price: 1500,
+      price: 2500,
       iconEmoji: '🔥',
       abilityName: 'Ember Burst',
       description: 'Orange-red body with flame-shaped wings and extended tail.',
-      abilityDesc: 'Incinerates the nearest active incoming arrow. (28s CD)',
+      abilityDesc: 'Ember burst clears nearby projectiles. Passive: immune to arrows. (26s CD)',
       previewSrc: 'assets/characters/chili-puff/preview.png',
       bodySrc: 'assets/characters/chili-puff/body.png',
       wingLeftSrc: 'assets/characters/chili-puff/wing-left.png',
       wingRightSrc: 'assets/characters/chili-puff/wing-right.png',
-      cooldown: 28,
-      duration: 0.3,
+      cooldown: 26,
+      duration: 0.32,
       collision: { headR: 27, bodyR: 30, tailOffset: -38, tailR: 16 }
     },
     {
@@ -525,12 +670,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       iconEmoji: '🌑',
       abilityName: 'Shadow Tuck',
       description: 'Deep navy-indigo silhouette with elongated dark feathers.',
-      abilityDesc: 'Folds wings and tail inward for 1.4s, shrinking hitbox! (28s CD)',
+      abilityDesc: 'Automatically tucks at rare narrow gaps; can also be activated manually. (36s CD)',
       previewSrc: 'assets/characters/midnight-dumpling/preview.png',
       bodySrc: 'assets/characters/midnight-dumpling/body.png',
       wingLeftSrc: 'assets/characters/midnight-dumpling/wing-left.png',
       wingRightSrc: 'assets/characters/midnight-dumpling/wing-right.png',
-      cooldown: 28,
+      cooldown: 36,
       duration: 1.4,
       collision: { headR: 27, bodyR: 30, tailOffset: -40, tailR: 15 }
     },
@@ -538,17 +683,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'royal-roast',
       name: 'Royal Roast',
       rarity: 'Legendary',
-      price: 3000,
+      price: 6000,
       iconEmoji: '👑',
-      abilityName: 'Royal Double Beat',
+      abilityName: 'Royal Time Warp',
       description: 'Royal purple chunky body with ornamental golden wings & fan tail.',
-      abilityDesc: 'Stores 1 bonus mid-air flap at 80% strength. (24s CD)',
+      abilityDesc: 'Slows surrounding hazards for 4.5s. Passive: one automatic extra life per run. (42s CD)',
       previewSrc: 'assets/characters/royal-roast/preview.png',
       bodySrc: 'assets/characters/royal-roast/body.png',
       wingLeftSrc: 'assets/characters/royal-roast/wing-left.png',
       wingRightSrc: 'assets/characters/royal-roast/wing-right.png',
-      cooldown: 24,
-      duration: 0.2,
+      cooldown: 42,
+      duration: 4.5,
       collision: { headR: 27, bodyR: 32, tailOffset: -38, tailR: 18 }
     }
   ];
@@ -588,6 +733,24 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   const arrowSprite = getCachedImage('assets/obstacles/pixel-arrow.png');
   const bombSprite = getCachedImage('assets/obstacles/sky-bomb.png');
+  const fireSweepSprite = getCachedImage('assets/obstacles/pixel-fire-sweep.png');
+  const cannonballSprite = getCachedImage('assets/obstacles/pixel-cannonball.png');
+  const pipeSawSprite = getCachedImage('assets/obstacles/pixel-sawblade.png');
+  const cannonSprite = getCachedImage('assets/obstacles/pixel-cannon.png');
+  const hazardWarningSprite = getCachedImage('assets/obstacles/pixel-hazard-warning.png');
+  const cannonWarningSprite = getCachedImage('assets/obstacles/pixel-cannon-warning.png');
+  const timeWarpSprite = getCachedImage('assets/obstacles/pixel-royal-timewarp.png');
+  const royalSoulSprite = getCachedImage('assets/obstacles/pixel-royal-soul.png');
+  const emberBurstSprite = getCachedImage('assets/obstacles/pixel-ember-burst.png');
+  const arrowImmunitySprite = getCachedImage('assets/obstacles/pixel-arrow-immunity.png');
+  const shadowTuckSprite = getCachedImage('assets/obstacles/pixel-shadow-tuck.png');
+  const parachuteSprite = getCachedImage('assets/obstacles/pixel-parachute.png');
+  const narrowGapSprite = getCachedImage('assets/obstacles/pixel-narrow-gap.png');
+  const caveWallSprite = getCachedImage('assets/obstacles/cave-rock-tile.png');
+  const cavePlateSprite = getCachedImage('assets/obstacles/cave-pressure-plate.png');
+  const caveCageSprite = getCachedImage('assets/obstacles/cave-cage.png');
+  const caveCrystalSprite = getCachedImage('assets/obstacles/cave-crystal.png');
+  const caveWarningSprite = getCachedImage('assets/obstacles/cave-warning.png');
   const magnetSprite = getCachedImage('assets/ui/magnet.png');
   const fattyCoinSprite = getCachedImage('assets/ui/fatty-coin.png');
   const coinSprites = new Map();
@@ -647,7 +810,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     { id: "night-city", name: "Night City", src: "assets/backgrounds/night-city.mp4", playsPerClip: 2 },
     { id: "railway-station", name: "Railway Station", src: "assets/backgrounds/Railway_station_game_background_4c4de770.gif", type: "gif", playsPerClip: 2 },
     { id: "washroom", name: "Washroom", src: "assets/backgrounds/washroom.mp4", playsPerClip: 2 },
-    { id: "camera-racing-exploding", name: "Camera Racing Through Exploding Scene", src: "assets/backgrounds/Camera_racing_through_exploding_…_128e91d1.gif", type: "gif", playsPerClip: 2 },
+    { id: "camera-racing-exploding", name: "Camera Racing Through Exploding Scene", src: "assets/backgrounds/Camera_racing_through_exploding_scene_128e91d1.gif", type: "gif", playsPerClip: 2 },
     { id: "gb-road-city", name: "G. B. Road / Sonagachi City", src: "assets/backgrounds/gb-road-city.mp4", playsPerClip: 2 },
     { id: "inshot-animation", name: "InShot Animation", src: "assets/backgrounds/InShot_20261101_163109258.gif", type: "gif", playsPerClip: 2 },
     { id: "stadium", name: "Stadium", src: "assets/backgrounds/stadium.mp4", playsPerClip: 2 }
@@ -970,11 +1133,25 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let shieldActive = false;
   let shieldTimer = 0;
   let shieldGraceTimer = 0; // Post-impact invulnerability grace window
-  let pulseLiftTimer = 0; // Smooth physical lift thrust window
+  let pulseLiftTimer = 0; // Smooth physical lift thrust window for Original Fatty
+  let glideDiveTimer = 0; // Brief player-requested downward movement while parachute is active
+  let timeWarpTimer = 0; // Royal Roast hazard-only slow motion
+  let reviveGraceTimer = 0; // Safe re-entry after Royal Roast's one extra life
+  let royalReviveAvailable = false;
+  let royalRevivedThisRun = false;
+  let fireSweep = null;
+  let cannonball = null;
+  let pipeSaw = null;
+  let specialHazardWarning = null;
+  let specialHazardScheduleTimer = 14;
+  let specialSceneCenter = 354;
+  let nextSpecialHazardType = 'fire';
+  const SPECIAL_HAZARD_ORDER = ['fire','cannon','pipe'];
+  let narrowWarningTimer = 0;
+  let narrowPipesUntilEligible = 0;
   let blinkPhaseTimer = 0; // Short protection while travelling through the portal
   let teleportArrivalShieldTimer = 0; // Exactly 5.0 s, independent of the Main Shield
   let portalState = 'idle', portalTimer = 0, portalEntryX = 0, portalEntryY = 0, pendingTeleport = null;
-  let royalDoubleBeatAvailable = false;
   let abilityParticles = [];
   let energyRipples = []; // Expanding shockwave rings
 
@@ -1002,6 +1179,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let activeBalloon = null;
   let pipesPassedSinceBalloon = 0;
   let floatingPopups = [];
+  let caveZone = null;
+  let caveStartPending = false;
+  let cavePipesPassed = 0;
+  let cavePipesUntilEntry = 9 + Math.floor(Math.random() * 5);
+  let caveCoins = [];
+  let caveCage = null;
+  let cageCapture = null;
 
   // Canvas clickable zones
   const menuHit = {
@@ -1042,6 +1226,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     for (const b of bombs) b.px = b.x;
     if (activeBalloon) activeBalloon.px = activeBalloon.x;
     if (worldMagnet) worldMagnet.px = worldMagnet.x;
+    if (caveZone) for (const seg of caveZone.segments) seg.px = seg.x;
+    for (const coin of caveCoins) coin.px = coin.x;
+    if (caveCage) caveCage.px = caveCage.x;
   }
 
   function reset() {
@@ -1056,9 +1243,18 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     shieldTimer = 0;
     shieldGraceTimer = 0;
     pulseLiftTimer = 0;
+    glideDiveTimer = 0;
+    timeWarpTimer = 0;
+    reviveGraceTimer = 0;
+    royalReviveAvailable = selectedCharacterId === 'royal-roast';
+    royalRevivedThisRun = false;
+    fireSweep = null; cannonball = null; pipeSaw = null; specialHazardWarning = null;
+    specialHazardScheduleTimer = 18 + Math.random() * 8;
+    specialSceneCenter = 354;
+    nextSpecialHazardType = SPECIAL_HAZARD_ORDER[Math.floor(Math.random() * SPECIAL_HAZARD_ORDER.length)];
+    narrowWarningTimer = 0; narrowPipesUntilEligible = 0;
     blinkPhaseTimer = 0;
     teleportArrivalShieldTimer = 0; portalState = 'idle'; portalTimer = 0; pendingTeleport = null;
-    royalDoubleBeatAvailable = false;
     abilityParticles = [];
     energyRipples = [];
 
@@ -1074,6 +1270,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     magnetActiveTimer = 0;
     worldMagnet = null;
+    caveZone = null; caveStartPending = false; cavePipesPassed = 0;
+    cavePipesUntilEntry = 9 + Math.floor(Math.random() * 5);
+    caveCoins = []; caveCage = null; cageCapture = null;
     magnetSpawnTimer = 13 + Math.random() * 8;
 
     activeBalloon = null;
@@ -1097,10 +1296,27 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function currentDifficulty() { return 1 + Math.min(score, 20) * 0.006; }
 
   function makePipe(x) {
-    const gap = currentGap();
-    const center = nextCenter !== null ? nextCenter : rollCenter(gap);
-    nextCenter = rollCenter(gap);
-    return { x, px: x, center, gap, passed: false, coins: null, nextCenter };
+    const inSpecialScene = !!(specialHazardWarning || fireSweep || cannonball || pipeSaw);
+    let gap = currentGap();
+    let center;
+    let narrow = false;
+    if (inSpecialScene) {
+      // Temporary broad passage keeps the scripted vertical escape route genuinely safe.
+      gap = Math.max(gap, SPECIAL_EVENT_PIPE_GAP);
+      center = specialSceneCenter;
+      nextCenter = specialSceneCenter;
+    } else {
+      if (narrowPipesUntilEligible > 0) {
+        narrowPipesUntilEligible--;
+      } else {
+        // A 5.5% roll with two skipped pipes after a hit yields ~5% long-run frequency.
+        narrow = score >= 6 && Math.random() < 0.055;
+      }
+      if (narrow) { gap = Math.max(132, currentGap() - 26); narrowPipesUntilEligible = 2; }
+      center = nextCenter !== null ? nextCenter : rollCenter(gap);
+      nextCenter = rollCenter(gap);
+    }
+    return { x, px: x, center, gap, narrow, narrowWarned: false, autoTuckTriggered: false, passed: false, coins: null, nextCenter };
   }
 
   function addGapFormation(p) {
@@ -1148,6 +1364,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function startFlight() {
+    if (state === 'ready') { royalReviveAvailable = selectedCharacterId === 'royal-roast'; royalRevivedThisRun = false; }
     state = 'playing';
     if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{});
     bird.vy = FLAP_IMPULSE;
@@ -1159,24 +1376,64 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function flap() {
     if (state === 'ready') { startFlight(); return; }
     if (state !== 'playing') return;
-    if (royalDoubleBeatAvailable) {
-      bird.vy = FLAP_IMPULSE * ROYAL_BEAT_FRACTION; // unchanged: 80% flap impulse
-      royalDoubleBeatAvailable = false;
-      flapStrokeBoost = 0.6;
-      tone(520, .05, 'triangle', .05);
-      createAbilityBurst('#ffd166', bird.x, bird.y, 18);
-      energyRipples.push({ x: bird.x, y: bird.y, r: 10, maxR: 72, color: '#ffd166', alpha: 1 });
-      showToast('ROYAL DOUBLE BEAT! 80% BONUS FLAP');
-      updateActionHud();
-      return;
-    }
+    if (getSelectedCharConfig().id === 'blueberry-blimp' && abilityActiveTimer > 0) glideDiveTimer = 0;
     bird.vy = FLAP_IMPULSE;
     flapStrokeBoost = 0.55;
     tone(430,.045,'triangle',.04);
   }
 
+  function isSafeRevivalY(testY) {
+    if (testY < 80 || testY > FLOOR - 95) return false;
+    const shapes = getBirdCollisionEnvelope(bird.x, testY);
+    for (const p of pipes) {
+      const top = p.center - p.gap / 2, bottom = p.center + p.gap / 2;
+      for (const s of shapes) {
+        if (hitRectCircle(s.cx, s.cy, s.r + 4, p.x, 0, PIPE_W, top) ||
+            hitRectCircle(s.cx, s.cy, s.r + 4, p.x, bottom, PIPE_W, FLOOR - bottom)) return false;
+      }
+    }
+    for (const a of arrows) for (const s of shapes) if (Math.hypot(a.x - s.cx, a.y - s.cy) < s.r + 22) return false;
+    for (const b of bombs) for (const s of shapes) if (Math.hypot(b.x - s.cx, b.y - s.cy) < s.r + b.r + 8) return false;
+    if (cannonball) for (const s of shapes) if (Math.hypot(cannonball.x - s.cx, cannonball.y - s.cy) < s.r + 32) return false;
+    if (pipeSaw) for (const s of shapes) if (Math.hypot(pipeSaw.x - s.cx, pipeSaw.y - s.cy) < s.r + pipeSaw.r + 8) return false;
+    if (fireSweep) for (const s of shapes) if (hitRectCircle(s.cx, s.cy, s.r, fireSweep.x, fireSweep.y, fireSweep.w, fireSweep.h)) return false;
+    return true;
+  }
+
+  function tryRoyalRevival() {
+    if (getSelectedCharConfig().id !== 'royal-roast' || !royalReviveAvailable) return false;
+    royalReviveAvailable = false;
+    royalRevivedThisRun = true;
+    const candidates = [];
+    for (const p of pipes) {
+      if (p.x < bird.x + 95 && p.x + PIPE_W > bird.x - 90) candidates.push(p.center);
+    }
+    candidates.push(bird.y - 90, bird.y + 90, bird.y - 145, bird.y + 145, 350, 270, 430);
+    const targetY = candidates.find(isSafeRevivalY);
+    bird.y = targetY == null ? Math.max(100, Math.min(FLOOR - 110, bird.y - 70)) : targetY;
+    bird.vy = -185;
+    bird.angle = -0.18;
+    // Clear only nearby incoming projectiles; the run and score continue.
+    arrows = arrows.filter(a => Math.hypot(a.x - bird.x, a.y - bird.y) > 125);
+    bombs = bombs.filter(b => Math.hypot(b.x - bird.x, b.y - bird.y) > 125);
+    let clearedSpecial = false;
+    if (cannonball && Math.hypot(cannonball.x - bird.x, cannonball.y - bird.y) < 155) { cannonball = null; clearedSpecial = true; }
+    if (pipeSaw && Math.hypot(pipeSaw.x - bird.x, pipeSaw.y - bird.y) < 165) { pipeSaw = null; clearedSpecial = true; }
+    if (fireSweep && bird.x + 70 > fireSweep.x && bird.x - 70 < fireSweep.x + fireSweep.w) { fireSweep = null; clearedSpecial = true; }
+    if (clearedSpecial) specialHazardScheduleTimer = 22 + Math.random() * 10;
+    reviveGraceTimer = ROYAL_REVIVE_GRACE;
+    createAbilityBurst('#ffe080', bird.x, bird.y, 28);
+    energyRipples.push({ x: bird.x, y: bird.y, r: 8, maxR: 112, color: '#ffd166', alpha: 1 });
+    floatingPopups.push({ x: bird.x, y: bird.y - 62, text: 'ROYAL SOUL! +1 LIFE', color: '#ffe18a', life: 1.25, max: 1.25 });
+    tone(760, .28, 'sine', .08);
+    showToast('ROYAL SOUL REVIVED — EXTRA LIFE USED');
+    syncPrev(); updateActionHud();
+    return true;
+  }
+
   function endFlight() {
     if (state !== 'playing') return;
+    if (tryRoyalRevival()) { cageCapture = null; caveCage = null; return; }
     state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause();
     if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
     playEffect('death', 155); updateLabel();
@@ -1187,7 +1444,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (SHIELD_BREAKS_ON_HIT) { shieldActive = false; shieldTimer = 0; }
     shieldGraceTimer = graceSeconds;
   }
-  function isProtectedByGrace() { return shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0; }
+  function isProtectedByGrace() { return shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0; }
 
   /* ---------- Action HUD & Consumable Triggers (Real Physical & State Impact) ---------- */
   function activateInstantPulse() {
@@ -1361,33 +1618,63 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     showToast(`Bubble Shield Active (14.0s)! (${POWERUP_TEST_MODE ? '∞' : shieldCharges} left)`);
   }
 
+  function activateShadowTuck(autoTriggered = false) {
+    const char = getSelectedCharConfig();
+    if (char.id !== 'midnight-dumpling' || abilityActiveTimer > 0 || (!POWERUP_TEST_MODE && abilityCooldownTimer > 0)) return false;
+    abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
+    abilityActiveTimer = char.duration;
+    tone(420, .14, 'sine', .05);
+    createAbilityBurst('#9a89ff', bird.x, bird.y, 18);
+    showToast(autoTriggered ? 'AUTO SHADOW TUCK — NARROW GAP!' : 'SHADOW TUCK ACTIVE!');
+    updateActionHud();
+    return true;
+  }
+
   function activateCharacterAbility() {
     if (state !== 'playing') return;
     const now = performance.now();
-    if (now - lastAbilityTriggerTime < 200) return; // Debounce
+    if (now - lastAbilityTriggerTime < 200) return;
     lastAbilityTriggerTime = now;
-
-    if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) return;
     const char = getSelectedCharConfig();
 
+    // Sustained abilities are manually cancellable. Early cancellation never refunds cooldown.
+    if (char.id === 'blueberry-blimp' && abilityActiveTimer > 0) {
+      abilityActiveTimer = 0; glideDiveTimer = 0;
+      createAbilityBurst('#8adfff', bird.x, bird.y, 9);
+      showToast('SKY GLIDE CLOSED — NORMAL FLIGHT RESTORED'); updateActionHud(); return;
+    }
+    if (char.id === 'midnight-dumpling' && abilityActiveTimer > 0) {
+      abilityActiveTimer = 0;
+      createAbilityBurst('#a99aff', bird.x, bird.y, 9);
+      showToast('SHADOW PHASE ENDED'); updateActionHud(); return;
+    }
+    if (char.id === 'royal-roast' && timeWarpTimer > 0) {
+      timeWarpTimer = 0; abilityActiveTimer = 0;
+      energyRipples.push({ x: bird.x, y: bird.y, r: 8, maxR: 76, color: '#b58aff', alpha: 1 });
+      showToast('TIME WARP ENDED — HAZARDS NORMAL SPEED'); updateActionHud(); return;
+    }
+    if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) return;
+
     if (char.id === 'original-fatty') {
-      bird.vy = Math.min(bird.vy, FLAP_IMPULSE * PULSE_FRACTION);
-      flapStrokeBoost = 0.7;
-      energyRipples.push({ x: bird.x, y: bird.y, r: 12, maxR: 60, color: '#ffd166', alpha: 1 });
+      // A real, strong upward impulse plus a short thrust window makes the lift unmistakable.
+      bird.vy = Math.min(bird.vy, FLAP_IMPULSE * 1.32);
+      pulseLiftTimer = 0.26;
+      flapStrokeBoost = 0.9;
+      energyRipples.push({ x: bird.x, y: bird.y, r: 12, maxR: 72, color: '#ffd166', alpha: 1 });
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
-      abilityActiveTimer = char.duration;
-      tone(580, .08, 'triangle', .06);
-      createAbilityBurst('#ffd166', bird.x, bird.y, 16);
-      showToast('Feather Pulse Lift!');
+      abilityActiveTimer = 0.35;
+      tone(580, .11, 'triangle', .08);
+      createAbilityBurst('#ffd166', bird.x, bird.y, 20);
+      showToast('FEATHER PULSE — POWER LIFT!');
     } else if (char.id === 'blueberry-blimp') {
-      // Sky Glide is a true parachute hold: cancel vertical momentum and begin a gentle downward drift.
-      // It never launches the bird upward. While active, vertical speed is held at 40 px/s.
-      bird.vy = GLIDE_TARGET_FALL;
+      // Hold the current height. It does not force the bird to slide down.
+      bird.vy *= 0.18;
+      glideDiveTimer = 0;
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
-      abilityActiveTimer = char.duration;
+      abilityActiveTimer = GLIDE_DURATION;
       tone(480, .12, 'sine', .05);
-      createAbilityBurst('#50b0ff', bird.x, bird.y, 14);
-      showToast('Sky Glide Active (8.0s)!');
+      createAbilityBurst('#50b0ff', bird.x, bird.y, 16);
+      showToast('PARACHUTE HOLD — TAP BELOW TO DESCEND');
     } else if (char.id === 'mint-mochi') {
       shieldActive = true;
       shieldTimer = SHIELD_DURATION;
@@ -1396,42 +1683,43 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       abilityActiveTimer = SHIELD_DURATION;
       tone(620, .18, 'triangle', .07);
       createAbilityBurst('#8ce6cb', bird.x, bird.y, 20);
-      showToast('Mochi Bubble Shield Active (14.0s)!');
+      showToast('MOCHI SHIELD ACTIVE (14s)');
     } else if (char.id === 'chili-puff') {
-      if (arrows.length === 0) {
-        showToast('No arrows to burn!');
-        return;
+      // Ember Burst is an area attack: nearby arrows, bombs and the cannonball can be destroyed.
+      const rangeX = 250, rangeY = 150;
+      const targets = [];
+      for (const a of arrows) if (a.x >= bird.x - 35 && a.x <= bird.x + rangeX && Math.abs(a.y - bird.y) <= rangeY) targets.push({ type: 'arrow', item: a, x: a.x, y: a.y });
+      for (const b of bombs) if (b.x >= bird.x - 35 && b.x <= bird.x + rangeX && Math.abs(b.y - bird.y) <= rangeY) targets.push({ type: 'bomb', item: b, x: b.x, y: b.y });
+      if (cannonball && cannonball.x >= bird.x - 35 && cannonball.x <= bird.x + rangeX && Math.abs(cannonball.y - bird.y) <= rangeY) targets.push({ type: 'cannon', item: cannonball, x: cannonball.x, y: cannonball.y });
+      if (pipeSaw && pipeSaw.x >= bird.x - 35 && pipeSaw.x <= bird.x + rangeX && Math.abs(pipeSaw.y - bird.y) <= rangeY) targets.push({ type: 'saw', item: pipeSaw, x: pipeSaw.x, y: pipeSaw.y });
+      if (fireSweep && bird.x + rangeX > fireSweep.x && bird.x - 35 < fireSweep.x + fireSweep.w && Math.abs((fireSweep.y + fireSweep.h/2) - bird.y) <= rangeY) targets.push({ type: 'fire', item: fireSweep, x: Math.max(bird.x + 25, fireSweep.x), y: fireSweep.y + fireSweep.h/2 });
+      if (!targets.length) { showToast('EMBER BURST: WAIT FOR A NEARBY HAZARD'); return; }
+      for (const t of targets) {
+        createExplosion(t.x, t.y, '#ff642d', 20);
+        if (t.type === 'arrow') arrows = arrows.filter(a => a !== t.item);
+        else if (t.type === 'bomb') bombs = bombs.filter(b => b !== t.item);
+        else if (t.type === 'cannon') cannonball = null;
+        else if (t.type === 'saw') pipeSaw = null;
+        else if (t.type === 'fire') fireSweep = null;
       }
-      let nearest = null, minDist = 9999;
-      for (const a of arrows) {
-        if (a.x < bird.x - 20) continue;            // only arrows still ahead of the bird
-        const d = Math.hypot(a.x - bird.x, a.y - bird.y);
-        if (d < minDist) { minDist = d; nearest = a; }
-      }
-      if (!nearest) { showToast('No arrows ahead!'); return; }   // no charge or cooldown wasted
-      if (nearest) {
-        createExplosion(nearest.x, nearest.y, '#ff4422', 26);
-        energyRipples.push({ x: nearest.x, y: nearest.y, r: 8, maxR: 92, color: '#ff6a32', alpha: 1 });
-        floatingPopups.push({ x: nearest.x, y: nearest.y - 22, text: 'EMBER BURST!', color: '#ff9b42', life: 0.8, max: 0.8 });
-        arrows = arrows.filter(a => a !== nearest);
-        abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
-        abilityActiveTimer = char.duration;
-        tone(350, .15, 'sawtooth', .06);
-        showToast('Arrow incinerated!');
-      }
+      if (targets.some(t => t.type === 'fire' || t.type === 'cannon' || t.type === 'saw')) specialHazardScheduleTimer = 30 + Math.random() * 10;
+      energyRipples.push({ x: bird.x + 48, y: bird.y, r: 10, maxR: 130, color: '#ff742e', alpha: 1 });
+      abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
+      abilityActiveTimer = char.duration;
+      tone(350, .18, 'sawtooth', .08);
+      createAbilityBurst('#ff8b32', bird.x + 42, bird.y, 24);
+      showToast(`EMBER BURST — ${targets.length} HAZARD${targets.length === 1 ? '' : 'S'} CLEARED`);
     } else if (char.id === 'midnight-dumpling') {
-      abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
-      abilityActiveTimer = char.duration;
-      tone(420, .14, 'sine', .05);
-      createAbilityBurst('#7080ff', bird.x, bird.y, 18);
-      showToast('Shadow Tuck Active (1.4s)!');
+      activateShadowTuck(false);
     } else if (char.id === 'royal-roast') {
-      royalDoubleBeatAvailable = true;
+      // Time Warp changes hazard movement only. Bird gravity, flaps and input stay at full speed.
+      timeWarpTimer = TIME_WARP_DURATION;
+      abilityActiveTimer = TIME_WARP_DURATION;
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
-      abilityActiveTimer = char.duration;
-      tone(640, .12, 'triangle', .06);
-      createAbilityBurst('#c060ff', bird.x, bird.y, 16);
-      showToast('Double Beat Ready!');
+      tone(640, .22, 'triangle', .07);
+      createAbilityBurst('#b58aff', bird.x, bird.y, 22);
+      energyRipples.push({ x: bird.x, y: bird.y, r: 16, maxR: 128, color: '#b58aff', alpha: 1 });
+      showToast('ROYAL TIME WARP — HAZARDS SLOWED!');
     }
     updateActionHud();
   }
@@ -1473,26 +1761,28 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     actionHud.hidden = (state !== 'playing');
     abilityIcon.textContent = char.iconEmoji;
     const abilitySub = abilityBtn.querySelector('.hud-sub');
-    const royalBonusReady = char.id === 'royal-roast' && royalDoubleBeatAvailable;
-
-    // Active/ready feedback takes priority over cooldown. Previously the cooldown
-    // branch ran first, so normal-release players never saw the ACTIVE state.
-    if (royalBonusReady) {
+    // Active state takes priority; the cooldown appears once the effect expires.
+    if (abilityActiveTimer > 0) {
       abilityBtn.classList.remove('is-ready', 'is-disabled');
       abilityBtn.classList.add('is-active-now');
-      if (abilitySub) abilitySub.textContent = 'BONUS READY';
-    } else if (abilityActiveTimer > 0) {
-      abilityBtn.classList.remove('is-ready', 'is-disabled');
-      abilityBtn.classList.add('is-active-now');
-      if (abilitySub) abilitySub.textContent = `ACTIVE ${Math.ceil(abilityActiveTimer)}s`;
+      if (abilitySub) abilitySub.textContent = (char.id === 'blueberry-blimp' || char.id === 'midnight-dumpling' || char.id === 'royal-roast') ? `ON ${Math.ceil(abilityActiveTimer)}s · TAP OFF` : `ACTIVE ${Math.ceil(abilityActiveTimer)}s`;
+      abilityBtn.setAttribute('aria-pressed','true');
     } else if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) {
       abilityBtn.classList.remove('is-ready', 'is-active-now');
       abilityBtn.classList.add('is-disabled');
       if (abilitySub) abilitySub.textContent = `CD ${Math.ceil(abilityCooldownTimer)}s`;
+      abilityBtn.setAttribute('aria-pressed','false');
     } else {
       abilityBtn.classList.remove('is-disabled', 'is-active-now');
       abilityBtn.classList.add('is-ready');
-      if (abilitySub) abilitySub.textContent = 'READY';
+      if (abilitySub) abilitySub.textContent = (char.id === 'midnight-dumpling' ? 'AUTO TUCK READY' : 'READY');
+      abilityBtn.setAttribute('aria-pressed','false');
+    }
+
+    royalSoulHud.hidden = (state !== 'playing' || char.id !== 'royal-roast');
+    if (royalSoulLabel) {
+      if (reviveGraceTimer > 0) royalSoulLabel.textContent = `REVIVED · ${reviveGraceTimer.toFixed(1)}s SAFE`;
+      else royalSoulLabel.textContent = royalReviveAvailable ? 'SOUL READY · 1 EXTRA LIFE' : 'SOUL SPENT · 0 EXTRA LIVES';
     }
 
     pulseCountBadge.textContent = POWERUP_TEST_MODE ? '∞' : String(pulseCharges);
@@ -1526,9 +1816,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   /* ---------- Hazards: Large White Minecraft Arrows ---------- */
   function scheduleArrowWave() {
-    if (arrowWaveInProgress || arrows.length >= 3) return;
+    if (arrowWaveInProgress || arrows.length >= 3 || specialHazardWarning || fireSweep || cannonball || pipeSaw) return;
     arrowWaveInProgress = true;
-    arrowWarningTimer = 0.6;
+    arrowWarningTimer = 1.40;
 
     const r = Math.random();
     const count = (score >= 12 && r < 0.25) ? 3 : (score >= 6 && r < 0.65) ? 2 : 1;
@@ -1537,16 +1827,16 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     if (count === 1) {
       const y = Math.max(90, Math.min(FLOOR - 90, bird.y + (Math.random() - 0.5) * 70));
-      pendingArrowSpawns.push({ delay: 0.6, y, speed });
+      pendingArrowSpawns.push({ delay: 1.40, y, speed });
     } else if (count === 2) {
       const gapY = Math.max(120, Math.min(FLOOR - 120, lastGapY));
-      pendingArrowSpawns.push({ delay: 0.6, y: gapY - 110, speed });
-      pendingArrowSpawns.push({ delay: 0.85, y: gapY + 110, speed: speed + 15 });
+      pendingArrowSpawns.push({ delay: 1.40, y: gapY - 110, speed });
+      pendingArrowSpawns.push({ delay: 1.70, y: gapY + 110, speed: speed + 15 });
     } else {
       const mid = Math.max(130, Math.min(FLOOR - 130, lastGapY));
-      pendingArrowSpawns.push({ delay: 0.6, y: mid - 120, speed });
-      pendingArrowSpawns.push({ delay: 0.9, y: mid + 120, speed });
-      pendingArrowSpawns.push({ delay: 1.2, y: mid, speed: speed + 25 });
+      pendingArrowSpawns.push({ delay: 1.40, y: mid - 120, speed });
+      pendingArrowSpawns.push({ delay: 1.70, y: mid + 120, speed });
+      pendingArrowSpawns.push({ delay: 2.00, y: mid, speed: speed + 25 });
     }
   }
 
@@ -1557,7 +1847,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   /* ---------- Cartoon Bomb Gates (Upper/Lower) ---------- */
   function maybeSpawnBombGate() {
-    if (bombs.length > 0 || arrowWaveInProgress) return;
+    if (bombs.length > 0 || arrowWaveInProgress || specialHazardWarning || fireSweep || cannonball || pipeSaw) return;
     const isPair = Math.random() < 0.35 && score >= 8;
     const speed = 188 * currentDifficulty();
 
@@ -1573,7 +1863,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   /* ---------- Collectibles: Magnet & Balloon ---------- */
   function maybeSpawnMagnet() {
-    if (worldMagnet || magnetActiveTimer > 0 || activeBalloon || arrowWaveInProgress || bombs.length > 0) return false;
+    if (worldMagnet || magnetActiveTimer > 0 || activeBalloon || arrowWaveInProgress || bombs.length > 0 || specialHazardWarning || fireSweep || cannonball || pipeSaw) return false;
 
     // Aim near the next pipe opening, but choose a fresh reachable height each time.
     // This keeps magnets visible and collectible rather than placing them behind pipes or off-screen.
@@ -1618,7 +1908,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function maybeSpawnBalloon() {
-    if (activeBalloon || worldMagnet || magnetActiveTimer > 0 || arrowWaveInProgress) return;
+    if (caveZone || activeBalloon || worldMagnet || magnetActiveTimer > 0 || arrowWaveInProgress || specialHazardWarning || fireSweep || cannonball || pipeSaw) return;
     const colors = ['#ffd166', '#ff6b6b', '#4ecdc4', '#a388ee'];
     const chosenColor = colors[Math.floor(Math.random() * colors.length)];
     const baseY = Math.max(130, Math.min(FLOOR - 120, lastGapY + (Math.random() - 0.5) * 60));
@@ -1677,18 +1967,22 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const char = getSelectedCharConfig();
     const isShadowTucked = (char.id === 'midnight-dumpling' && abilityActiveTimer > 0);
     const col = char.collision;
-    const bodyRadius = isShadowTucked ? col.bodyR * 0.70 : col.bodyR;
-    const tailOffset = isShadowTucked ? col.tailOffset * 0.65 : col.tailOffset;
+    const tuckScale = isShadowTucked ? 0.76 : 1;
+    const bodyRadius = col.bodyR * tuckScale;
+    const tailOffset = col.tailOffset * (isShadowTucked ? 0.76 : 1);
 
     return [
-      { cx: bx + 10, cy: by - 6, r: col.headR },
-      { cx: bx - 6, cy: by + 4, r: bodyRadius },
-      { cx: bx + tailOffset, cy: by + 12, r: col.tailR }
+      { cx: bx + 10 * tuckScale, cy: by - 6 * tuckScale, r: col.headR * tuckScale },
+      { cx: bx - 6 * tuckScale, cy: by + 4 * tuckScale, r: bodyRadius },
+      { cx: bx + tailOffset, cy: by + 12 * tuckScale, r: col.tailR * tuckScale }
     ];
   }
 
   function checkCollisionWithPillars(p) {
+    const activeChar = getSelectedCharConfig();
     if (isProtectedByGrace()) return false;
+    // Midnight Dumpling's timed Shadow Phase bypasses pipe geometry only.
+    if (activeChar.id === 'midnight-dumpling' && abilityActiveTimer > 0) return false;
     const shapes = getBirdCollisionEnvelope();
     const top = p.center - p.gap / 2, bottom = p.center + p.gap / 2;
     for (const s of shapes) {
@@ -1736,7 +2030,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (e.isPrimary === false) return;
     if (e.pointerType === 'mouse' && e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
-    if (!aboutPanel.hidden || !storePanel.hidden) return;
+    if (!aboutPanel.hidden || !storePanel.hidden || !guidePanel.hidden) return;
 
     const rect = canvas.getBoundingClientRect();
     const point = { x: (e.clientX - rect.left) * W / rect.width, y: (e.clientY - rect.top) * H / rect.height };
@@ -1755,7 +2049,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       return;
     }
     if (state === 'paused') { togglePause(); return; }
-    if (state === 'playing') { flap(); playBackgrounds(); }
+    if (state === 'playing') {
+      const cur = getSelectedCharConfig();
+      if (cur.id === 'blueberry-blimp' && abilityActiveTimer > 0 && point.y > bird.y + 18) {
+        bird.vy = Math.max(bird.vy, GLIDE_DIVE_SPEED); glideDiveTimer = 0.28;
+        createAbilityBurst('#76d8ff', bird.x, bird.y + 18, 5);
+      } else { flap(); }
+      playBackgrounds();
+    }
   }
 
   function inputFromKeyboard() {
@@ -1770,8 +2071,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   document.addEventListener('keydown', e => {
     if (e.repeat) return;
     if (e.code === 'Escape') {
+      if (!guidePanel.hidden) { closeGuide(); return; }
       if (!storePanel.hidden) { storePanel.hidden = true; return; }
       if (!aboutPanel.hidden) { aboutPanel.hidden = true; return; }
+    }
+    if (!guidePanel.hidden) {
+      if (e.code === 'ArrowLeft') { e.preventDefault(); stepGuide(-1); }
+      else if (e.code === 'ArrowRight') { e.preventDefault(); stepGuide(1); }
+      return;
     }
     if (!aboutPanel.hidden || !storePanel.hidden) return;
 
@@ -1780,6 +2087,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (e.code === 'KeyQ') { e.preventDefault(); activateInstantPulse(); return; }
     if (e.code === 'KeyW') { e.preventDefault(); activateSkyBlink(); return; }
     if (e.code === 'KeyS') { e.preventDefault(); activateBubbleShield(); return; }
+    if (e.code === 'ArrowDown' && state === 'playing' && getSelectedCharConfig().id === 'blueberry-blimp' && abilityActiveTimer > 0) {
+      e.preventDefault(); bird.vy = Math.max(bird.vy, GLIDE_DIVE_SPEED); glideDiveTimer = 0.28; return;
+    }
 
     if (['Space','ArrowUp','Enter'].includes(e.code)) {
       e.preventDefault();
@@ -1790,6 +2100,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   });
 
   aboutCloseBtn.addEventListener('click', () => { aboutPanel.hidden = true; });
+  openGuideBtn.addEventListener('click', openGuide);
+  guideCloseBtn.addEventListener('click', closeGuide);
+  guidePrevBtn.addEventListener('click', () => stepGuide(-1));
+  guideNextBtn.addEventListener('click', () => { if (guideIndex === GUIDE_SLIDES.length - 1) closeGuide(); else stepGuide(1); });
   soundBtn.addEventListener('click', () => setSound(!soundOn));
 
   function togglePause() {
@@ -2019,6 +2333,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function drawWorldCoins() {
+    for (const coin of caveCoins) {
+      if (coin.collected || coin.x < -24 || coin.x > W+24) continue;
+      const spin=Math.cos(visualTime*7+coin.spinSeed); ctx.save(); ctx.translate(lerp(coin.px,coin.x,renderAlpha),coin.y); ctx.scale(Math.max(.28,Math.abs(spin)),1); drawCoinGlyph(0,0,COIN_R,visualTime*1.15); ctx.restore();
+      if (magnetActiveTimer>0 && Math.hypot(coin.x-bird.x,coin.y-bird.y)<180) { ctx.save(); ctx.strokeStyle='rgba(255,209,102,.4)'; ctx.setLineDash([3,4]); ctx.beginPath(); ctx.moveTo(coin.x,coin.y); ctx.lineTo(bird.x,bird.y); ctx.stroke(); ctx.restore(); }
+    }
     for (const p of pipes) {
       if (!p.coins) continue;
       const px = lerp(p.px, p.x, renderAlpha);
@@ -2165,11 +2484,16 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const gapTop = p.center - p.gap/2, gapBottom = p.center + p.gap/2, pw=PIPE_W, cap=CAP_H;
     ctx.save(); ctx.translate(x, 0);
     ctx.save(); ctx.shadowColor='rgba(17,65,65,.18)'; ctx.shadowBlur=7; ctx.shadowOffsetX=2;
-    ctx.fillStyle=pipeBodyGrad; roundRect(5,0,pw-10,Math.max(1,gapTop),8); roundRect(5,gapBottom,pw-10,FLOOR-gapBottom,8);
-    ctx.fillStyle=pipeCapGrad; roundRect(0,gapTop-cap+2,pw,cap,7); roundRect(0,gapBottom-2,pw,cap,7);
+    ctx.fillStyle=pipeBodyGrad;
+    if (gapTop > 1) roundRect(5,0,pw-10,gapTop,8);
+    if (gapBottom < FLOOR-1) roundRect(5,gapBottom,pw-10,FLOOR-gapBottom,8);
+    ctx.fillStyle=pipeCapGrad;
+    if (gapTop > 1) roundRect(0,gapTop-cap+2,pw,cap,7);
+    if (gapBottom < FLOOR-1) roundRect(0,gapBottom-2,pw,cap,7);
     ctx.restore();
-    ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,11,5,Math.max(0,gapTop-22),3); roundRect(13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3);
-    ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,0,4,Math.max(1,gapTop-cap+2)); ctx.fillRect(pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom-4));
+    if (gapTop > 22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,11,5,Math.max(0,gapTop-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,0,4,Math.max(1,gapTop-cap+2)); }
+    if (gapBottom < FLOOR-22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom-4)); }
+    if (p.narrow && !p.retracting) { ctx.fillStyle='#ffd166'; if (gapTop > 1) ctx.fillRect(1, gapTop-cap+6, 3, Math.max(6, cap-8)); if (gapBottom < FLOOR-1) ctx.fillRect(pw-4, gapBottom+3, 3, Math.max(6, cap-8)); }
     ctx.restore();
   }
 
@@ -2179,120 +2503,45 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const scale = drawWidth / 163;
     const pulse = 0.5 + 0.5 * Math.sin(visualTime * 9);
 
-    // Blueberry Blimp: a clear parachute canopy makes Sky Glide readable at a glance.
-    // Decorative only: it does not alter the bird's collision envelope or movement physics.
+    // Blueberry Blimp: the parachute is now pixel art and corresponds to the real height-hold physics.
     if (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0) {
       ctx.save();
-      ctx.translate(x, y);
-      const sway = Math.sin(visualTime * 3.2) * 3.5 * scale;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = 'rgba(225,248,255,.92)';
-      ctx.lineWidth = 1.8 * scale;
-      ctx.beginPath();
-      ctx.moveTo(-49 * scale + sway, -91 * scale);
-      ctx.lineTo(-22 * scale, -34 * scale);
-      ctx.moveTo(49 * scale + sway, -91 * scale);
-      ctx.lineTo(22 * scale, -34 * scale);
-      ctx.stroke();
-
-      const canopy = ctx.createLinearGradient(0, -145 * scale, 0, -88 * scale);
-      canopy.addColorStop(0, '#d9f8ff');
-      canopy.addColorStop(.42, '#55c9ff');
-      canopy.addColorStop(1, '#1679d4');
-      ctx.fillStyle = canopy;
-      ctx.strokeStyle = '#dffaff';
-      ctx.lineWidth = 2.2 * scale;
-      ctx.shadowColor = '#39caff';
-      ctx.shadowBlur = 12 * scale;
-      ctx.beginPath();
-      ctx.moveTo(-55 * scale + sway, -91 * scale);
-      ctx.bezierCurveTo(-59 * scale + sway, -123 * scale, -33 * scale + sway, -145 * scale, sway, -140 * scale);
-      ctx.bezierCurveTo(33 * scale + sway, -145 * scale, 59 * scale + sway, -123 * scale, 55 * scale + sway, -91 * scale);
-      ctx.quadraticCurveTo(sway, -78 * scale, -55 * scale + sway, -91 * scale);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(238,252,255,.75)';
-      ctx.lineWidth = 1.1 * scale;
-      for (const panelX of [-34, -17, 0, 17, 34]) {
-        ctx.beginPath();
-        ctx.moveTo(sway, -139 * scale);
-        ctx.lineTo((panelX + sway / scale) * scale, -92 * scale);
-        ctx.stroke();
+      ctx.globalAlpha = 0.94;
+      ctx.imageSmoothingEnabled = false;
+      const sway = Math.round(Math.sin(visualTime * 3.2) * 3 * scale);
+      if (parachuteSprite && parachuteSprite.complete && parachuteSprite.naturalWidth) {
+        ctx.drawImage(parachuteSprite, x - 48 * scale + sway, y - 146 * scale, 96 * scale, 80 * scale);
       }
       ctx.restore();
-
-      // Keep the existing airflow ribbons and floating particles beneath the canopy effect.
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = 0.48 + pulse * 0.22;
-      ctx.strokeStyle = '#70dfff';
-      ctx.lineWidth = 2.4 * scale;
-      ctx.shadowColor = '#39caff';
-      ctx.shadowBlur = 12 * scale;
-      for (let i = 0; i < 3; i++) {
-        const offset = i * 12 * scale;
-        ctx.beginPath();
-        ctx.ellipse(-5 * scale, 2 * scale, (49 + offset) * scale, (34 + offset * 0.35) * scale,
-          visualTime * (i % 2 ? -0.45 : 0.45), 0.25 + i * 0.22, Math.PI * 1.72 + i * 0.22);
-        ctx.stroke();
-      }
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#c9f6ff';
-      for (let i = 0; i < 5; i++) {
-        const a = visualTime * 2.8 + i * (Math.PI * 2 / 5);
-        ctx.beginPath();
-        ctx.arc(Math.cos(a) * 61 * scale, Math.sin(a) * 43 * scale, 2.1 * scale, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.save(); ctx.translate(x, y); ctx.globalAlpha = 0.55 + pulse * 0.2;
+      ctx.fillStyle = '#8fe4ff'; ctx.imageSmoothingEnabled = false;
+      for (let i = 0; i < 5; i++) { const px = x - 48 * scale + ((i * 19 + Math.floor(visualTime * 22)) % 92) * scale; ctx.fillRect(px - x, (8 + (i % 2) * 8) * scale, 3 * scale, 3 * scale); }
       ctx.restore();
     }
 
-    // Midnight Dumpling: a violet shadow ring makes the shortened hitbox/tuck visible.
-    if (curChar.id === 'midnight-dumpling' && abilityActiveTimer > 0) {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = 0.45 + pulse * 0.2;
-      ctx.strokeStyle = '#9b87ff';
-      ctx.shadowColor = '#6954ff';
-      ctx.shadowBlur = 13 * scale;
-      ctx.lineWidth = 2.2 * scale;
-      ctx.setLineDash([7 * scale, 5 * scale]);
-      ctx.beginPath();
-      ctx.ellipse(0, 3 * scale, 53 * scale, 39 * scale, -visualTime * 0.8, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#b8aaff';
-      for (let i = 0; i < 3; i++) {
-        const a = -visualTime * 3 + i * Math.PI * 2 / 3;
-        ctx.beginPath();
-        ctx.arc(Math.cos(a) * 58 * scale, Math.sin(a) * 42 * scale, 2.8 * scale, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // Midnight Dumpling: pixel shadow marker while its complete collision envelope is tucked.
+    if (curChar.id === 'midnight-dumpling' && abilityActiveTimer > 0 && shadowTuckSprite && shadowTuckSprite.complete && shadowTuckSprite.naturalWidth) {
+      ctx.save(); ctx.globalAlpha = 0.9; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(shadowTuckSprite, x - 42 * scale, y - 68 * scale, 84 * scale, 70 * scale);
       ctx.restore();
     }
 
-    // Royal Roast: the stored 80% flap remains visibly primed until the next flap consumes it.
-    if (curChar.id === 'royal-roast' && royalDoubleBeatAvailable) {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = 0.85 + pulse * 0.15;
-      ctx.strokeStyle = '#ffd166';
-      ctx.shadowColor = '#ffc247';
-      ctx.shadowBlur = 15 * scale;
-      ctx.lineWidth = 2.4 * scale;
-      ctx.beginPath();
-      ctx.ellipse(0, 1 * scale, 56 * scale, 42 * scale, visualTime * 0.35, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = '#ffe28a';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = `bold ${19 * scale}px system-ui`;
-      ctx.fillText('♛', 0, -58 * scale);
-      ctx.font = `900 ${7.5 * scale}px system-ui`;
-      ctx.fillText('BONUS FLAP READY', 0, -72 * scale);
+    // Chili Puff's arrow immunity is passive and always visible, not tied to Ember Burst cooldown.
+    if (curChar.id === 'chili-puff' && arrowImmunitySprite && arrowImmunitySprite.complete && arrowImmunitySprite.naturalWidth) {
+      ctx.save(); ctx.globalAlpha = 0.86; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(arrowImmunitySprite, x + 43 * scale, y - 54 * scale, 38 * scale, 38 * scale);
+      ctx.restore();
+    }
+    if (curChar.id === 'chili-puff' && abilityActiveTimer > 0 && emberBurstSprite && emberBurstSprite.complete && emberBurstSprite.naturalWidth) {
+      ctx.save(); ctx.globalAlpha = 0.95; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(emberBurstSprite, x + 18 * scale, y - 26 * scale, 86 * scale, 86 * scale);
+      ctx.restore();
+    }
+
+    // Royal Roast: pixel hourglass/rune while surrounding hazards are actually slowed.
+    if (curChar.id === 'royal-roast' && timeWarpTimer > 0 && timeWarpSprite && timeWarpSprite.complete && timeWarpSprite.naturalWidth) {
+      ctx.save(); ctx.globalAlpha = 0.72 + pulse * 0.2; ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(timeWarpSprite, x - 68 * scale, y - 72 * scale, 136 * scale, 136 * scale);
       ctx.restore();
     }
   }
@@ -2317,7 +2566,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.rotate(tilt + wobble);
 
     if (isShadowTucked) {
-      ctx.scale((drawWidth/1024) * 0.78, drawHeight/769);
+      ctx.scale((drawWidth/1024) * 0.78, (drawHeight/769) * 0.88);
     } else {
       ctx.scale(drawWidth/1024, drawHeight/769);
     }
@@ -2335,36 +2584,25 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       ctx.fill();
     }
 
-    // LAYER 4: DIZZY EYES (Aligned precisely with original natural eyes, completely concealing them)
+    // DEATH FACE: crisp red pixel crosses replace the old floating/dizzy eyes.
+    // Eye anchors are calibrated against all six original character frame sheets.
+    // Sprite-local coordinates keep both marks attached to the face while it tilts and sinks.
     if (dazed) {
       ctx.shadowBlur = 0;
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#3f2926';
-      ctx.lineWidth = 6;
-
-      ctx.beginPath();
-      ctx.ellipse(702, 339, 30, 22, -0.06, 0, Math.PI * 2);
-      ctx.fill(); ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(810, 339, 30, 22, 0.05, 0, Math.PI * 2);
-      ctx.fill(); ctx.stroke();
-
-      ctx.fillStyle = '#28283a';
-      ctx.beginPath(); ctx.arc(707, 344, 8, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(815, 344, 8, 0, Math.PI * 2); ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(704, 341, 3.0, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(812, 341, 3.0, 0, Math.PI * 2); ctx.fill();
-
-      for (let i = 0; i < 3; i++) {
-        const a = deathAnim * 8 + i * 2.1;
-        const sx = 780 + Math.cos(a) * 90, sy = 245 + Math.sin(a) * 30;
-        ctx.save(); ctx.translate(sx, sy); ctx.rotate(a); ctx.fillStyle = '#ffe17e';
-        ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(4, -4); ctx.lineTo(13, 0); ctx.lineTo(4, 4); ctx.lineTo(0, 13); ctx.lineTo(-4, 4); ctx.lineTo(-13, 0); ctx.lineTo(-4, -4); ctx.closePath(); ctx.fill(); ctx.restore();
-      }
-      ctx.fillStyle = '#fff2b5'; ctx.font = 'bold 54px system-ui'; ctx.fillText('Zzz', 850, 195);
+      const drawDeathCross = (cx, cy, halfLength) => {
+        ctx.save(); ctx.translate(cx, cy); ctx.lineCap = 'square'; ctx.lineJoin = 'miter';
+        for (const angle of [-Math.PI / 4, Math.PI / 4]) {
+          ctx.save(); ctx.rotate(angle);
+          ctx.strokeStyle = '#281925'; ctx.lineWidth = 38;
+          ctx.beginPath(); ctx.moveTo(-halfLength, 0); ctx.lineTo(halfLength, 0); ctx.stroke();
+          ctx.strokeStyle = '#f04455'; ctx.lineWidth = 25;
+          ctx.beginPath(); ctx.moveTo(-halfLength, 0); ctx.lineTo(halfLength, 0); ctx.stroke();
+          ctx.restore();
+        }
+        ctx.restore();
+      };
+      drawDeathCross(676, 310, 23);
+      drawDeathCross(766, 310, 23);
     }
 
     ctx.restore();
@@ -2437,7 +2675,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       ctx.restore();
       ctx.globalAlpha = portalState === 'warp' ? .35 : .7;
     }
-    drawBirdArtwork(bird.x, y+bob, 163, angle*.62, visualTime, state==='over' && deathAnim<.76, false);
+    drawBirdArtwork(bird.x, y+bob, 163, angle*.62, visualTime, state==='over', false);
     ctx.globalAlpha = 1;
     if (collisionDebugActive) {            // developer overlay (H key): the exact circles used for collisions
       ctx.save(); ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 2;
@@ -2470,18 +2708,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (arrowWarningTimer > 0) {
-      const alpha = Math.abs(Math.sin(visualTime * 18));
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#222';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(W - 4, H / 2 - 25);
-      ctx.lineTo(W - 22, H / 2);
-      ctx.lineTo(W - 4, H / 2 + 25);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
+      const alpha = 0.72 + Math.abs(Math.sin(visualTime * 15)) * 0.28;
+      ctx.save(); ctx.globalAlpha = alpha; ctx.imageSmoothingEnabled = false;
+      if (hazardWarningSprite && hazardWarningSprite.complete && hazardWarningSprite.naturalWidth) ctx.drawImage(hazardWarningSprite, W - 52, 104, 34, 34);
+      ctx.fillStyle='rgba(18,20,43,.9)'; ctx.fillRect(W-174,146,160,25);
+      ctx.fillStyle='#fff0bd'; ctx.font='900 10px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('ARROWS INCOMING ←',W-94,158);
       ctx.restore();
     }
   }
@@ -2535,6 +2766,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.fillStyle='#ffe8a5'; ctx.font='850 8px system-ui'; ctx.textAlign='left'; ctx.letterSpacing='.6px'; ctx.fillText('RUN',329,41);
     ctx.fillStyle='#fff'; ctx.font='950 13px system-ui'; ctx.letterSpacing='0px'; ctx.fillText(String(coinsRun),329,57);
     ctx.textAlign='left';
+    if (getSelectedCharConfig().id === 'blueberry-blimp' && abilityActiveTimer > 0) {
+      ctx.fillStyle='rgba(8,24,48,.88)'; roundRect(64,94,292,24,9);
+      ctx.fillStyle='#bceeff'; ctx.font='900 9px system-ui'; ctx.textAlign='center'; ctx.fillText('TAP BELOW TO DESCEND  ·  TAP ABOVE TO FLAP',210,110); ctx.textAlign='left';
+    }
+    if (getSelectedCharConfig().id === 'royal-roast' && timeWarpTimer > 0) {
+      ctx.fillStyle='rgba(66,37,100,.9)'; roundRect(144,94,132,22,8);
+      ctx.fillStyle='#efdcff'; ctx.font='900 9px system-ui'; ctx.textAlign='center'; ctx.fillText(`TIME WARP ${timeWarpTimer.toFixed(1)}s`,210,109); ctx.textAlign='left';
+    }
   }
 
   function drawGameOver() {
@@ -2543,7 +2782,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.strokeStyle='rgba(255,220,136,.58)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(32.5,170.5,355,409,27); ctx.stroke();
     ctx.textAlign='center'; ctx.fillStyle='#ffcf60'; ctx.font='900 10px system-ui'; ctx.letterSpacing='2px'; ctx.fillText('FLIGHT REPORT',210,203);
     ctx.fillStyle='#fff'; ctx.font='1000 31px system-ui'; ctx.letterSpacing='-.7px'; ctx.fillText('YOU BONKED!',210,244);
-    ctx.fillStyle='#c8d1ef'; ctx.font='600 11px system-ui'; ctx.letterSpacing='0px'; ctx.fillText('The sky won this round. Your legend survives.',210,267);
+    ctx.fillStyle='#c8d1ef'; ctx.font='600 11px system-ui'; ctx.letterSpacing='0px'; ctx.fillText(royalRevivedThisRun ? 'The Royal Soul was spent. This flight is over.' : 'The sky won this round. Your legend survives.',210,267);
     ctx.fillStyle='rgba(255,255,255,.07)'; roundRect(53,291,314,75,17);
     ctx.fillStyle='#aebbe2'; ctx.font='850 8px system-ui'; ctx.letterSpacing='1.2px'; ctx.fillText('SCORE',104,311); ctx.fillText('COINS THIS RUN',210,311); ctx.fillText('BEST',316,311);
     ctx.fillStyle='#fff'; ctx.font='1000 24px system-ui'; ctx.letterSpacing='0px'; ctx.fillText(String(score),104,344); ctx.fillText(String(coinsRun),210,344); ctx.fillText(String(best),316,344);
@@ -2623,9 +2862,400 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.fillStyle='#c4d7e2'; ctx.font='500 13px system-ui'; ctx.fillText('Tap RESUME above to keep flying.',210,358); ctx.textAlign='left';
   }
 
+  /* ---------- Special pixel-art hazard scenes ---------- */
+  function widenUpcomingGapsForSpecialScene(center = bird.y) {
+    // Keep the player's current / intended safe lane inside the event corridor.
+    specialSceneCenter = Math.max(230, Math.min(480, center));
+    nextCenter = specialSceneCenter;
+    for (const p of pipes) {
+      if (p.x > bird.x - PIPE_W && p.x < W + PIPE_SPACING * 2) {
+        p.gap = Math.max(p.gap, SPECIAL_EVENT_PIPE_GAP);
+        p.center = specialSceneCenter;
+      }
+    }
+  }
+
+  function canStartSpecialHazard() {
+    return score >= 4 && !caveStartPending && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw &&
+      !arrowWaveInProgress && arrows.length === 0 && pendingArrowSpawns.length === 0 && bombs.length === 0 &&
+      !activeBalloon && !worldMagnet && portalState === 'idle';
+  }
+
+  function beginSpecialHazardWarning(type) {
+    if (type === 'fire') {
+      const y = Math.max(112, Math.min(286, bird.y - 58));
+      // A route roughly 60px lower leaves room to descend while remaining inside
+      // the generous temporary pipe corridor during the 1.8s warning.
+      widenUpcomingGapsForSpecialScene(bird.y + 60);
+      specialHazardWarning = { type, timer: SPECIAL_WARNING_SECONDS, y, routeCenter: specialSceneCenter };
+    } else if (type === 'cannon') {
+      const y = Math.max(250, Math.min(432, bird.y));
+      // Keep both vertical dodge directions open around the player's current lane.
+      widenUpcomingGapsForSpecialScene(bird.y);
+      specialHazardWarning = { type, timer: SPECIAL_WARNING_SECONDS, y, routeCenter: specialSceneCenter };
+    } else {
+      const y = Math.max(250, Math.min(432, bird.y));
+      widenUpcomingGapsForSpecialScene(bird.y);
+      specialHazardWarning = { type, timer: SPECIAL_WARNING_SECONDS, y, routeCenter: specialSceneCenter };
+    }
+    if (type === 'fire') tone(240, .18, 'sawtooth', .05);
+    else if (type === 'pipe') tone(420, .18, 'square', .06);
+    else tone(610, .12, 'square', .055);
+  }
+
+  function startPipeRetractionEncounter(y) {
+    // Retract only the next two pipe pairs; the corridor opens before the rotor arrives.
+    const targets = pipes.filter(p => p.x > bird.x + 35 && !p.retracting).sort((a,b) => a.x - b.x).slice(0,2);
+    for (const p of targets) {
+      p.retracting = true;
+      p.retractProgress = 0;
+      p.retractBaseGap = p.gap;
+    }
+    pipeSaw = { x: W + 46, px: W + 46, y, speed: 285, r: 27 };
+    showToast('PIPE SHIFT! PIPES RETRACT — DODGE THE ROTOR');
+  }
+
+  function updateSpecialHazards(dt, hazardTimeScale) {
+    if (specialHazardScheduleTimer > 0) specialHazardScheduleTimer = Math.max(0, specialHazardScheduleTimer - dt);
+    if (specialHazardScheduleTimer <= 0 && canStartSpecialHazard()) {
+      beginSpecialHazardWarning(nextSpecialHazardType);
+      const currentIndex = SPECIAL_HAZARD_ORDER.indexOf(nextSpecialHazardType);
+      nextSpecialHazardType = SPECIAL_HAZARD_ORDER[(currentIndex + 1) % SPECIAL_HAZARD_ORDER.length];
+    }
+    if (specialHazardWarning) {
+      specialHazardWarning.timer -= dt;
+      if (specialHazardWarning.timer <= 0) {
+        const warning = specialHazardWarning;
+        if (warning.type === 'fire') {
+          fireSweep = { x: W + 38, y: warning.y, w: 252, h: 54, speed: 315 };
+          showToast('FIRE SWEEP! MOVE BELOW THE FLAMES');
+        } else if (warning.type === 'pipe') {
+          startPipeRetractionEncounter(warning.y);
+        } else {
+          cannonball = { x: W + 42, px: W + 42, y: warning.y, speed: 370, r: 20 };
+          showToast('CANNONBALL INCOMING! DODGE UP OR DOWN');
+        }
+        specialHazardWarning = null;
+      }
+    }
+    if (fireSweep) {
+      fireSweep.x -= fireSweep.speed * hazardTimeScale * dt;
+      if (fireSweep.x + fireSweep.w < -20) { fireSweep = null; specialHazardScheduleTimer = 30 + Math.random() * 10; }
+    }
+    if (cannonball) {
+      cannonball.px = cannonball.x;
+      cannonball.x -= cannonball.speed * hazardTimeScale * dt;
+      if (cannonball.x < -45) {
+        createExplosion(14, cannonball.y, '#ff9a3d', 18);
+        cannonball = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
+      }
+    }
+    if (pipeSaw) {
+      pipeSaw.px = pipeSaw.x;
+      pipeSaw.x -= pipeSaw.speed * hazardTimeScale * dt;
+      if (pipeSaw.x < -50) {
+        createExplosion(12, pipeSaw.y, '#ffd166', 14);
+        pipeSaw = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
+      }
+    }
+  }
+
+  function checkCollisionWithFire(hazard) {
+    const shapes = getBirdCollisionEnvelope();
+    return shapes.some(s => hitRectCircle(s.cx, s.cy, s.r, hazard.x, hazard.y, hazard.w, hazard.h));
+  }
+
+  function checkCollisionWithCannonball(projectile) {
+    const shapes = getBirdCollisionEnvelope();
+    return shapes.some(s => Math.hypot(s.cx - projectile.x, s.cy - projectile.y) < s.r + projectile.r);
+  }
+
+  function checkCollisionWithPipeSaw(projectile) {
+    const shapes = getBirdCollisionEnvelope();
+    return shapes.some(s => Math.hypot(s.cx - projectile.x, s.cy - projectile.y) < s.r + projectile.r);
+  }
+
+  function drawSpecialHazards() {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    if (fireSweep) {
+      if (fireSweepSprite && fireSweepSprite.complete && fireSweepSprite.naturalWidth) ctx.drawImage(fireSweepSprite, fireSweep.x, fireSweep.y, fireSweep.w, fireSweep.h);
+      else { ctx.fillStyle='#ff672b'; ctx.fillRect(fireSweep.x, fireSweep.y, fireSweep.w, fireSweep.h); }
+      ctx.fillStyle='rgba(255,239,165,.9)';
+      for (let i=0;i<9;i++) { const fx=fireSweep.x+((i*31+Math.floor(visualTime*70))%fireSweep.w); ctx.fillRect(fx,fireSweep.y+5+(i%3)*13,5,4); }
+    }
+    if (cannonball) {
+      if (cannonSprite && cannonSprite.complete && cannonSprite.naturalWidth) ctx.drawImage(cannonSprite, W-66, cannonball.y-24, 62, 42);
+      if (cannonballSprite && cannonballSprite.complete && cannonballSprite.naturalWidth) ctx.drawImage(cannonballSprite, cannonball.x-23, cannonball.y-23, 46, 46);
+      else { ctx.fillStyle='#374355'; ctx.beginPath(); ctx.arc(cannonball.x,cannonball.y,cannonball.r,0,Math.PI*2); ctx.fill(); }
+      ctx.fillStyle='rgba(255,182,65,.82)'; ctx.fillRect(cannonball.x+18,cannonball.y-3,12,6); ctx.fillRect(cannonball.x+30,cannonball.y-1,7,3);
+    }
+    if (pipeSaw) {
+      ctx.save(); ctx.translate(pipeSaw.x, pipeSaw.y); ctx.rotate(visualTime * 8.5);
+      if (pipeSawSprite && pipeSawSprite.complete && pipeSawSprite.naturalWidth) {
+        ctx.drawImage(pipeSawSprite, -34, -34, 68, 68);
+      } else {
+        ctx.fillStyle='#9caec0'; ctx.beginPath(); ctx.arc(0,0,27,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle='#f5d16b'; ctx.lineWidth=4; ctx.stroke();
+      }
+      ctx.restore();
+      ctx.fillStyle='rgba(255,180,75,.7)'; ctx.fillRect(pipeSaw.x+24,pipeSaw.y-2,24,4);
+    }
+    if (specialHazardWarning) {
+      const fire = specialHazardWarning.type === 'fire';
+      const pipe = specialHazardWarning.type === 'pipe';
+      const sprite = fire ? hazardWarningSprite : pipe ? pipeSawSprite : cannonWarningSprite;
+      const alpha = 0.72 + Math.abs(Math.sin(visualTime * 13)) * 0.28;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle='rgba(16,20,45,.94)'; ctx.fillRect(34,124,352,66);
+      ctx.strokeStyle=fire?'#ff8b35':pipe?'#91c7ff':'#ffcf69'; ctx.lineWidth=3; ctx.strokeRect(35.5,125.5,349,63);
+      if (sprite && sprite.complete && sprite.naturalWidth) ctx.drawImage(sprite, fire ? 48 : 334, 140, 34, 34);
+      ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.font='900 13px system-ui';
+      ctx.fillStyle=fire?'#ffb45a':pipe?'#9ed4ff':'#ffe08a';
+      ctx.fillText(fire?'FIRE SWEEP INCOMING':pipe?'PIPE SHIFT INCOMING':'CANNONBALL INCOMING',90,147);
+      ctx.font='800 10px system-ui'; ctx.fillStyle='#fff';
+      ctx.fillText(fire?'WARNING: MOVE BELOW · RIGHT → LEFT':pipe?'PIPES WILL RETRACT · DODGE THE ROTOR':'FROM RIGHT → LEFT · DODGE UP/DOWN',90,171);
+      ctx.textAlign='center'; ctx.font='1000 16px system-ui'; ctx.fillStyle='#fff';
+      ctx.fillText(Math.ceil(specialHazardWarning.timer).toString(),304,157);
+    }
+    if (narrowWarningTimer > 0) {
+      const alpha = Math.min(1,narrowWarningTimer*2);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle='rgba(15,24,35,.9)'; ctx.fillRect(110,200,200,34);
+      ctx.strokeStyle='#ffd166'; ctx.lineWidth=2; ctx.strokeRect(111,201,198,32);
+      if (narrowGapSprite && narrowGapSprite.complete && narrowGapSprite.naturalWidth) ctx.drawImage(narrowGapSprite,118,204,28,28);
+      ctx.fillStyle='#ffe08a'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='950 11px system-ui'; ctx.fillText('RARE NARROW GAP AHEAD!',224,217);
+    }
+    ctx.restore();
+  }
+
+  /* ---------- Variable-length Cave Zone ---------- */
+  const CAVE_SEGMENT_W = 48;
+  const CAVE_ENTRY_BASE_GAP = 258;
+  function clampNumber(value, min, max) { return Math.max(min, Math.min(max, value)); }
+  function makeCaveSegment(x, previousCenter, index, entryGap = CAVE_ENTRY_BASE_GAP) {
+    // A generous entry corridor tapers over several panels before the full dynamic section.
+    const firstSafe = index < 6;
+    const center = firstSafe ? previousCenter : clampNumber(previousCenter + (Math.random() * 2 - 1) * 20, 210, 455);
+    const transition = clampNumber((index - 5) / 4, 0, 1);
+    const gap = index < 6 ? entryGap : index < 9 ? lerp(entryGap, 244, transition) : 236 + Math.random() * 16;
+    const topJags = Array.from({length:6}, () => 3 + Math.floor(Math.random() * 10));
+    const bottomJags = Array.from({length:6}, () => 3 + Math.floor(Math.random() * 10));
+    return { x, px:x, center, gap, topJags, bottomJags, index, passed:false };
+  }
+  function beginCaveZone() {
+    if (caveZone || state !== 'playing') return;
+    const startCenter = clampNumber(bird.y, 210, 455);
+    const entryGap = clampNumber(CAVE_ENTRY_BASE_GAP + Math.abs(bird.y - startCenter) * .65, CAVE_ENTRY_BASE_GAP, 340);
+    const initialCount = Math.ceil(W / CAVE_SEGMENT_W) + 3;
+    const targetSegments = 12 + Math.floor(Math.random() * 7); // variable length; triggered by pipe progression, not a timer
+    caveZone = { segments:[], targetSegments, generated:0, center:startCenter, transition:0, notice:1.5, speedFactor:1, switchPlaced:false, exited:false };
+    for (let i=0;i<initialCount;i++) {
+      const seg = makeCaveSegment(i*CAVE_SEGMENT_W-CAVE_SEGMENT_W, startCenter, i, entryGap);
+      caveZone.segments.push(seg);
+    }
+    caveZone.center = startCenter;
+    pipes = []; nextCenter = null; lastGapY = startCenter;
+    arrows = []; pendingArrowSpawns = []; arrowWaveInProgress = false; arrowWarningTimer = 0;
+    bombs = []; activeBalloon = null; worldMagnet = null; magnetActiveTimer = 0;
+    fireSweep = null; cannonball = null; pipeSaw = null; specialHazardWarning = null;
+    caveCoins = []; caveCage = null; cageCapture = null;
+    cavePipesPassed = 0; caveStartPending = false;
+    showToast('CAVE ZONE — FOLLOW THE MOVING WALLS!');
+    tone(260,.2,'triangle',.05);
+  }
+  function addCaveSegmentContent(seg) {
+    // Coin chains are optional puzzle routes, never positioned inside rock collision margins.
+    if (seg.index >= 3 && seg.index % 2 === 1) {
+      const offset = (seg.index % 4 === 1 ? -1 : 1) * (seg.gap * (.13 + Math.random()*.06));
+      for (let i=0;i<2;i++) {
+        const x = seg.x + 12 + i*22;
+        caveCoins.push({ x, px:x, y:clampNumber(seg.center+offset+(i?8:-8), seg.center-seg.gap/2+48, seg.center+seg.gap/2-48), collected:false, spinSeed:Math.random()*Math.PI*2 });
+      }
+    }
+    // A small number of bombs create a choice, rather than a wall of unavoidable hazards.
+    if (seg.index >= 5 && seg.index % 6 === 2 && bombs.length < 1) {
+      const side = Math.random() < .5 ? -1 : 1;
+      const y = clampNumber(seg.center + side*(seg.gap*.27), 95, FLOOR-65);
+      bombs.push({ x:seg.x+36, px:seg.x+36, y, speed:188*currentDifficulty(), r:15, isCaveBomb:true, fuseSeed:Math.random() });
+    }
+    // A single visible pressure switch may call one cage trap during the cave run.
+    if (!caveZone.switchPlaced && seg.index >= 7 && seg.index < caveZone.targetSegments+3 && Math.random() < .23) {
+      const side = Math.random() < .5 ? -1 : 1;
+      const y = clampNumber(seg.center + side*(seg.gap/2-34), 75, FLOOR-60);
+      const x = seg.x + 24;
+      caveZone.switchPlate = { x, px:x, y, side, triggered:false, r:15 };
+      caveZone.switchPlaced = true;
+    }
+  }
+  function beginCaveCageTrap() {
+    if (!caveZone || caveCage || !caveZone.switchPlate || caveZone.switchPlate.triggered) return;
+    caveZone.switchPlate.triggered = true;
+    const targetY = clampNumber(bird.y - 88, 70, FLOOR - 232);
+    caveCage = { x:bird.x-44, px:bird.x-44, y:-196, targetY, w:88, h:184, phase:'warning', timer:.82, progress:0, caught:false };
+    showToast('CAGE TRAP! MOVE OUT OF THE DROP ZONE!');
+    tone(190,.28,'sawtooth',.07);
+  }
+  function caveCageContainsBird(cage) {
+    const shapes = getBirdCollisionEnvelope();
+    return shapes.some(s => hitRectCircle(s.cx,s.cy,s.r,cage.x+7,cage.y+10,cage.w-14,cage.h-18));
+  }
+  function updateCaveZone(dt, speed, hazardTimeScale) {
+    if (!caveZone) return;
+    caveZone.transition = Math.min(1, caveZone.transition + dt/.7);
+    caveZone.notice = Math.max(0,caveZone.notice-dt);
+    const scroll = speed * hazardTimeScale;
+    for (const seg of caveZone.segments) { seg.px=seg.x; seg.x -= scroll*dt; }
+    while (caveZone.segments.length && caveZone.segments[0].x + CAVE_SEGMENT_W < -6) caveZone.segments.shift();
+    if (caveZone.generated < caveZone.targetSegments && caveZone.segments.length) {
+      const last = caveZone.segments[caveZone.segments.length-1];
+      if (last.x < W - CAVE_SEGMENT_W) {
+        const index = 12 + caveZone.generated;
+        const seg = makeCaveSegment(last.x+CAVE_SEGMENT_W, caveZone.center, index);
+        caveZone.center = seg.center;
+        caveZone.segments.push(seg);
+        caveZone.generated++;
+        addCaveSegmentContent(seg);
+      }
+    }
+    // Cave coins travel with the level and are pulled by the existing magnet power-up.
+    for (let i=caveCoins.length-1;i>=0;i--) {
+      const coin=caveCoins[i]; coin.px=coin.x; coin.x -= scroll*dt;
+      if (magnetActiveTimer>0) {
+        const dx=bird.x-coin.x, dy=bird.y-coin.y, dist=Math.hypot(dx,dy);
+        if (dist<190 && dist>1) { const pull=(1-dist/190)*430*dt; coin.x += dx/dist*pull; coin.y += dy/dist*pull; }
+      }
+      if (!coin.collected && Math.hypot(coin.x-bird.x,coin.y-bird.y) < bird.radius+COIN_R) collectCoin(coin,coin.x);
+      if (coin.collected || coin.x < -30) caveCoins.splice(i,1);
+    }
+    if (caveZone.switchPlate && !caveZone.switchPlate.triggered) {
+      const plate=caveZone.switchPlate; plate.px=plate.x; plate.x -= scroll*dt;
+      if (plate.x < -40) { plate.triggered=true; }
+      else if (Math.abs(plate.x-bird.x)<34 && Math.abs(plate.y-bird.y)<42) beginCaveCageTrap();
+    }
+    if (caveCage) {
+      const cage=caveCage;
+      if (cage.phase==='warning') {
+        cage.timer-=dt;
+        if (cage.timer<=0) { cage.phase='dropping'; cage.timer=.78; showToast('CAGE DROPPING — DODGE NOW!'); }
+      } else if (cage.phase==='dropping') {
+        cage.progress=Math.min(1,cage.progress+dt/.78);
+        const e=cage.progress*cage.progress*(3-2*cage.progress);
+        cage.y=-196+(cage.targetY+196)*e;
+        // The cage only catches when it closes; this preserves a real response window.
+        if (cage.progress>=.96 && caveCageContainsBird(cage)) {
+          cageCapture={x:cage.x,y:cage.y,w:cage.w,h:cage.h,timer:0,startY:bird.y,endY:Math.min(FLOOR-50,bird.y+34)};
+          endFlight();
+          if (state==='playing') cageCapture=null; // Royal Soul revived; do not leave a stale cage on screen.
+          return;
+        }
+        if (cage.progress>=1) { cage.phase='retreat'; cage.timer=.72; }
+      } else if (cage.phase==='retreat') {
+        cage.timer-=dt; cage.x-=scroll*1.1*dt;
+        if (cage.timer<=0 || cage.x+cage.w<-20) caveCage=null;
+      }
+    }
+    // When the final generated segment scrolls past the player, return to pipes.
+    const last=caveZone.segments[caveZone.segments.length-1];
+    if (caveZone.generated>=caveZone.targetSegments && (!last || last.x+CAVE_SEGMENT_W < bird.x-55) && !caveCage) {
+      caveZone=null; caveCoins=[]; caveCage=null;
+      cavePipesPassed=0; cavePipesUntilEntry=10+Math.floor(Math.random()*7);
+      pipesPassedSinceArrow=0; pipesPassedSinceBomb=0; pipesPassedSinceBalloon=0;
+      specialHazardScheduleTimer=22+Math.random()*10;
+      lastGapY=clampNumber(bird.y,250,410); nextCenter=null;
+      pipes=[spawnPipe(W+55)];
+      showToast('CAVE CLEARED — BACK TO THE PIPES!');
+    }
+  }
+  function checkCollisionWithCaveWalls() {
+    if (!caveZone || isProtectedByGrace()) return false;
+    const shapes=getBirdCollisionEnvelope();
+    for (const seg of caveZone.segments) {
+      if (seg.x > bird.x+55 || seg.x+CAVE_SEGMENT_W < bird.x-55) continue;
+      const top=seg.center-seg.gap/2+8, bottom=seg.center+seg.gap/2-8;
+      for (const shape of shapes) {
+        if (hitRectCircle(shape.cx,shape.cy,shape.r,seg.x,0,CAVE_SEGMENT_W,top) ||
+            hitRectCircle(shape.cx,shape.cy,shape.r,seg.x,bottom,CAVE_SEGMENT_W,FLOOR-bottom)) return true;
+      }
+    }
+    return false;
+  }
+  function drawCaveZone() {
+    if (!caveZone) return;
+    ctx.save();
+    const fade=caveZone.transition;
+    ctx.globalAlpha=fade;
+    const bg=ctx.createLinearGradient(0,0,0,FLOOR); bg.addColorStop(0,'#091525'); bg.addColorStop(.55,'#14243b'); bg.addColorStop(1,'#08121f');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,FLOOR);
+    ctx.fillStyle='#101a2a'; ctx.fillRect(0,FLOOR,W,H-FLOOR);
+    // Quiet parallax crystal silhouettes, kept behind the safe corridor.
+    for (let i=0;i<6;i++) {
+      const x=((i*93 - (visualTime*18)%93)+W)%W;
+      ctx.fillStyle='rgba(42,71,100,.24)'; ctx.fillRect(x,120+(i%3)*55,3,150);
+    }
+    ctx.imageSmoothingEnabled=false;
+    for (const seg of caveZone.segments) {
+      const x=Math.round(lerp(seg.px,seg.x,renderAlpha));
+      const topEdge=seg.center-seg.gap/2, bottomEdge=seg.center+seg.gap/2;
+      if (caveWallSprite && caveWallSprite.complete && caveWallSprite.naturalWidth) {
+        for (let y=0;y<topEdge;y+=64) ctx.drawImage(caveWallSprite,x,y,CAVE_SEGMENT_W,Math.min(64,topEdge-y));
+        for (let y=bottomEdge;y<FLOOR;y+=64) ctx.drawImage(caveWallSprite,x,y,CAVE_SEGMENT_W,Math.min(64,FLOOR-y));
+      } else {
+        ctx.fillStyle='#27364d'; ctx.fillRect(x,0,CAVE_SEGMENT_W,topEdge); ctx.fillRect(x,bottomEdge,CAVE_SEGMENT_W,FLOOR-bottomEdge);
+      }
+      // Pixel-jagged lips; collision remains slightly inside these decorative edges.
+      ctx.fillStyle='#60748d';
+      for (let j=0;j<6;j++) {
+        const sx=x+j*8;
+        ctx.fillRect(sx,topEdge-2,5,seg.topJags[j]);
+        ctx.fillRect(sx,bottomEdge-seg.bottomJags[j]+2,5,seg.bottomJags[j]);
+      }
+      ctx.fillStyle='rgba(180,213,237,.35)'; ctx.fillRect(x,topEdge-2,CAVE_SEGMENT_W,3); ctx.fillRect(x,bottomEdge-1,CAVE_SEGMENT_W,3);
+      if (seg.index%4===0 && caveCrystalSprite && caveCrystalSprite.complete && caveCrystalSprite.naturalWidth) {
+        ctx.drawImage(caveCrystalSprite,x+10,topEdge+14,16,25);
+      }
+    }
+    if (caveZone.switchPlate && !caveZone.switchPlate.triggered && cavePlateSprite && cavePlateSprite.complete && cavePlateSprite.naturalWidth) {
+      const plate=caveZone.switchPlate; ctx.save(); ctx.shadowColor='#ff7867'; ctx.shadowBlur=9; ctx.drawImage(cavePlateSprite,plate.x-16,plate.y-16,32,32); ctx.restore();
+    }
+    if (caveZone.notice>0) {
+      ctx.fillStyle='rgba(9,18,35,.84)'; ctx.fillRect(126,128,168,35);
+      ctx.strokeStyle='#69d9ff'; ctx.lineWidth=2; ctx.strokeRect(127,129,166,33);
+      ctx.fillStyle='#d7f7ff'; ctx.font='1000 15px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('CAVE ZONE',210,145);
+    }
+    ctx.restore();
+  }
+  function drawCaveTrap() {
+    if (caveCage && caveCage.phase==='warning') {
+      ctx.save(); ctx.fillStyle='rgba(71,18,30,.92)'; ctx.fillRect(105,174,210,38);
+      ctx.strokeStyle='#ff9a82'; ctx.lineWidth=2; ctx.strokeRect(106,175,208,36);
+      if (caveWarningSprite && caveWarningSprite.complete && caveWarningSprite.naturalWidth) ctx.drawImage(caveWarningSprite,112,179,28,28);
+      ctx.fillStyle='#fff0d2'; ctx.font='1000 12px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('CAGE TRAP — MOVE!',224,194); ctx.restore();
+    }
+    const cage = cageCapture || caveCage;
+    if (!cage || (cage===caveCage && cage.phase==='warning')) return;
+    let x=cage.x, y=cage.y;
+    if (cageCapture) {
+      const t=Math.min(1,cageCapture.timer/.65); y=cageCapture.y + t*24;
+    }
+    ctx.save(); ctx.imageSmoothingEnabled=false;
+    if (caveCageSprite && caveCageSprite.complete && caveCageSprite.naturalWidth) {
+      ctx.drawImage(caveCageSprite,x,y,cage.w,cage.h);
+    } else {
+      ctx.strokeStyle='#b7c7d8'; ctx.lineWidth=4; ctx.strokeRect(x,y,cage.w,cage.h);
+      for(let bx=x+15;bx<x+cage.w;bx+=16){ctx.beginPath();ctx.moveTo(bx,y);ctx.lineTo(bx,y+cage.h);ctx.stroke();}
+    }
+    if (cageCapture) { ctx.fillStyle='rgba(255,205,93,.22)'; ctx.fillRect(x,y,cage.w,cage.h); }
+    ctx.restore();
+  }
+
   /* ---------- Simulation (Fixed-Step Loop) ---------- */
   function update(dt) {
-    if (state === 'over') { deathAnim += dt; return; }
+    if (state === 'over') {
+      deathAnim += dt;
+      if (cageCapture) { cageCapture.timer += dt; bird.y = cageCapture.startY + (cageCapture.endY-cageCapture.startY)*Math.min(1,cageCapture.timer/.65); }
+      return;
+    }
     if (state !== 'playing') return;
     syncPrev();
     elapsed += dt;
@@ -2633,9 +3263,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (flapStrokeBoost > 0) flapStrokeBoost = Math.max(0, flapStrokeBoost - dt * 2.2);
 
     if (abilityCooldownTimer > 0) abilityCooldownTimer = Math.max(0, abilityCooldownTimer - dt);
-    if (abilityActiveTimer > 0) {
-      abilityActiveTimer = Math.max(0, abilityActiveTimer - dt);
-    }
+    if (abilityActiveTimer > 0) abilityActiveTimer = Math.max(0, abilityActiveTimer - dt);
+    if (timeWarpTimer > 0) timeWarpTimer = Math.max(0, timeWarpTimer - dt);
+    if (reviveGraceTimer > 0) reviveGraceTimer = Math.max(0, reviveGraceTimer - dt);
+    if (pulseLiftTimer > 0) pulseLiftTimer = Math.max(0, pulseLiftTimer - dt);
+    if (glideDiveTimer > 0) glideDiveTimer = Math.max(0, glideDiveTimer - dt);
+    if (narrowWarningTimer > 0) narrowWarningTimer = Math.max(0, narrowWarningTimer - dt);
 
     // Shield timers
     if (shieldActive) {
@@ -2646,7 +3279,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
     }
     if (shieldGraceTimer > 0) shieldGraceTimer = Math.max(0, shieldGraceTimer - dt);
-    if (pulseLiftTimer > 0) pulseLiftTimer = Math.max(0, pulseLiftTimer - dt);
     if (blinkPhaseTimer > 0) blinkPhaseTimer = Math.max(0, blinkPhaseTimer - dt);
     if (teleportArrivalShieldTimer > 0) teleportArrivalShieldTimer = Math.max(0, teleportArrivalShieldTimer - dt);
     updatePortal(dt);
@@ -2655,14 +3287,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (magnetSpawnTimer > 0) magnetSpawnTimer = Math.max(0, magnetSpawnTimer - dt);
 
     // Random time-based magnet schedule. Never overlap a balloon, arrow wave or bomb gate.
-    if (score >= 4 && magnetSpawnTimer <= 0 && !worldMagnet && magnetActiveTimer <= 0 &&
+    if (!caveZone && score >= 4 && magnetSpawnTimer <= 0 && !worldMagnet && magnetActiveTimer <= 0 &&
         !activeBalloon && !arrowWaveInProgress && bombs.length === 0) {
       if (maybeSpawnMagnet()) magnetSpawnTimer = 18 + Math.random() * 14;
       else magnetSpawnTimer = 2.5; // retry shortly after a conflicting event clears
     }
 
     // Pending arrow spawns
-    for (let i = pendingArrowSpawns.length - 1; i >= 0; i--) {
+    for (let i = pendingArrowSpawns.length - 1; !caveZone && i >= 0; i--) {
       pendingArrowSpawns[i].delay -= dt;
       if (pendingArrowSpawns[i].delay <= 0) {
         spawnArrow(pendingArrowSpawns[i].y, pendingArrowSpawns[i].speed);
@@ -2672,36 +3304,52 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     const curChar = getSelectedCharConfig();
     const speed = 188 * currentDifficulty();
+    const hazardTimeScale = (curChar.id === 'royal-roast' && timeWarpTimer > 0) ? TIME_WARP_FACTOR : 1;
     groundOffset = (groundOffset + speed*dt) % 34;
+    if (!caveZone) updateSpecialHazards(dt, hazardTimeScale);
 
     const isGliding = (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0);
     if (isGliding) {
-      // Parachute mode gently carries the bird downward at a near-constant rate.
-      // This replaces gravity during the 8-second ability and prevents upward launch or a fast fall.
-      bird.vy = GLIDE_TARGET_FALL;
+      // Neutral vertical hold: no forced downward drift. A tap below the bird gives a short controlled descent; a normal flap moves up.
+      if (glideDiveTimer > 0) bird.vy = GLIDE_DIVE_SPEED;
+      else bird.vy *= Math.exp(-GLIDE_DAMPING * dt);
+      if (Math.abs(bird.vy) < 5) bird.vy = 0;
     } else {
       bird.vy = Math.min(650, bird.vy + 1280 * dt);
+      if (pulseLiftTimer > 0 && curChar.id === 'original-fatty') bird.vy = Math.max(-760, bird.vy - 470 * dt);
     }
     bird.y += bird.vy * dt;
     const targetAngle = Math.max(-.48, Math.min(1.08, bird.vy / 850));
     bird.angle += (targetAngle - bird.angle) * Math.min(1, dt * 13);
+    if (caveZone) { updateCaveZone(dt, speed, hazardTimeScale); if (state !== 'playing') return; }
 
     const pickup = bird.radius + COIN_R;
 
     // Update Pipes & Collisions
     for (const p of pipes) {
-      p.x -= speed * dt;
+      p.x -= speed * hazardTimeScale * dt;
+      if (p.retracting && p.retractProgress < 1) {
+        p.retractProgress = Math.min(1, p.retractProgress + dt / 0.62);
+        const eased = p.retractProgress * p.retractProgress * (3 - 2 * p.retractProgress);
+        p.gap = lerp(p.retractBaseGap || p.gap, 900, eased);
+      }
+      if (p.narrow && !p.narrowWarned && p.x < bird.x + 235 && p.x > bird.x - PIPE_W - 20) { p.narrowWarned = true; narrowWarningTimer = 1.2; }
+      if (p.narrow && curChar.id === 'midnight-dumpling' && !p.autoTuckTriggered && p.x < bird.x + PIPE_W + 45 && p.x > bird.x - PIPE_W - 26) {
+        if (abilityActiveTimer > 0) p.autoTuckTriggered = true;
+        else if (POWERUP_TEST_MODE || abilityCooldownTimer <= 0) p.autoTuckTriggered = activateShadowTuck(true);
+      }
       if (!p.passed && p.x + PIPE_W < bird.x) {
         p.passed = true;
         score++;
         pipesPassedSinceArrow++;
         pipesPassedSinceBalloon++;
         pipesPassedSinceBomb++;
+        if (!caveZone) cavePipesPassed++;
         if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
         playScore();
 
         // Check if an arrow event should trigger
-        if (score >= 4 && pipesPassedSinceArrow >= 5 && !arrowWaveInProgress) {
+        if (!caveStartPending && !caveZone && score >= 4 && pipesPassedSinceArrow >= 5 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
           if (Math.random() < 0.60 || pipesPassedSinceArrow >= 8) {
             scheduleArrowWave();
             pipesPassedSinceArrow = 0;
@@ -2709,13 +3357,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         }
 
         // Check if floating bonus balloon should spawn
-        if (pipesPassedSinceBalloon >= 8 && !activeBalloon && !arrowWaveInProgress) {
+        if (!caveZone && !caveStartPending && pipesPassedSinceBalloon >= 8 && !activeBalloon && !arrowWaveInProgress) {
           maybeSpawnBalloon();
           pipesPassedSinceBalloon = 0;
         }
 
         // Check if Bomb Gate should spawn
-        if (score >= 5 && pipesPassedSinceBomb >= 6 && bombs.length === 0 && !arrowWaveInProgress) {
+        if (!caveZone && !caveStartPending && score >= 5 && pipesPassedSinceBomb >= 6 && bombs.length === 0 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
           if (Math.random() < 0.45) {
             maybeSpawnBombGate();
             pipesPassedSinceBomb = 0;
@@ -2723,6 +3371,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         }
 
       }
+
+      if (!caveStartPending && !caveZone && score >= 9 && cavePipesPassed >= cavePipesUntilEntry &&
+          !arrowWaveInProgress && arrows.length===0 && pendingArrowSpawns.length===0 &&
+          !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw && bombs.length===0 &&
+          !activeBalloon && !worldMagnet && magnetActiveTimer<=0) caveStartPending = true;
 
       // GENUINE BUBBLE SHIELD: Intercepts lethal pipe collisions
       if (checkCollisionWithPillars(p)) {
@@ -2768,13 +3421,22 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (state !== 'playing') return;
+    if (caveStartPending && !caveZone && bird.y >= 105 && bird.y <= 585 &&
+        !arrowWaveInProgress && arrows.length===0 && pendingArrowSpawns.length===0 &&
+        !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw && bombs.length===0 &&
+        !activeBalloon && !worldMagnet && magnetActiveTimer<=0) beginCaveZone();
 
     // Update Arrows & Genuine Shield Interception
     for (let i = arrows.length - 1; i >= 0; i--) {
       const a = arrows[i];
-      a.x -= a.speed * dt;
+      a.x -= a.speed * hazardTimeScale * dt;
 
       if (checkCollisionWithArrow(a)) {
+        if (curChar.id === 'chili-puff') {
+          createExplosion(a.x, a.y, '#ff8b35', 10);
+          arrows.splice(i, 1);
+          continue;
+        }
         if (shieldActive) {
           absorbShieldHit(0.65);
           tone(280, .18, 'triangle', .09);
@@ -2801,7 +3463,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     // Update Bombs & Genuine Shield Defusal
     for (let i = bombs.length - 1; i >= 0; i--) {
       const b = bombs[i];
-      b.x -= b.speed * dt;
+      b.x -= b.speed * hazardTimeScale * dt;
 
       if (checkCollisionWithBomb(b)) {
         createExplosion(b.x, b.y, '#ff4422', 26);
@@ -2823,6 +3485,40 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (b.x < -50) bombs.splice(i, 1);
     }
 
+    if (caveZone && checkCollisionWithCaveWalls()) {
+      if (shieldActive) {
+        absorbShieldHit(.75);
+        const seg = caveZone.segments.find(v => v.x <= bird.x && v.x+CAVE_SEGMENT_W >= bird.x);
+        if (seg) bird.vy = bird.y < seg.center ? 235 : -235;
+        showToast('MOCHI SHIELD BOUNCED YOU FROM THE CAVE WALL');
+      } else if (!isProtectedByGrace()) { endFlight(); }
+    }
+    if (state !== 'playing') return;
+
+    // New pixel-art cannonball and fire-sweep collisions are real hazards, not decoration.
+    if (fireSweep && checkCollisionWithFire(fireSweep)) {
+      if (shieldActive) {
+        absorbShieldHit(0.75); createExplosion(bird.x, bird.y, '#ff9a3d', 18); fireSweep = null;
+        specialHazardScheduleTimer = 22 + Math.random() * 10;
+        showToast('SHIELD BLOCKED THE FIRE SWEEP');
+      } else if (!isProtectedByGrace()) {
+        endFlight();
+      }
+    }
+    if (state !== 'playing') return;
+    if (cannonball && checkCollisionWithCannonball(cannonball)) {
+      const hit = cannonball; cannonball = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
+      createExplosion(hit.x, hit.y, '#ff8a32', 24);
+      if (shieldActive) { absorbShieldHit(0.75); showToast('SHIELD BLOCKED THE CANNONBALL'); }
+      else if (!isProtectedByGrace()) endFlight();
+    }
+    if (pipeSaw && checkCollisionWithPipeSaw(pipeSaw)) {
+      const hit = pipeSaw; pipeSaw = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
+      createExplosion(hit.x, hit.y, '#c9d7e7', 26);
+      if (shieldActive) { absorbShieldHit(0.75); showToast('MOCHI SHIELD BLOCKED THE ROTOR'); }
+      else if (!isProtectedByGrace()) endFlight();
+    }
+
     // Update Explosions
     for (let i = explosions.length - 1; i >= 0; i--) {
       const ex = explosions[i];
@@ -2833,7 +3529,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     // Update Floating Balloon Collectible
-    if (activeBalloon && !activeBalloon.collected) {
+    if (!caveZone && activeBalloon && !activeBalloon.collected) {
       activeBalloon.x -= speed * 0.72 * dt;
       activeBalloon.y = activeBalloon.baseY + Math.sin(visualTime * 3.5 + activeBalloon.seed) * 8;
 
@@ -2887,8 +3583,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (r.alpha <= 0) energyRipples.splice(i, 1);
     }
 
-    while (pipes.length && pipes[0].x <= -260) pipes.shift();
-    if (!arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {
+    if (!caveZone) while (pipes.length && pipes[0].x <= -260) pipes.shift();
+    if (!caveZone && !arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {
       pipes.push(spawnPipe(W+8));
     }
 
@@ -2917,19 +3613,21 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px'; ctx.imageSmoothingEnabled = true;
 
     ctx.clearRect(0, 0, W, H);
-    drawGround();
+    if (caveZone) drawCaveZone(); else drawGround();
     if (state === 'ready') { drawMenu(); return; }
     drawWorldCoins();
-    for (const p of pipes) drawPipe(p);
+    if (!caveZone) for (const p of pipes) drawPipe(p);
     drawWorldMagnet();
     drawBalloon();
     drawBombs();
     drawArrows();
+    drawSpecialHazards();
     drawCoinParticles();
     drawAbilityParticles();
     drawFloatingPopups();
     drawPortals();
     drawBird();
+    drawCaveTrap();
     drawHud();
     if (state === 'over' && deathAnim >= .76) drawGameOver();
     else if (state === 'over') { ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore(); }
