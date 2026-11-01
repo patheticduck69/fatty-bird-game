@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "description": "Fatty Bird Dynamic Background Video Manifest. Add new MP4 videos to assets/backgrounds/ and register them here.",
+  "settings": {
+    "defaultPlaysPerClip": 2,
+    "playbackRate": 1,
+    "crossfadeDurationMs": 850
+  },
+  "backgrounds": [
+    {
+      "id": "night-city",
+      "name": "Night City",
+      "src": "assets/backgrounds/night-city.mp4",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 1
+    },
+    {
+      "id": "washroom",
+      "name": "Washroom",
+      "src": "assets/backgrounds/washroom.mp4",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 2
+    },
+    {
+      "id": "gb-road-city",
+      "name": "G. B. Road / Sonagachi City",
+      "src": "assets/backgrounds/gb-road-city.mp4",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 3
+    },
+    {
+      "id": "stadium",
+      "name": "Stadium",
+      "src": "assets/backgrounds/stadium.mp4",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 4
+    }
+  ]
+}
