@@ -251,7 +251,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
             <h3 class="card-name">Sky Blink</h3>
             <p class="card-ability"><strong>Forward Teleport (W)</strong>Opens a portal and jumps about 270px forward to a safe landing, then gives a 5s arrival shield. (1st use FREE!)</p>
             <div style="font-size:10px;font-weight:900;color:#ffd166;margin-bottom:6px;">OWNED: <span id="storeBlinkOwned">1</span></div>
-            <button class="card-btn btn-buy" id="buyBlinkBtn" type="button">BUY 1 (500 🪙)</button>
+            <button class="card-btn btn-buy" id="buyBlinkBtn" type="button">BUY 1 (300 🪙)</button>
           </div>
 
           <!-- Bubble Shield Card -->
@@ -261,7 +261,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
             <h3 class="card-name">Bubble Shield</h3>
             <p class="card-ability"><strong>Crash Shield (S)</strong>Bubble that absorbs lethal collisions for 14s, with a short grace window after each hit.</p>
             <div style="font-size:10px;font-weight:900;color:#ffd166;margin-bottom:6px;">OWNED: <span id="storeShieldOwned">1</span></div>
-            <button class="card-btn btn-buy" id="buyShieldBtn" type="button">BUY 1 (150 🪙)</button>
+            <button class="card-btn btn-buy" id="buyShieldBtn" type="button">BUY 1 (125 🪙)</button>
           </div>
         </div>
       </div>
@@ -305,7 +305,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
        - Saved coins and stored inventory in localStorage are NOT modified.
      Set POWERUP_TEST_MODE to false to restore normal limits, charges & economy.
      ========================================================================== */
-  const POWERUP_TEST_MODE = true; // <-- SET TO false TO RESTORE NORMAL LIMITS
+  const POWERUP_TEST_MODE = false; // Normal release economy: all purchases and charges use coins
+
+  const POWERUP_PRICES = Object.freeze({ pulse: 100, blink: 300, shield: 125 });
 
   const W = 420, H = 700, FLOOR = 632;
   const PIPE_W = 76, CAP_H = 19, COIN_R = 12;
@@ -403,7 +405,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   if (!ownedCharacters.includes(selectedCharacterId)) selectedCharacterId = 'original-fatty';
 
   // Consumable inventory persistence
-  let pulseCharges = Math.max(0, Number(safeStore.get('fattyBirdInstantPulseCharges', '0')) || 0);
+  // First-time grant: every new player receives one Instant Pulse charge.
+  let freePulseClaimed = safeStore.get('fattyBirdFreePulseClaimed', '0') === '1';
+  let pulseCharges = Math.max(0, Number(safeStore.get('fattyBirdInstantPulseCharges', freePulseClaimed ? '0' : '1')) || 0);
+  if (!freePulseClaimed) {
+    pulseCharges = Math.max(1, pulseCharges);
+    safeStore.set('fattyBirdInstantPulseCharges', pulseCharges);
+    safeStore.set('fattyBirdFreePulseClaimed', '1');
+    freePulseClaimed = true;
+  }
 
   // First-time grant of 1 free Sky Blink and 1 free Bubble Shield
   let freeBlinkClaimed = safeStore.get('fattyBirdFreeBlinkClaimed', '0') === '1';
@@ -454,7 +464,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'blueberry-blimp',
       name: 'Blueberry Blimp',
       rarity: 'Uncommon',
-      price: 60,
+      price: 700,
       iconEmoji: '🪂',
       abilityName: 'Sky Glide',
       description: 'Sky-blue round body with long pointed tail and swept wings.',
@@ -471,7 +481,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'mint-mochi',
       name: 'Mint Mochi',
       rarity: 'Uncommon',
-      price: 100,
+      price: 1000,
       iconEmoji: '🛡️',
       abilityName: 'Mochi Shield',
       description: 'Compact mint-green body with layered emerald feathers.',
@@ -488,7 +498,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'chili-puff',
       name: 'Chili Puff',
       rarity: 'Rare',
-      price: 250,
+      price: 1500,
       iconEmoji: '🔥',
       abilityName: 'Ember Burst',
       description: 'Orange-red body with flame-shaped wings and extended tail.',
@@ -505,7 +515,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'midnight-dumpling',
       name: 'Midnight Dumpling',
       rarity: 'Epic',
-      price: 400,
+      price: 2200,
       iconEmoji: '🌑',
       abilityName: 'Shadow Tuck',
       description: 'Deep navy-indigo silhouette with elongated dark feathers.',
@@ -522,7 +532,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       id: 'royal-roast',
       name: 'Royal Roast',
       rarity: 'Legendary',
-      price: 600,
+      price: 3000,
       iconEmoji: '👑',
       abilityName: 'Royal Double Beat',
       description: 'Royal purple chunky body with ornamental golden wings & fan tail.',
@@ -1682,13 +1692,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     storeBlinkOwned.textContent = POWERUP_TEST_MODE ? '∞' : String(blinkCharges);
     storeShieldOwned.textContent = POWERUP_TEST_MODE ? '∞' : String(shieldCharges);
 
-    buyPulseBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : 'BUY 1 (100 🪙)';
-    buyBlinkBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : 'BUY 1 (500 🪙)';
-    buyShieldBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : 'BUY 1 (150 🪙)';
+    buyPulseBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : `BUY 1 (${POWERUP_PRICES.pulse} 🪙)`;
+    buyBlinkBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : `BUY 1 (${POWERUP_PRICES.blink} 🪙)`;
+    buyShieldBtn.textContent = POWERUP_TEST_MODE ? 'TEST USE (FREE)' : `BUY 1 (${POWERUP_PRICES.shield} 🪙)`;
 
-    buyPulseBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < 100);
-    buyBlinkBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < 500);
-    buyShieldBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < 150);
+    buyPulseBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < POWERUP_PRICES.pulse);
+    buyBlinkBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < POWERUP_PRICES.blink);
+    buyShieldBtn.disabled = !POWERUP_TEST_MODE && (totalCoins < POWERUP_PRICES.shield);
   }
 
   function buyCharacter(id) {
@@ -1730,8 +1740,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   buyPulseBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (POWERUP_TEST_MODE) { showToast('Test Mode: Instant Pulse is unlimited!'); return; }
-    if (totalCoins < 100) { showToast('Not enough coins (Need 100 🪙)'); return; }
-    totalCoins -= 100;
+    if (totalCoins < POWERUP_PRICES.pulse) { showToast(`Not enough coins (Need ${POWERUP_PRICES.pulse} 🪙)`); return; }
+    totalCoins -= POWERUP_PRICES.pulse;
     pulseCharges++;
     safeStore.set('fattyBirdCoins', totalCoins);
     savePowerups();
@@ -1744,8 +1754,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   buyBlinkBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (POWERUP_TEST_MODE) { showToast('Test Mode: Sky Blink is unlimited!'); return; }
-    if (totalCoins < 500) { showToast('Not enough coins (Need 500 🪙)'); return; }
-    totalCoins -= 500;
+    if (totalCoins < POWERUP_PRICES.blink) { showToast(`Not enough coins (Need ${POWERUP_PRICES.blink} 🪙)`); return; }
+    totalCoins -= POWERUP_PRICES.blink;
     blinkCharges++;
     safeStore.set('fattyBirdCoins', totalCoins);
     savePowerups();
@@ -1758,8 +1768,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   buyShieldBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (POWERUP_TEST_MODE) { showToast('Test Mode: Bubble Shield is unlimited!'); return; }
-    if (totalCoins < 150) { showToast('Not enough coins (Need 150 🪙)'); return; }
-    totalCoins -= 150;
+    if (totalCoins < POWERUP_PRICES.shield) { showToast(`Not enough coins (Need ${POWERUP_PRICES.shield} 🪙)`); return; }
+    totalCoins -= POWERUP_PRICES.shield;
     shieldCharges++;
     safeStore.set('fattyBirdCoins', totalCoins);
     savePowerups();
