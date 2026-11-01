@@ -1029,11 +1029,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (state === 'ready') { startFlight(); return; }
     if (state !== 'playing') return;
     if (royalDoubleBeatAvailable) {
-      bird.vy = FLAP_IMPULSE * ROYAL_BEAT_FRACTION;
+      bird.vy = FLAP_IMPULSE * ROYAL_BEAT_FRACTION; // unchanged: 80% flap impulse
       royalDoubleBeatAvailable = false;
       flapStrokeBoost = 0.6;
       tone(520, .05, 'triangle', .05);
-      createAbilityBurst('#ffd166', bird.x, bird.y, 12);
+      createAbilityBurst('#ffd166', bird.x, bird.y, 18);
+      energyRipples.push({ x: bird.x, y: bird.y, r: 10, maxR: 72, color: '#ffd166', alpha: 1 });
+      showToast('ROYAL DOUBLE BEAT! 80% BONUS FLAP');
+      updateActionHud();
       return;
     }
     bird.vy = FLAP_IMPULSE;
@@ -1273,7 +1276,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
       if (!nearest) { showToast('No arrows ahead!'); return; }   // no charge or cooldown wasted
       if (nearest) {
-        createExplosion(nearest.x, nearest.y, '#ff4422', 18);
+        createExplosion(nearest.x, nearest.y, '#ff4422', 26);
+        energyRipples.push({ x: nearest.x, y: nearest.y, r: 8, maxR: 92, color: '#ff6a32', alpha: 1 });
+        floatingPopups.push({ x: nearest.x, y: nearest.y - 22, text: 'EMBER BURST!', color: '#ff9b42', life: 0.8, max: 0.8 });
         arrows = arrows.filter(a => a !== nearest);
         abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
         abilityActiveTimer = char.duration;
@@ -1333,16 +1338,27 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const char = getSelectedCharConfig();
     actionHud.hidden = (state !== 'playing');
     abilityIcon.textContent = char.iconEmoji;
+    const abilitySub = abilityBtn.querySelector('.hud-sub');
+    const royalBonusReady = char.id === 'royal-roast' && royalDoubleBeatAvailable;
 
-    if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) {
-      abilityBtn.classList.remove('is-ready', 'is-active-now');
-      abilityBtn.classList.add('is-disabled');
+    // Active/ready feedback takes priority over cooldown. Previously the cooldown
+    // branch ran first, so normal-release players never saw the ACTIVE state.
+    if (royalBonusReady) {
+      abilityBtn.classList.remove('is-ready', 'is-disabled');
+      abilityBtn.classList.add('is-active-now');
+      if (abilitySub) abilitySub.textContent = 'BONUS READY';
     } else if (abilityActiveTimer > 0) {
       abilityBtn.classList.remove('is-ready', 'is-disabled');
       abilityBtn.classList.add('is-active-now');
+      if (abilitySub) abilitySub.textContent = `ACTIVE ${Math.ceil(abilityActiveTimer)}s`;
+    } else if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) {
+      abilityBtn.classList.remove('is-ready', 'is-active-now');
+      abilityBtn.classList.add('is-disabled');
+      if (abilitySub) abilitySub.textContent = `CD ${Math.ceil(abilityCooldownTimer)}s`;
     } else {
       abilityBtn.classList.remove('is-disabled', 'is-active-now');
       abilityBtn.classList.add('is-ready');
+      if (abilitySub) abilitySub.textContent = 'READY';
     }
 
     pulseCountBadge.textContent = POWERUP_TEST_MODE ? '∞' : String(pulseCharges);
@@ -2008,6 +2024,87 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.restore();
   }
 
+  /* ---------- Character Ability Visual Feedback (render-only; no physics changes) ---------- */
+  function drawCharacterAbilityVisual(curChar, x, y, drawWidth, isMenuIdle=false) {
+    if (isMenuIdle || state !== 'playing') return;
+    const scale = drawWidth / 163;
+    const pulse = 0.5 + 0.5 * Math.sin(visualTime * 9);
+
+    // Blueberry Blimp: visible airflow ribbons while the low-gravity glide is active.
+    if (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = 0.48 + pulse * 0.22;
+      ctx.strokeStyle = '#70dfff';
+      ctx.lineWidth = 2.4 * scale;
+      ctx.shadowColor = '#39caff';
+      ctx.shadowBlur = 12 * scale;
+      for (let i = 0; i < 3; i++) {
+        const offset = i * 12 * scale;
+        ctx.beginPath();
+        ctx.ellipse(-5 * scale, 2 * scale, (49 + offset) * scale, (34 + offset * 0.35) * scale,
+          visualTime * (i % 2 ? -0.45 : 0.45), 0.25 + i * 0.22, Math.PI * 1.72 + i * 0.22);
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#c9f6ff';
+      for (let i = 0; i < 5; i++) {
+        const a = visualTime * 2.8 + i * (Math.PI * 2 / 5);
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * 61 * scale, Math.sin(a) * 43 * scale, 2.1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Midnight Dumpling: a violet shadow ring makes the shortened hitbox/tuck visible.
+    if (curChar.id === 'midnight-dumpling' && abilityActiveTimer > 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = 0.45 + pulse * 0.2;
+      ctx.strokeStyle = '#9b87ff';
+      ctx.shadowColor = '#6954ff';
+      ctx.shadowBlur = 13 * scale;
+      ctx.lineWidth = 2.2 * scale;
+      ctx.setLineDash([7 * scale, 5 * scale]);
+      ctx.beginPath();
+      ctx.ellipse(0, 3 * scale, 53 * scale, 39 * scale, -visualTime * 0.8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#b8aaff';
+      for (let i = 0; i < 3; i++) {
+        const a = -visualTime * 3 + i * Math.PI * 2 / 3;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * 58 * scale, Math.sin(a) * 42 * scale, 2.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Royal Roast: the stored 80% flap remains visibly primed until the next flap consumes it.
+    if (curChar.id === 'royal-roast' && royalDoubleBeatAvailable) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.globalAlpha = 0.85 + pulse * 0.15;
+      ctx.strokeStyle = '#ffd166';
+      ctx.shadowColor = '#ffc247';
+      ctx.shadowBlur = 15 * scale;
+      ctx.lineWidth = 2.4 * scale;
+      ctx.beginPath();
+      ctx.ellipse(0, 1 * scale, 56 * scale, 42 * scale, visualTime * 0.35, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffe28a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `bold ${19 * scale}px system-ui`;
+      ctx.fillText('♛', 0, -58 * scale);
+      ctx.font = `900 ${7.5 * scale}px system-ui`;
+      ctx.fillText('BONUS FLAP READY', 0, -72 * scale);
+      ctx.restore();
+    }
+  }
+
   /* ---------- Bird Drawing (per-character frame-by-frame wing animation) ---------- */
   function drawBirdArtwork(x, y, drawWidth, tilt, phase, dazed=false, isMenuIdle=false) {
     const drawHeight = drawWidth * 769 / 1024;
@@ -2079,6 +2176,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     ctx.restore();
+
+    // Character-specific ability visuals are decorative only; game physics stay in update().
+    drawCharacterAbilityVisual(curChar, x, y, drawWidth, isMenuIdle);
 
     // LAYER 5: GENUINE BUBBLE SHIELD (Surrounding entire bird silhouette)
     if (shieldActive || isProtectedByGrace()) {
