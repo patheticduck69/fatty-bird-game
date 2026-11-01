@@ -1,43 +1,78 @@
 {
-  "version": "1.0.0",
-  "description": "Fatty Bird Dynamic Background Video Manifest. Add new MP4 videos to assets/backgrounds/ and register them here.",
+  "version": "1.1.0",
+  "description": "Fatty Bird background playlist. MP4 videos and animated GIFs share the same double-buffered crossfade transitions.",
   "settings": {
     "defaultPlaysPerClip": 2,
     "playbackRate": 1,
-    "crossfadeDurationMs": 850
+    "crossfadeDurationMs": 850,
+    "gifFallbackDurationMs": 10000
   },
   "backgrounds": [
     {
       "id": "night-city",
       "name": "Night City",
       "src": "assets/backgrounds/night-city.mp4",
+      "type": "video",
       "enabled": true,
       "playsPerClip": 2,
       "order": 1
     },
     {
-      "id": "washroom",
-      "name": "Washroom",
-      "src": "assets/backgrounds/washroom.mp4",
+      "id": "railway-station",
+      "name": "Railway Station",
+      "src": "assets/backgrounds/Railway_station_game_background_4c4de770.gif",
+      "type": "gif",
+      "fallbackDurationMs": 10000,
       "enabled": true,
       "playsPerClip": 2,
       "order": 2
     },
     {
-      "id": "gb-road-city",
-      "name": "G. B. Road / Sonagachi City",
-      "src": "assets/backgrounds/gb-road-city.mp4",
+      "id": "washroom",
+      "name": "Washroom",
+      "src": "assets/backgrounds/washroom.mp4",
+      "type": "video",
       "enabled": true,
       "playsPerClip": 2,
       "order": 3
     },
     {
-      "id": "stadium",
-      "name": "Stadium",
-      "src": "assets/backgrounds/stadium.mp4",
+      "id": "camera-racing-exploding",
+      "name": "Camera Racing Through Exploding Scene",
+      "src": "assets/backgrounds/Camera_racing_through_exploding_…_128e91d1.gif",
+      "type": "gif",
+      "fallbackDurationMs": 10000,
       "enabled": true,
       "playsPerClip": 2,
       "order": 4
+    },
+    {
+      "id": "gb-road-city",
+      "name": "G. B. Road / Sonagachi City",
+      "src": "assets/backgrounds/gb-road-city.mp4",
+      "type": "video",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 5
+    },
+    {
+      "id": "inshot-animation",
+      "name": "InShot Animation",
+      "src": "assets/backgrounds/InShot_20261101_163109258.gif",
+      "type": "gif",
+      "fallbackDurationMs": 10000,
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 6
+    },
+    {
+      "id": "stadium",
+      "name": "Stadium",
+      "src": "assets/backgrounds/stadium.mp4",
+      "type": "video",
+      "enabled": true,
+      "playsPerClip": 2,
+      "order": 7
     }
   ]
 }
