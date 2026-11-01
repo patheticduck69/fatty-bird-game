@@ -37,8 +37,11 @@ body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-
 
 /* Stage & Layers */
 .stage{position:relative;isolation:isolate;width:100%;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.17);background:#101b31;aspect-ratio:420/700;touch-action:none;overscroll-behavior:contain;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 16px 44px rgba(0,0,0,.2)}
-.stage:fullscreen{border-radius:0;border:0;width:100vw;height:100vh;max-width:none;aspect-ratio:auto;background:#060d16;display:flex;align-items:center;justify-content:center}
-.stage:fullscreen canvas{width:auto!important;height:100%!important;aspect-ratio:420/700;max-width:100vw;margin:0 auto}
+.stage-board{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;border-radius:inherit;background:#101b31}
+.stage:fullscreen, .stage:-webkit-full-screen{border-radius:0;border:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;aspect-ratio:auto;background:#060d16;display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.stage:fullscreen .stage-board, .stage:-webkit-full-screen .stage-board{position:relative;inset:auto;flex:none;width:min(100%,60dvh);height:min(100%,166.6667vw);max-width:100%;max-height:100%;aspect-ratio:420/700;border-radius:18px;overflow:hidden}
+.stage:fullscreen .stage-board canvas, .stage:-webkit-full-screen .stage-board canvas{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none;margin:0;aspect-ratio:420/700}
+@media(orientation:landscape) and (max-height:520px){.stage:fullscreen .stage-board,.stage:-webkit-full-screen .stage-board{width:min(100%,60dvh);height:min(100%,166.6667vw)}}
 
 /* Double-buffered background videos */
 .bg-video{position:absolute;top:50%;left:50%;z-index:0;width:auto;height:auto;min-width:100%;min-height:100%;transform:translate(-50%,-50%);object-fit:cover;pointer-events:none;opacity:0;transition:opacity 0.85s ease-in-out;background:transparent}
@@ -158,6 +161,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       </div>
     </div>
     <div class="stage" id="stage">
+      <div class="stage-board" id="stageBoard">
       <video id="bgVideoA" class="bg-video is-active" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-hidden="true"></video>
       <video id="bgVideoB" class="bg-video" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback tabindex="-1" aria-hidden="true"></video>
       <div class="bg-shade" aria-hidden="true"></div>
@@ -278,6 +282,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
           <button class="about-close" id="aboutCloseBtn" type="button">BACK TO HOME</button>
         </div>
       </div>
+      </div><!-- /.stage-board -->
     </div>
     <div class="hint">
       <span class="dot"></span><b>TAP / SPACE: FLAP</b>
@@ -325,6 +330,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const MAX_RENDER_SCALE = 1.5;
 
   const stage = document.getElementById('stage');
+  const stageBoard = document.getElementById('stageBoard');
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   if (typeof ctx.roundRect !== 'function' && typeof CanvasRenderingContext2D !== 'undefined') {
@@ -468,7 +474,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       iconEmoji: '🪂',
       abilityName: 'Sky Glide',
       description: 'Sky-blue round body with long pointed tail and swept wings.',
-      abilityDesc: 'Gravity x0.12 and fall speed capped at 85 px/s for 8.0s. (24s CD)',
+      abilityDesc: 'Parachute glide: cancels strong upward drift and slows descent for 8.0s. (24s CD)',
       previewSrc: 'assets/characters/blueberry-blimp/preview.png',
       bodySrc: 'assets/characters/blueberry-blimp/body.png',
       wingLeftSrc: 'assets/characters/blueberry-blimp/wing-left.png',
@@ -596,9 +602,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let renderScale = 1, scaleX = 1, scaleY = 1, resizeNeeded = false, staticFrameDrawn = false;
   function resizeCanvas() {
     resizeNeeded = false;
-    const cssW = stage.clientWidth || W;
+    const cssW = stageBoard.clientWidth || stage.clientWidth || W;
+    const cssH = stageBoard.clientHeight || stage.clientHeight || H;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const scale = Math.max(1, Math.min(cssW * dpr / W, MAX_RENDER_SCALE));
+    // Use one uniform scale so the 420:700 game world never stretches on rotation/fullscreen.
+    const scale = Math.max(1, Math.min(cssW * dpr / W, cssH * dpr / H, MAX_RENDER_SCALE));
     const pw = Math.round(W * scale), ph = Math.round(H * scale);
     if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
     if (scale !== renderScale) { renderScale = scale; coinSprites.clear(); }
@@ -610,7 +618,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   window.addEventListener('resize', queueResize);
   window.addEventListener('orientationchange', queueResize);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', queueResize);
-  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(queueResize).observe(stage);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(queueResize).observe(stageBoard);
 
   /* ---------- Fullscreen API ---------- */
   function isFullscreen() {
@@ -866,7 +874,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   /* ---------- Collectibles: Magnet & Floating Balloon ---------- */
   let magnetActiveTimer = 0;
   let worldMagnet = null;
-  let pipesPassedSinceMagnet = 0;
+  let magnetSpawnTimer = 0; // Randomized cooldown keeps magnets spaced away from balloons and other events.
 
   let activeBalloon = null;
   let pipesPassedSinceBalloon = 0;
@@ -943,7 +951,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     magnetActiveTimer = 0;
     worldMagnet = null;
-    pipesPassedSinceMagnet = 0;
+    magnetSpawnTimer = 13 + Math.random() * 8;
 
     activeBalloon = null;
     pipesPassedSinceBalloon = 0;
@@ -1249,6 +1257,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       createAbilityBurst('#ffd166', bird.x, bird.y, 16);
       showToast('Feather Pulse Lift!');
     } else if (char.id === 'blueberry-blimp') {
+      // Sky Glide is a parachute/controlled descent, not an upward boost.
+      // Remove strong upward momentum and soften a fast fall at activation; normal gravity/collisions remain active.
+      bird.vy = Math.max(-18, Math.min(bird.vy, 35));
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
       abilityActiveTimer = char.duration;
       tone(480, .12, 'sine', .05);
@@ -1439,16 +1450,30 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   /* ---------- Collectibles: Magnet & Balloon ---------- */
   function maybeSpawnMagnet() {
-    if (worldMagnet || magnetActiveTimer > 0) return;
-    const baseY = Math.max(120, Math.min(FLOOR - 120, lastGapY + (Math.random() - 0.5) * 50));
+    if (worldMagnet || magnetActiveTimer > 0 || activeBalloon || arrowWaveInProgress || bombs.length > 0) return false;
+
+    // Aim near the next pipe opening, but choose a fresh reachable height each time.
+    // This keeps magnets visible and collectible rather than placing them behind pipes or off-screen.
+    const nextPipe = pipes
+      .filter(p => p.x + PIPE_W > bird.x + 70)
+      .sort((a, b) => a.x - b.x)[0];
+    const targetCenter = nextPipe ? nextPipe.center : lastGapY;
+    const targetGap = nextPipe ? nextPipe.gap : currentGap();
+    const safeOffset = Math.max(12, Math.min(46, targetGap / 2 - bird.radius - 18));
+    const offset = (Math.random() * 2 - 1) * safeOffset;
+    const baseY = Math.max(112, Math.min(FLOOR - 112, targetCenter + offset));
+    const spawnX = W + 28 + Math.random() * 92;
+
     worldMagnet = {
-      x: W + 40,
-      px: W + 40,
+      x: spawnX,
+      px: spawnX,
       y: baseY,
       baseY,
       speed: 135,
       r: 16
     };
+    pipesPassedSinceBalloon = 0; // Stagger the next balloon away from this magnet.
+    return true;
   }
 
   function collectMagnet(m) {
@@ -1470,11 +1495,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function maybeSpawnBalloon() {
-    if (activeBalloon || arrowWaveInProgress) return;
+    if (activeBalloon || worldMagnet || magnetActiveTimer > 0 || arrowWaveInProgress) return;
     const colors = ['#ffd166', '#ff6b6b', '#4ecdc4', '#a388ee'];
     const chosenColor = colors[Math.floor(Math.random() * colors.length)];
     const baseY = Math.max(130, Math.min(FLOOR - 120, lastGapY + (Math.random() - 0.5) * 60));
 
+    magnetSpawnTimer = Math.max(magnetSpawnTimer, 9 + Math.random() * 5); // Keep magnet and balloon events separated.
     activeBalloon = {
       x: W + 50,
       px: W + 50,
@@ -2030,8 +2056,51 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const scale = drawWidth / 163;
     const pulse = 0.5 + 0.5 * Math.sin(visualTime * 9);
 
-    // Blueberry Blimp: visible airflow ribbons while the low-gravity glide is active.
+    // Blueberry Blimp: a clear parachute canopy makes Sky Glide readable at a glance.
+    // Decorative only: it does not alter the bird's collision envelope or movement physics.
     if (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0) {
+      ctx.save();
+      ctx.translate(x, y);
+      const sway = Math.sin(visualTime * 3.2) * 3.5 * scale;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(225,248,255,.92)';
+      ctx.lineWidth = 1.8 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-49 * scale + sway, -91 * scale);
+      ctx.lineTo(-22 * scale, -34 * scale);
+      ctx.moveTo(49 * scale + sway, -91 * scale);
+      ctx.lineTo(22 * scale, -34 * scale);
+      ctx.stroke();
+
+      const canopy = ctx.createLinearGradient(0, -145 * scale, 0, -88 * scale);
+      canopy.addColorStop(0, '#d9f8ff');
+      canopy.addColorStop(.42, '#55c9ff');
+      canopy.addColorStop(1, '#1679d4');
+      ctx.fillStyle = canopy;
+      ctx.strokeStyle = '#dffaff';
+      ctx.lineWidth = 2.2 * scale;
+      ctx.shadowColor = '#39caff';
+      ctx.shadowBlur = 12 * scale;
+      ctx.beginPath();
+      ctx.moveTo(-55 * scale + sway, -91 * scale);
+      ctx.bezierCurveTo(-59 * scale + sway, -123 * scale, -33 * scale + sway, -145 * scale, sway, -140 * scale);
+      ctx.bezierCurveTo(33 * scale + sway, -145 * scale, 59 * scale + sway, -123 * scale, 55 * scale + sway, -91 * scale);
+      ctx.quadraticCurveTo(sway, -78 * scale, -55 * scale + sway, -91 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(238,252,255,.75)';
+      ctx.lineWidth = 1.1 * scale;
+      for (const panelX of [-34, -17, 0, 17, 34]) {
+        ctx.beginPath();
+        ctx.moveTo(sway, -139 * scale);
+        ctx.lineTo((panelX + sway / scale) * scale, -92 * scale);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Keep the existing airflow ribbons and floating particles beneath the canopy effect.
       ctx.save();
       ctx.translate(x, y);
       ctx.globalAlpha = 0.48 + pulse * 0.22;
@@ -2460,6 +2529,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     updatePortal(dt);
     if (arrowWarningTimer > 0) arrowWarningTimer = Math.max(0, arrowWarningTimer - dt);
     if (magnetActiveTimer > 0) magnetActiveTimer = Math.max(0, magnetActiveTimer - dt);
+    if (magnetSpawnTimer > 0) magnetSpawnTimer = Math.max(0, magnetSpawnTimer - dt);
+
+    // Random time-based magnet schedule. Never overlap a balloon, arrow wave or bomb gate.
+    if (score >= 4 && magnetSpawnTimer <= 0 && !worldMagnet && magnetActiveTimer <= 0 &&
+        !activeBalloon && !arrowWaveInProgress && bombs.length === 0) {
+      if (maybeSpawnMagnet()) magnetSpawnTimer = 18 + Math.random() * 14;
+      else magnetSpawnTimer = 2.5; // retry shortly after a conflicting event clears
+    }
 
     // Pending arrow spawns
     for (let i = pendingArrowSpawns.length - 1; i >= 0; i--) {
@@ -2494,7 +2571,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         pipesPassedSinceArrow++;
         pipesPassedSinceBalloon++;
         pipesPassedSinceBomb++;
-        pipesPassedSinceMagnet++;
         if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
         playScore();
 
@@ -2520,13 +2596,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
           }
         }
 
-        // Check if Magnet should spawn
-        if (score >= 4 && pipesPassedSinceMagnet >= 9 && !worldMagnet && magnetActiveTimer <= 0) {
-          if (Math.random() < 0.5) {
-            maybeSpawnMagnet();
-            pipesPassedSinceMagnet = 0;
-          }
-        }
       }
 
       // GENUINE BUBBLE SHIELD: Intercepts lethal pipe collisions
