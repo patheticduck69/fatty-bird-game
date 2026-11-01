@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Fatty Bird background playlist. MP4 videos and animated GIFs share the same double-buffered crossfade transitions.",
   "settings": {
     "defaultPlaysPerClip": 2,
@@ -39,7 +39,7 @@
     {
       "id": "camera-racing-exploding",
       "name": "Camera Racing Through Exploding Scene",
-      "src": "assets/backgrounds/Camera_racing_through_exploding_…_128e91d1.gif",
+      "src": "assets/backgrounds/Camera_racing_through_exploding_scene_128e91d1.gif",
       "type": "gif",
       "fallbackDurationMs": 10000,
       "enabled": true,
