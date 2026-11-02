@@ -25,13 +25,11 @@
 
 <a href="https://github.com/patheticduck69/fatty-bird-game/releases/tag/v1.0.0"><b>🐤&nbsp;&nbsp;https://github.com/patheticduck69/fatty-bird-game/releases/tag/v1.0.0</b></a>
 
-<!--
-  ADD A SCREENSHOT OR GIF HERE (highly recommended):
-  1. Create a folder named docs in the repo and upload preview.gif (or preview.png).
-  2. Remove the arrows of this comment and use the line below:
+<br>
 
-  <img src="docs/preview.gif" alt="Fatty Bird gameplay" width="300">
--->
+<img src="fatty-bird-cover.jpg" alt="Fatty Bird app artwork" width="360">
+
+<sub><b>FATTY BIRD</b> · Big feathers. Bad decisions. One more run?</sub>
 
 </div>
 
@@ -81,6 +79,13 @@ Daily, weekly and all-time. Find out exactly how much better your friend is than
 🎵 Music &nbsp;·&nbsp; 🎬 Animated backgrounds &nbsp;·&nbsp; 📱 One-thumb controls &nbsp;·&nbsp; 🎨 Pixel-art style
 
 > We deliberately don't list every secret here. Finding out what happens at score 30 is part of the fun. (Spoiler: the bird has no sympathy.)
+
+<details>
+<summary>🗝️ A spoiler-free warning about the cave</summary>
+
+The cave is not the finish line. Keep flying, keep your nerve, and pay attention when the sky suddenly gets quiet. There is one last surprise waiting beyond the usual chaos. No names. No spoilers.
+
+</details>
 
 ---
 
@@ -154,6 +159,16 @@ Open an **[Issue](https://github.com/patheticduck69/fatty-bird-game/issues)** an
 <br>
 
 [![Star this repo](https://img.shields.io/badge/⭐_Star_this_repo-ffd166?style=for-the-badge&labelColor=1b2a41)](https://github.com/patheticduck69/fatty-bird-game)
+
+<br>
+
+### ☕ Fuel the next flight
+
+Enjoying the game? Help keep the feathers flying and support future updates. Every coffee is a little boost for the next round of ideas.
+
+<a href="https://buymeacoffee.com/sagniksarb3" target="_blank" rel="noopener noreferrer">
+  <img src="buy-me-a-coffee.png" alt="Buy me a coffee — support Fatty Bird" width="380">
+</a>
 
 <br>
 
