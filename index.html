@@ -138,6 +138,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 .leaderboard-name-row input:focus{border-color:#ffd166;box-shadow:0 0 0 2px rgba(255,209,102,.16)}
 .leaderboard-save{border:0;border-radius:10px;padding:0 12px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#29233a;font-size:9px;font-weight:1000;letter-spacing:.04em;cursor:pointer;touch-action:manipulation}
 .leaderboard-name-note{margin:6px 0 0;color:#9fadc7;font-size:8px;line-height:1.35}
+.leaderboard-current-name{margin-top:8px;padding:8px 9px;border:1px solid rgba(140,230,203,.22);border-radius:9px;background:rgba(140,230,203,.07);color:#b9ffe6;font-size:9px;font-weight:900;letter-spacing:.025em;overflow-wrap:anywhere}
+.leaderboard-name-sync{margin-top:5px;color:#a9bdd1;font-size:8px;line-height:1.4;font-weight:750}
+.leaderboard-save:disabled{opacity:.58;cursor:wait}
 .leaderboard-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .leaderboard-tab{min-height:36px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:rgba(255,255,255,.055);color:#cbd7ed;font-size:9px;font-weight:950;letter-spacing:.04em;cursor:pointer;touch-action:manipulation}
 .leaderboard-tab.is-active{border-color:rgba(255,209,102,.65);background:linear-gradient(140deg,rgba(255,209,102,.22),rgba(255,166,62,.12));color:#ffe49b;box-shadow:inset 0 1px rgba(255,255,255,.08)}
@@ -148,6 +151,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 .leaderboard-player{min-width:0;color:#f2f5ff;font-size:10px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .leaderboard-score{color:#ffe7a3;font-size:11px;font-weight:1000;font-variant-numeric:tabular-nums}
 .leaderboard-row.top-one{border-color:rgba(255,209,102,.36);background:linear-gradient(90deg,rgba(255,209,102,.13),rgba(255,255,255,.04))}
+.leaderboard-row.is-you{border-color:rgba(140,230,203,.58);background:linear-gradient(90deg,rgba(140,230,203,.15),rgba(255,255,255,.045))}
+.leaderboard-you-pill{display:inline-block;margin-left:6px;padding:2px 5px;border-radius:999px;background:rgba(140,230,203,.17);color:#9ff5d8;font-size:7px;font-weight:1000;letter-spacing:.06em;vertical-align:1px}
 .leaderboard-empty{padding:18px 10px;color:#9eacc9;text-align:center;font-size:10px;line-height:1.5}
 .leaderboard-foot{margin-top:auto;padding-top:7px;border-top:1px solid rgba(255,255,255,.08);color:#7f91ad;font-size:8px;line-height:1.45;text-align:center}
 
@@ -328,7 +333,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
             <input id="leaderboardNickname" type="text" minlength="3" maxlength="16" autocomplete="nickname" autocapitalize="off" spellcheck="false" placeholder="e.g. FattyFlyer">
             <button class="leaderboard-save" id="leaderboardSaveBtn" type="button">SAVE NAME</button>
           </div>
-          <p class="leaderboard-name-note">3–16 letters, numbers or underscores. Your name is public. Skip it and we’ll create a FattyBird nickname automatically. No login required.</p>
+          <p class="leaderboard-name-note">3–16 letters, numbers or underscores. Your name is public. No login required. A new name is registered online with your first submitted score.</p>
+          <div class="leaderboard-current-name" id="leaderboardCurrentName" role="status" aria-live="polite">YOUR LEADERBOARD NAME: Not set</div>
+          <div class="leaderboard-name-sync" id="leaderboardNameSync" aria-live="polite">Your nickname will appear with your first submitted score.</div>
         </div>
         <div class="leaderboard-tabs" role="tablist" aria-label="Leaderboard period">
           <button class="leaderboard-tab is-active" data-board="all-time" type="button" role="tab" aria-selected="true">ALL-TIME</button>
@@ -424,6 +431,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
   const leaderboardNicknameInput = document.getElementById('leaderboardNickname');
   const leaderboardSaveBtn = document.getElementById('leaderboardSaveBtn');
+  const leaderboardCurrentName = document.getElementById('leaderboardCurrentName');
+  const leaderboardNameSync = document.getElementById('leaderboardNameSync');
   const leaderboardStatus = document.getElementById('leaderboardStatus');
   const leaderboardRows = document.getElementById('leaderboardRows');
   const leaderboardTabButtons = Array.from(document.querySelectorAll('.leaderboard-tab'));
@@ -1079,6 +1088,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let leaderboardNickname = safeStore.get('fattyBirdLeaderboardNickname', '');
   let leaderboardProfileCreated = safeStore.get('fattyBirdLeaderboardProfileCreated', '0') === '1';
   let leaderboardProfileReady = false;
+  let leaderboardProfileState = leaderboardProfileCreated ? 'existing' : 'unknown';
+  let leaderboardProfilePromise = null;
+  let leaderboardNicknamePending = safeStore.get('fattyBirdLeaderboardNicknamePending', '0') === '1';
+  let leaderboardNicknameSaving = false;
+  let leaderboardNicknameRevision = 0;
   let leaderboardSessionToken = safeStore.get('fattyBirdLeaderboardSessionToken', '');
   let leaderboardSessionStartPromise = null;
   let leaderboardBusy = false, leaderboardLoadToken = 0;
@@ -2015,7 +2029,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       rank.textContent = `#${entry.rank ?? index + 1}`;
       const player = document.createElement('span');
       player.className = 'leaderboard-player';
-      player.textContent = entry.nickname || 'Player';
+      const entryName = String(entry.nickname || 'Player');
+      player.textContent = entryName;
+      // Make the current player's own entry easy to spot when it is in the returned rankings.
+      const isCurrentPlayer = !!leaderboardNickname && entryName === leaderboardNickname;
+      if (isCurrentPlayer) {
+        row.classList.add('is-you');
+        const you = document.createElement('span');
+        you.className = 'leaderboard-you-pill';
+        you.textContent = 'YOU';
+        player.appendChild(you);
+      }
       const points = document.createElement('span');
       points.className = 'leaderboard-score';
       points.textContent = Number(entry.score || 0).toLocaleString();
@@ -2051,7 +2075,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     storePanel.hidden = true;
     aboutPanel.hidden = true;
     leaderboardPanel.hidden = false;
+    ensureLeaderboardNickname();
     leaderboardNicknameInput.value = leaderboardNickname;
+    updateLeaderboardCurrentName();
     ensureLeaderboardPlayerId();
     if (pendingLeaderboardScore > 0 && !leaderboardNickname) {
       setLeaderboardStatus(`Choose a nickname to submit your score of ${pendingLeaderboardScore.toLocaleString()}.`);
@@ -2059,7 +2085,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       setLeaderboardStatus('A saved score is waiting to sync.');
     }
     loadLeaderboardBoard(activeLeaderboardBoard);
-    fetchLeaderboardProfile().then(() => {
+    fetchLeaderboardProfile().then(async () => {
+      if (leaderboardNicknamePending && leaderboardProfileState === 'existing') await syncPendingLeaderboardNickname();
       if (pendingLeaderboardScore > 0 && leaderboardNickname && leaderboardSessionToken && !leaderboardBusy) {
         submitLeaderboardScore(pendingLeaderboardScore);
       }
@@ -2069,51 +2096,150 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     leaderboardPanel.hidden = true;
     leaderboardNicknameInput.blur();
   }
-  async function fetchLeaderboardProfile() {
-    if (!leaderboardPlayerId) return;
-    try {
-      const data = await leaderboardRequest(`/players/${encodeURIComponent(leaderboardPlayerId)}/profile`);
-      if (data.nickname) {
-        leaderboardNickname = String(data.nickname);
-        leaderboardProfileCreated = true;
-        leaderboardProfileReady = true;
-        safeStore.set('fattyBirdLeaderboardProfileCreated', '1');
-        safeStore.set('fattyBirdLeaderboardNickname', leaderboardNickname);
-        if (document.activeElement !== leaderboardNicknameInput) leaderboardNicknameInput.value = leaderboardNickname;
+  function updateLeaderboardCurrentName() {
+    const shown = leaderboardNickname || 'Not set';
+    if (leaderboardCurrentName) leaderboardCurrentName.textContent = `YOUR LEADERBOARD NAME: ${shown}`;
+    if (leaderboardNameSync) {
+      let syncText;
+      if (leaderboardProfileState === 'existing' && !leaderboardNicknamePending) {
+        syncText = 'CONFIRMED ONLINE · This exact name is stored on your CheddaBoards profile.';
+      } else if (leaderboardProfileState === 'existing' && leaderboardNicknamePending) {
+        syncText = 'SAVED ON THIS DEVICE · Online name change will retry when connected.';
+      } else if (leaderboardProfileState === 'new') {
+        syncText = leaderboardNicknamePending
+          ? 'SAVED ON THIS DEVICE · It will register online with your first submitted score.'
+          : 'READY TO REGISTER · Your name will appear after your first submitted score.';
+      } else {
+        syncText = leaderboardNicknamePending
+          ? 'SAVED ON THIS DEVICE · Waiting to confirm the online profile.'
+          : 'ONLINE STATUS NOT CHECKED · The name is stored on this device.';
       }
-    } catch (_) { /* The score submit itself remains valid if a profile read is unavailable. */ }
+      leaderboardNameSync.textContent = syncText;
+    }
+    if (leaderboardSaveBtn && !leaderboardNicknameSaving) {
+      const inputMatchesSaved = leaderboardNicknameInput && leaderboardNicknameInput.value.trim() === leaderboardNickname && !!leaderboardNickname;
+      leaderboardSaveBtn.textContent = inputMatchesSaved ? 'SAVED ✓' : 'SAVE NAME';
+    }
+  }
+  function persistLeaderboardNickname(name, pending = leaderboardNicknamePending, forceInput = false) {
+    leaderboardNickname = name;
+    safeStore.set('fattyBirdLeaderboardNickname', name);
+    leaderboardNicknamePending = pending;
+    safeStore.set('fattyBirdLeaderboardNicknamePending', pending ? '1' : '0');
+    updateLeaderboardCurrentName();
+    // Force the canonical server-applied name (including any numeric suffix) into the field.
+    // Passive profile refreshes still avoid overwriting a nickname the player is editing.
+    if (forceInput || document.activeElement !== leaderboardNicknameInput) leaderboardNicknameInput.value = name;
+  }
+  async function fetchLeaderboardProfile() {
+    if (!leaderboardPlayerId) return null;
+    if (leaderboardProfilePromise) return leaderboardProfilePromise;
+    const revisionAtStart = leaderboardNicknameRevision;
+    leaderboardProfilePromise = (async () => {
+      try {
+        const data = await leaderboardRequest(`/players/${encodeURIComponent(leaderboardPlayerId)}/profile`);
+        const remoteName = String(data.nickname || '').trim();
+        if (remoteName) {
+          leaderboardProfileCreated = true;
+          leaderboardProfileReady = true;
+          leaderboardProfileState = 'existing';
+          safeStore.set('fattyBirdLeaderboardProfileCreated', '1');
+          // Never let an in-flight profile read overwrite a newer name the player just saved.
+          if (!leaderboardNicknamePending && !leaderboardNicknameSaving && revisionAtStart === leaderboardNicknameRevision) {
+            persistLeaderboardNickname(remoteName, false);
+          }
+        }
+        updateLeaderboardCurrentName();
+        return data;
+      } catch (error) {
+        if (error.status === 404) {
+          leaderboardProfileCreated = false;
+          leaderboardProfileReady = true;
+          leaderboardProfileState = 'new';
+          safeStore.set('fattyBirdLeaderboardProfileCreated', '0');
+        } else {
+          leaderboardProfileReady = false;
+          leaderboardProfileState = 'unknown';
+        }
+        updateLeaderboardCurrentName();
+        return null;
+      } finally {
+        leaderboardProfilePromise = null;
+      }
+    })();
+    return leaderboardProfilePromise;
+  }
+  async function renameLeaderboardProfile(candidate) {
+    const data = await leaderboardRequest(`/players/${encodeURIComponent(leaderboardPlayerId)}/nickname`, {
+      method: 'PUT', body: JSON.stringify({ nickname: candidate })
+    });
+    const appliedName = String(data.nickname || data.player?.nickname || data.profile?.nickname || candidate);
+    leaderboardProfileCreated = true;
+    leaderboardProfileReady = true;
+    leaderboardProfileState = 'existing';
+    safeStore.set('fattyBirdLeaderboardProfileCreated', '1');
+    persistLeaderboardNickname(appliedName, false, true);
+    return appliedName;
+  }
+  async function syncPendingLeaderboardNickname() {
+    if (!leaderboardNicknamePending || !leaderboardNickname) return true;
+    if (leaderboardProfileState !== 'existing') await fetchLeaderboardProfile();
+    if (leaderboardProfileState !== 'existing') return false;
+    try {
+      const appliedName = await renameLeaderboardProfile(leaderboardNickname);
+      if (!leaderboardPanel.hidden) await loadLeaderboardBoard(activeLeaderboardBoard);
+      setLeaderboardStatus(`Leaderboard name confirmed online: ${appliedName}.`);
+      return true;
+    } catch (error) {
+      // Keep the chosen name and retry on a later profile open or score submit.
+      setLeaderboardStatus(`Your name is saved on this device. Online name update will retry: ${error.message || 'connection error'}`);
+      return false;
+    }
   }
   async function saveLeaderboardNickname() {
+    if (leaderboardNicknameSaving) return;
     const candidate = leaderboardNicknameInput.value.trim();
     if (!/^[A-Za-z0-9_]{3,16}$/.test(candidate)) {
       setLeaderboardStatus('Use 3–16 characters: letters, numbers or underscores only.');
       leaderboardNicknameInput.focus();
       return;
     }
-    const previous = leaderboardNickname;
-    leaderboardNickname = candidate;
+
+    leaderboardNicknameSaving = true;
+    leaderboardNicknameRevision++;
+    leaderboardSaveBtn.disabled = true;
+    leaderboardNicknameInput.disabled = true;
+    leaderboardSaveBtn.textContent = 'SAVING…';
     ensureLeaderboardPlayerId();
-    if (leaderboardProfileCreated) {
-      setLeaderboardStatus('Saving nickname…');
-      try {
-        const data = await leaderboardRequest(`/players/${encodeURIComponent(leaderboardPlayerId)}/nickname`, {
-          method: 'PUT', body: JSON.stringify({ nickname: candidate })
-        });
-        leaderboardNickname = data.nickname || data.player?.nickname || candidate;
-        safeStore.set('fattyBirdLeaderboardNickname', leaderboardNickname);
-        leaderboardNicknameInput.value = leaderboardNickname;
-        setLeaderboardStatus(`Nickname saved as ${leaderboardNickname}.`);
-      } catch (error) {
-        leaderboardNickname = previous;
-        leaderboardNicknameInput.value = previous;
-        setLeaderboardStatus(`Nickname could not be changed: ${error.message || 'connection error'}`);
-        return;
+    // Persist the player's choice immediately, then reconcile it with the server.
+    persistLeaderboardNickname(candidate, true);
+    setLeaderboardStatus('Saving your leaderboard name…');
+    try {
+      await fetchLeaderboardProfile();
+      if (leaderboardProfileState === 'existing') {
+        const appliedName = await renameLeaderboardProfile(candidate);
+        if (!leaderboardPanel.hidden) await loadLeaderboardBoard(activeLeaderboardBoard);
+        setLeaderboardStatus(`Saved and confirmed online as ${appliedName}. This name will appear beside your scores on all three boards.`);
+      } else if (leaderboardProfileState === 'new') {
+        setLeaderboardStatus(`Saved on this device as ${candidate}. CheddaBoards creates your online profile with your first submitted score; this name will be attached to it and shown on the leaderboards.`);
+      } else {
+        setLeaderboardStatus(`Saved on this device as ${candidate}. The server could not be reached now; the name will be synced when the leaderboard connection is available.`);
       }
-    } else {
-      safeStore.set('fattyBirdLeaderboardNickname', leaderboardNickname);
-      setLeaderboardStatus(`Nickname saved as ${leaderboardNickname}. Your first score will create your online player profile.`);
+      if (pendingLeaderboardScore > 0) await submitLeaderboardScore(pendingLeaderboardScore);
+    } catch (error) {
+      // Retain the user's selection locally even when the server is unavailable.
+      setLeaderboardStatus(`Saved on this device as ${candidate}. Online confirmation will retry: ${error.message || 'connection error'}`);
+    } finally {
+      leaderboardNicknameSaving = false;
+      leaderboardSaveBtn.disabled = false;
+      leaderboardNicknameInput.disabled = false;
+      // A server-assigned suffix is still a successful save; keep the confirmation visible.
+      const saveWasAccepted = !!leaderboardNickname && (
+        leaderboardNickname === candidate || (!leaderboardNicknamePending && leaderboardProfileState === 'existing')
+      );
+      leaderboardSaveBtn.textContent = saveWasAccepted ? 'SAVED ✓' : 'SAVE NAME';
+      updateLeaderboardCurrentName();
     }
-    if (pendingLeaderboardScore > 0) await submitLeaderboardScore(pendingLeaderboardScore);
   }
   async function submitLeaderboardScore(scoreValue) {
     const scoreToSend = Math.max(0, Math.floor(Number(scoreValue) || 0));
@@ -2133,6 +2259,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     leaderboardBusy = true;
     ensureLeaderboardPlayerId();
     setLeaderboardStatus('Submitting your flight score…');
+    if (leaderboardProfileState === 'unknown') await fetchLeaderboardProfile();
     let sessionToken = leaderboardSessionToken;
     if (!sessionToken && leaderboardSessionStartPromise) sessionToken = await leaderboardSessionStartPromise;
     try {
@@ -2143,17 +2270,22 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         streak: 0
       };
       if (sessionToken) body.playSessionToken = sessionToken;
-      // Send the nickname on the first score only; later runs keep the server-side name.
-      if (!leaderboardProfileCreated) body.nickname = leaderboardNickname;
+      // Only send a name with the first score when the profile lookup confirmed no server profile exists.
+      // For an unknown lookup state, omit nickname to avoid silently renaming a returning player.
+      if (leaderboardProfileState === 'new') body.nickname = leaderboardNickname;
       await leaderboardRequest('/scores', { method: 'POST', body: JSON.stringify(body) });
       leaderboardProfileCreated = true;
+      leaderboardProfileReady = true;
+      leaderboardProfileState = 'existing';
       safeStore.set('fattyBirdLeaderboardProfileCreated', '1');
       pendingLeaderboardScore = 0;
       safeStore.set('fattyBirdLeaderboardPendingScore', '0');
       if (sessionToken) closeLeaderboardPlaySession(sessionToken);
       if (leaderboardPanel && !leaderboardPanel.hidden) setLeaderboardStatus('Score submitted. Refreshing rankings…');
       else showToast('SCORE SENT TO LEADERBOARD!');
-      await fetchLeaderboardProfile();
+      if (leaderboardNicknamePending) await syncPendingLeaderboardNickname();
+      else await fetchLeaderboardProfile();
+      updateLeaderboardCurrentName();
       if (!leaderboardPanel.hidden) loadLeaderboardBoard(activeLeaderboardBoard);
     } catch (error) {
       pendingLeaderboardScore = Math.max(pendingLeaderboardScore, scoreToSend);
@@ -2176,10 +2308,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   leaderboardCloseBtn.addEventListener('click', closeLeaderboard);
   leaderboardSaveBtn.addEventListener('click', saveLeaderboardNickname);
+  leaderboardNicknameInput.addEventListener('input', () => {
+    const matchesSavedName = leaderboardNicknameInput.value.trim() === leaderboardNickname && !!leaderboardNickname;
+    if (!leaderboardNicknameSaving) leaderboardSaveBtn.textContent = matchesSavedName ? 'SAVED ✓' : 'SAVE NAME';
+  });
   leaderboardNicknameInput.addEventListener('keydown', event => {
     if (event.key === 'Enter') { event.preventDefault(); saveLeaderboardNickname(); }
   });
   leaderboardTabButtons.forEach(button => button.addEventListener('click', () => loadLeaderboardBoard(button.dataset.board)));
+  updateLeaderboardCurrentName();
 
   soundBtn.addEventListener('click', () => setSound(!soundOn));
 
