@@ -28,7 +28,7 @@ body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:1px 2px 9px;min-height:46px;flex-wrap:wrap}
 .hud-label{flex:1 1 auto;min-width:0;font-size:9px;font-weight:850;letter-spacing:.18em;text-transform:uppercase;color:#a8bed1}
 .hud-label strong{display:block;color:#fff;font-size:13px;letter-spacing:.02em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.actions{flex:0 0 auto;display:flex;gap:5px;align-items:center}
+.actions{flex:0 1 auto;max-width:100%;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;align-items:center}
 .wallet-pill{display:flex;align-items:center;gap:5px;min-height:35px;padding:0 9px;border-radius:12px;border:1px solid rgba(255,209,102,.35);background:linear-gradient(145deg,rgba(255,209,102,.18),rgba(8,19,30,.62));color:#ffe59a;font-size:12px;font-weight:950;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px rgba(255,255,255,.08)}
 .wallet-coin{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:linear-gradient(145deg,#fff1a8,#f0a51a 68%,#a96a09);color:#975b05;font-size:9px;border:1px solid #ffe89a;box-shadow:0 1px 5px rgba(255,191,56,.3)}
 .control{border:1px solid rgba(255,255,255,.15);background:rgba(8,19,30,.5);color:#eaf2fa;border-radius:12px;min-height:35px;padding:0 10px;font-size:10px;font-weight:850;letter-spacing:.06em;cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,transform .15s}
@@ -148,6 +148,31 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 .hint{display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;color:#aebfd0;font-size:10px;letter-spacing:.02em;padding:8px 2px 1px;flex-wrap:wrap}
 .dot{width:4px;height:4px;border-radius:50%;background:var(--gold);display:inline-block}
 .footer{max-width:440px;text-align:center;color:#8297ab;font-size:9px;line-height:1.5;padding:0 12px}.footer b{color:#c7d5e2;font-weight:750}
+/* Online nickname and three-period leaderboard panels */
+.leaderboard-overlay,.name-save-overlay{position:absolute;inset:0;z-index:14;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(4,8,24,.94);backdrop-filter:blur(8px);touch-action:pan-y}
+.leaderboard-overlay[hidden],.name-save-overlay[hidden]{display:none}
+.leaderboard-card,.name-save-card{width:100%;max-height:100%;overflow:auto;border:1px solid rgba(255,209,102,.45);border-radius:19px;background:linear-gradient(155deg,#1c2b50,#11192f 72%,#211d45);box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px;color:#f5f7ff}
+.lb-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.lb-head h2,.name-save-card h2{font-size:17px;line-height:1.1;margin:0;color:#ffe6a0;font-weight:1000;letter-spacing:.01em}
+.lb-close{flex:0 0 auto;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;border-radius:9px;padding:7px 10px;font-weight:900;cursor:pointer}
+.lb-tabs{display:flex;gap:5px;margin:8px 0}
+.lb-tab{flex:1;min-width:0;border:1px solid rgba(255,255,255,.16);border-radius:9px;padding:8px 4px;background:rgba(255,255,255,.06);color:#c4d0e7;font-size:10px;font-weight:950;cursor:pointer}
+.lb-tab[aria-pressed="true"]{background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#2b2340;border-color:#ffe69a}
+.lb-status{display:block;width:100%;min-height:28px;padding:7px 8px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.06);color:#aec4dd;font:inherit;font-size:10px;line-height:1.4;text-align:left;margin:7px 0;cursor:pointer}
+.lb-list{display:flex;flex-direction:column;gap:5px;min-height:80px}
+.lb-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 9px;border:1px solid rgba(255,255,255,.09);border-radius:9px;background:rgba(255,255,255,.045);font-size:11px}
+.lb-row.is-you{border-color:rgba(255,209,102,.7);background:rgba(255,209,102,.12)}
+.lb-rank{font-weight:1000;color:#ffd166;text-align:center}.lb-player{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:850;color:#edf4ff}.lb-score{font-weight:1000;color:#ffe5a0;font-variant-numeric:tabular-nums}
+.lb-foot{font-size:8px;line-height:1.4;color:#899cbd;margin-top:8px}
+.name-save-card{max-width:350px;text-align:center;padding:18px 16px}
+.name-save-card .name-kicker{font-size:8px;font-weight:1000;letter-spacing:.16em;color:#8ce6cb;margin-bottom:7px}
+.name-save-card p{font-size:10px;line-height:1.45;color:#c5d3eb;margin:8px 0 12px}
+.name-save-input{display:block;width:100%;height:43px;padding:0 12px;border-radius:11px;border:1px solid rgba(255,255,255,.28);background:#0a1428;color:#fff;font-size:16px;font-weight:850;letter-spacing:.06em;text-align:center;outline:none}
+.name-save-input:focus{border-color:#ffd166;box-shadow:0 0 0 3px rgba(255,209,102,.14)}
+.name-save-btn{display:block;width:100%;min-height:42px;margin-top:9px;border:0;border-radius:11px;background:linear-gradient(140deg,#ffe69a,#ffb83f);color:#2b2340;font-size:11px;font-weight:1000;letter-spacing:.05em;cursor:pointer}
+.name-save-btn:disabled{opacity:.55;cursor:wait}
+.name-save-status{min-height:28px;font-size:9px!important;color:#a9daf0!important;margin-bottom:0!important}
+
 @media(max-height:720px){:root{--chrome:205px}body{padding-top:6px;padding-bottom:6px}.app{gap:6px}.brand{gap:8px}.mark{width:43px;height:43px;flex-basis:43px;border-radius:13px}.mark img{width:55px;height:51px}.brand h1{font-size:22px}.tagline{font-size:10px;margin-top:2px}.game-shell{padding:8px}.toolbar{padding-bottom:5px;min-height:40px}.hint{padding-top:5px}.footer{font-size:8px}}
 @media(max-width:390px){.brand h1{font-size:22px}.actions{gap:4px}.wallet-pill{padding:0 6px}.control{padding:0 6px;font-size:9px}.hud-label strong{font-size:11px}}
 @media(orientation:landscape) and (max-height:520px){
@@ -178,6 +203,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       <div class="actions">
         <div class="wallet-pill" aria-label="Total coins saved"><span class="wallet-coin">●</span><span id="walletLabel">0</span></div>
         <button class="control store-btn" id="openStoreBtn" type="button" aria-label="Open Bird Collection Store">🛒 STORE</button>
+        <button class="control" id="leaderboardBtn" type="button" aria-label="Open online leaderboards">🏆 BOARD</button>
         <button class="control" id="openGuideBtn" type="button" aria-label="Open Help and Skill Guide">❔ GUIDE</button>
         <button class="control" id="fullscreenBtn" type="button" aria-label="Toggle Fullscreen">FULLSCREEN</button>
         <button class="control" id="soundBtn" type="button" aria-pressed="false" aria-label="Turn music and effects off">AUDIO ON</button>
@@ -267,6 +293,33 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
             <button class="guide-nav-btn primary" id="guideNextBtn" type="button">NEXT →</button>
           </footer>
           <div class="guide-footnote">TIP: Open GUIDE from the top bar any time to revisit these slides.</div>
+        </div>
+      </section>
+
+      <!-- First-run nickname: the first successful score submit creates the online profile. -->
+      <section class="name-save-overlay" id="nameSavePanel" hidden role="dialog" aria-modal="true" aria-labelledby="nameSaveTitle">
+        <div class="name-save-card">
+          <div class="name-kicker">FATTY BIRD ONLINE ID</div>
+          <h2 id="nameSaveTitle">SAVE YOUR LEADERBOARD NAME</h2>
+          <p>Your score is ready. Choose a nickname to create your player profile and send this run to the All-time, Weekly and Daily leaderboards.</p>
+          <input class="name-save-input" id="leaderboardNameInput" type="text" maxlength="16" minlength="3" pattern="[A-Za-z0-9_]{3,16}" autocomplete="nickname" autocapitalize="off" spellcheck="false" placeholder="3–16 letters, numbers or _">
+          <button class="name-save-btn" id="saveLeaderboardNameBtn" type="button">SAVE NAME + SUBMIT SCORE</button>
+          <p class="name-save-status" id="nameSaveStatus" aria-live="polite">Your name is saved after the server confirms it.</p>
+        </div>
+      </section>
+
+      <!-- All-time, Weekly and Daily online boards. -->
+      <section class="leaderboard-overlay" id="leaderboardPanel" hidden role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+        <div class="leaderboard-card">
+          <header class="lb-head"><h2 id="leaderboardTitle">🏆 FATTY BIRD LEADERBOARDS</h2><button class="lb-close" id="leaderboardCloseBtn" type="button">✕ CLOSE</button></header>
+          <nav class="lb-tabs" aria-label="Leaderboard period">
+            <button class="lb-tab" type="button" data-board="all-time" aria-pressed="true">ALL-TIME</button>
+            <button class="lb-tab" type="button" data-board="weekly" aria-pressed="false">WEEKLY</button>
+            <button class="lb-tab" type="button" data-board="daily" aria-pressed="false">DAILY</button>
+          </nav>
+          <button class="lb-status" id="leaderboardStatus" type="button" aria-live="polite" title="Tap to refresh this board">Loading scores…</button>
+          <div class="lb-list" id="leaderboardList" aria-live="polite"></div>
+          <div class="lb-foot">Scores submit automatically when a flight ends. One best score per player is shown on each board. Weekly and Daily periods follow UTC resets.</div>
         </div>
       </section>
 
@@ -408,6 +461,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const fullscreenBtn = document.getElementById('fullscreenBtn');
   const openStoreBtn = document.getElementById('openStoreBtn');
   const openGuideBtn = document.getElementById('openGuideBtn');
+  const leaderboardBtn = document.getElementById('leaderboardBtn');
+  const leaderboardPanel = document.getElementById('leaderboardPanel');
+  const leaderboardCloseBtn = document.getElementById('leaderboardCloseBtn');
+  const leaderboardStatus = document.getElementById('leaderboardStatus');
+  const leaderboardList = document.getElementById('leaderboardList');
+  const nameSavePanel = document.getElementById('nameSavePanel');
+  const leaderboardNameInput = document.getElementById('leaderboardNameInput');
+  const saveLeaderboardNameBtn = document.getElementById('saveLeaderboardNameBtn');
+  const nameSaveStatus = document.getElementById('nameSaveStatus');
   const guidePanel = document.getElementById('guidePanel');
   const guideCloseBtn = document.getElementById('guideCloseBtn');
   const guidePrevBtn = document.getElementById('guidePrevBtn');
@@ -454,7 +516,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     {category:'CHARACTER SKILLS',kicker:'HAZARD CONTROL',title:'Royal Roast — Time Warp',image:'assets/ui/guide/guide-08.png',alt:'Royal Roast inside a golden time-warp ring in pixel art',text:'Time Warp slows surrounding moving hazards to 42% speed for 4.5 seconds. Royal Roast’s own flight and touch controls remain responsive at normal speed.',tipLabel:'GOOD TIME TO USE',tip:'Trigger it before a dense moving-hazard sequence. Tap the skill button again to restore normal hazard speed early; cooldown is not refunded.',meta:'4.5s maximum active · 42s cooldown · tap again to cancel'},
     {category:'ROYAL ROAST PASSIVE',kicker:'ONCE PER RUN',title:'Royal Soul — one extra life',image:'assets/ui/guide/guide-09.png',alt:'Royal Roast inside a golden one-time revival aura in pixel art',text:'Royal Roast automatically revives after its first fatal hit in a run. It returns at a safe height, clears nearby incoming projectiles and gets 1.8 seconds of re-entry protection.',tipLabel:'REMEMBER',tip:'This passive is consumed once and never recharges with Time Warp. A second fatal hit ends the run. Royal Roast costs 6,000 coins.',meta:'1 revival per run · no cooldown'},
     {category:'SPECIAL EVENT + CHARACTER SKILL',kicker:'PIPE SYSTEM SHIFT',title:'Pipes retract — Mint Mochi shields the route',image:'assets/ui/guide/guide-10.png',alt:'Mint Mochi approaching a spinning cutter while mechanical pipes retract',text:'A PIPE SHIFT warning appears first. The next pipe pairs retract out of the lane as a spinning rotor travels from right to left. Mint Mochi’s active shield protects against pipe and rotor hits for 14 seconds.',tipLabel:'GOOD TIME TO USE',tip:'Activate Mochi Shield just before a dense pipe-shift sequence. Midnight’s Shadow Phase bypasses pipes for 1.4 seconds, but it cannot block the rotor. The event remains dodgeable without a skill.',meta:'Mochi Shield: 14s active · 32s cooldown · rotor event: warning first'},
-    {category:'NEW ENVIRONMENT',kicker:'CAVE ZONE · VARIABLE LENGTH',title:'Cave Run — read the moving walls',image:'assets/ui/guide/guide-11.png',alt:'Blueberry Blimp navigating a pixel-art cave with shifting upper and lower rock walls and coins',text:'After a variable number of pipe passages, pipes give way to a cave passage. The ceiling and floor walls shift up and down, creating a changing but always passable corridor. Cave lengths vary by segment count, not by a fixed clock.',tipLabel:'GOOD TIME TO USE',tip:'Use controlled taps to follow the centre of the safe corridor. Coin trails show optional routes; bombs and wall edges still need to be avoided. Balloons do not spawn in the cave.',meta:'Dynamic walls · optional coin routes · no fixed-time entry'},
+    {category:'NEW ENVIRONMENT',kicker:'DRAGON GATE · VARIABLE LENGTH',title:'Cave Run — survive the cannon, enter the dragon',image:'assets/ui/guide/guide-11.png',alt:'Blueberry Blimp navigating a pixel-art cave with shifting upper and lower rock walls and coins',text:'After a random stretch of pipe passages, a cannon fires. Survive its cannonball and the pipes retract as a giant dragon opens its mouth to form the cave entrance. A short 1–2 second earthquake follows; then the game pauses on YOU ENTERED THE CAVE! Tap to continue. The cave length is randomly selected from 40, 45, 50 or 60 pipe-spacing units.',tipLabel:'GOOD TIME TO USE',tip:'The opening corridor is deliberately wide and hazard-free. Later cave walls shift gently; rare bombs and at most one warned cage trap appear with generous spacing. Follow the centre of the safe corridor.',meta:'Random: Short 40 · Medium 45 · Long 50 · Maximum 60 pipe spaces'},
     {category:'CAVE TRAPS + ABILITY CONTROL',kicker:'WATCH THE SWITCH',title:'Pressure plates, cages & manual skill cancel',image:'assets/ui/guide/guide-12.png',alt:'Midnight Dumpling near a pixel-art pressure plate and descending cage trap',text:'A cave pressure plate can trigger a warning and release a cage from above. Move out of the marked cage lane before it closes. Sustained abilities such as Sky Glide, Shadow Phase and Time Warp can be stopped by tapping the skill button again.',tipLabel:'REMEMBER',tip:'Early cancellation does not refund the cooldown. Instant skills and the passive Royal Soul are not toggleable. Mint Mochi’s bubble remains active for its timed protection window.',meta:'A warning precedes the cage · sustained effects can be cancelled'},
   ];
   let guideIndex = 0;
@@ -479,7 +541,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     guideDots.appendChild(dot);
   });
   function openGuide() {
-    if (!guidePanel.hidden) return;
+    if (!guidePanel.hidden || (nameSavePanel && !nameSavePanel.hidden) || state==='caveIntro') return;
+    leaderboardPanel.hidden = true;
     guideReturnState = state;
     storePanel.hidden = true; aboutPanel.hidden = true;
     if (state === 'playing') { state = 'paused'; pauseBackgrounds(); menuMusic.pause(); updateLabel(); }
@@ -537,6 +600,218 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let soundOn = safeStore.get('fattyBirdMusic', '1') !== '0';
   let totalCoins = Math.max(0, Number(safeStore.get('fattyBirdCoins', '0')) || 0);
   let best = Math.max(0, Number(safeStore.get('fattyBirdBest', '0')) || 0);
+
+  /* ---------- CheddaBoards: anonymous persistent player + fan-out boards ----------
+     This is the public client API key (not a secret). Keep the Game ID and key
+     together here; do not rename, split, trim, or mutate the key string. */
+  const CHEDDABOARDS = Object.freeze({
+    baseUrl: 'https://api.cheddaboards.com',
+    gameId: 'fattybird69',
+    apiKey: 'cb_fattybird69_1a551e1fcab245674e8cce03286afcbd'
+  });
+  function makeAnonymousPlayerId() {
+    const bytes = new Uint8Array(4);
+    try { crypto.getRandomValues(bytes); }
+    catch (_) { for (let i=0;i<4;i++) bytes[i]=Math.floor(Math.random()*256); }
+    const suffix = Array.from(bytes, b => b.toString(16).padStart(2,'0')).join('');
+    return `dev_${Math.floor(Date.now()/1000)}_${suffix}`;
+  }
+  let cheddaPlayerId = safeStore.get('fattyBirdCheddaPlayerId', null);
+  if (!cheddaPlayerId || !/^dev_\d+_[0-9a-f]{8}$/i.test(cheddaPlayerId)) {
+    cheddaPlayerId = makeAnonymousPlayerId();
+    safeStore.set('fattyBirdCheddaPlayerId', cheddaPlayerId);
+  }
+  let cheddaNickname = safeStore.get('fattyBirdLeaderboardNickname', '') || '';
+  let cheddaProfileCreated = safeStore.get('fattyBirdCheddaProfileCreated', '0') === '1';
+  let cheddaSessionToken = null;
+  let cheddaSessionPromise = Promise.resolve(null);
+  let cheddaSubmitBusy = false;
+  let activeLeaderboardBoard = 'all-time';
+  let leaderboardReturnState = 'ready';
+  let lastLeaderboardRunScore = 0;
+
+  async function cheddaRequest(path, options = {}) {
+    const method = options.method || 'GET';
+    const headers = { 'X-Game-ID': CHEDDABOARDS.gameId, 'X-API-Key': CHEDDABOARDS.apiKey };
+    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+    const response = await fetch(CHEDDABOARDS.baseUrl + path, {
+      method, headers,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      cache: method === 'GET' ? 'no-store' : 'default'
+    });
+    let payload;
+    try { payload = await response.json(); }
+    catch (_) { throw new Error(`Leaderboard service returned an unreadable response (${response.status}).`); }
+    if (!response.ok || payload.ok === false) throw new Error(payload.error || `Leaderboard request failed (${response.status}).`);
+    return payload.data || {};
+  }
+
+  async function beginCheddaPlaySession() {
+    cheddaSessionToken = null;
+    try {
+      const data = await cheddaRequest('/play-sessions/start', {
+        method: 'POST', body: { gameId: CHEDDABOARDS.gameId, playerId: cheddaPlayerId }
+      });
+      cheddaSessionToken = data.ok || data.playSessionToken || data.sessionToken || null;
+      return cheddaSessionToken;
+    } catch (error) {
+      console.warn('[CheddaBoards] Play session could not start:', error.message);
+      return null; // Keep offline play available; server validation may require the token.
+    }
+  }
+
+  function startCheddaRun() {
+    cheddaSessionToken = null;
+    cheddaSessionPromise = beginCheddaPlaySession();
+  }
+
+  async function endCheddaPlaySession(token) {
+    if (!token) return;
+    try { await cheddaRequest('/play-sessions/end', { method:'POST', body:{ playSessionToken:token } }); }
+    catch (error) { console.warn('[CheddaBoards] Session cleanup:', error.message); }
+  }
+
+  async function submitCheddaRun(runScore, chosenNickname = '') {
+    if (cheddaSubmitBusy) return { ok:false, error:'A leaderboard request is already running.' };
+    cheddaSubmitBusy = true;
+    let token = null;
+    let scoreWasPosted = scoreSubmittedThisRun;
+    try {
+      if (scoreSubmittedThisRun) {
+        // The score is already on the server; a retry here only completes the name change.
+        if (!chosenNickname) return { ok:true, nickname:cheddaNickname };
+        await cheddaRequest(`/players/${encodeURIComponent(cheddaPlayerId)}/nickname`, {
+          method:'PUT', body:{ nickname:chosenNickname }
+        });
+        const profile = await cheddaRequest(`/players/${encodeURIComponent(cheddaPlayerId)}/profile`);
+        cheddaNickname = profile.nickname || chosenNickname;
+        safeStore.set('fattyBirdLeaderboardNickname', cheddaNickname);
+        return { ok:true, nickname:cheddaNickname };
+      }
+
+      token = await cheddaSessionPromise;
+      if (!token) token = await beginCheddaPlaySession();
+      const body = { playerId: cheddaPlayerId, gameId: CHEDDABOARDS.gameId, score: Math.max(0, Math.floor(runScore)) };
+      if (token) body.playSessionToken = token;
+      // Only the first profile-creating score carries the player's chosen nickname.
+      if (!cheddaProfileCreated && chosenNickname) body.nickname = chosenNickname;
+      await cheddaRequest('/scores', { method:'POST', body });
+      scoreSubmittedThisRun = true;
+      scoreWasPosted = true;
+      lastLeaderboardRunScore = Math.max(0, Math.floor(runScore));
+      if (!cheddaProfileCreated) {
+        cheddaProfileCreated = true;
+        safeStore.set('fattyBirdCheddaProfileCreated', '1');
+      }
+
+      if (chosenNickname) {
+        // On a taken first-submit name, raw REST does not auto-suffix/resync.
+        // Read the actual profile, then use the documented rename endpoint.
+        let profile = await cheddaRequest(`/players/${encodeURIComponent(cheddaPlayerId)}/profile`);
+        if ((profile.nickname || '') !== chosenNickname) {
+          await cheddaRequest(`/players/${encodeURIComponent(cheddaPlayerId)}/nickname`, {
+            method:'PUT', body:{ nickname:chosenNickname }
+          });
+          profile = await cheddaRequest(`/players/${encodeURIComponent(cheddaPlayerId)}/profile`);
+        }
+        cheddaNickname = profile.nickname || chosenNickname;
+        safeStore.set('fattyBirdLeaderboardNickname', cheddaNickname);
+      }
+      return { ok:true, nickname:cheddaNickname };
+    } catch (error) {
+      console.error('[CheddaBoards] Score/name request failed:', error);
+      return { ok:false, error:error.message || 'Could not submit the score.' };
+    } finally {
+      // On a failed score submit keep the session token available for a user-initiated retry.
+      if (scoreWasPosted) {
+        await endCheddaPlaySession(token);
+        cheddaSessionToken = null;
+        cheddaSessionPromise = Promise.resolve(null);
+      } else if (token) {
+        cheddaSessionToken = token;
+        cheddaSessionPromise = Promise.resolve(token);
+      }
+      cheddaSubmitBusy = false;
+    }
+  }
+
+  async function refreshLeaderboard(board = activeLeaderboardBoard) {
+    activeLeaderboardBoard = board;
+    if (leaderboardStatus) leaderboardStatus.textContent = `Loading ${board === 'all-time' ? 'All-time' : board[0].toUpperCase()+board.slice(1)} scores…`;
+    if (leaderboardList) leaderboardList.replaceChildren();
+    document.querySelectorAll('.lb-tab').forEach(button => button.setAttribute('aria-pressed', button.dataset.board === board ? 'true' : 'false'));
+    try {
+      // These are the three built-in fan-out board IDs; do not use them in score submissions.
+      const data = await cheddaRequest(`/games/${CHEDDABOARDS.gameId}/scoreboards/${board}?limit=20`);
+      const entries = Array.isArray(data.entries) ? data.entries : [];
+      if (!entries.length) {
+        leaderboardStatus.textContent = 'No scores on this board yet. Your first submitted flight will start it.';
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      for (const entry of entries) {
+        const row = document.createElement('div'); row.className = 'lb-row';
+        if (cheddaNickname && entry.nickname === cheddaNickname) row.classList.add('is-you');
+        const rank = document.createElement('span'); rank.className='lb-rank'; rank.textContent = `#${entry.rank ?? '—'}`;
+        const name = document.createElement('span'); name.className='lb-player'; name.textContent = String(entry.nickname || 'Player');
+        const scoreCell = document.createElement('span'); scoreCell.className='lb-score'; scoreCell.textContent = String(Number(entry.score) || 0);
+        row.append(rank,name,scoreCell); frag.appendChild(row);
+      }
+      leaderboardList.appendChild(frag);
+      leaderboardStatus.textContent = `${entries.length} ranked ${entries.length === 1 ? 'player' : 'players'} shown · best score per player`;
+    } catch (error) {
+      leaderboardStatus.textContent = `Could not load this board: ${error.message}. Check your connection and try again.`;
+    }
+  }
+
+  function openLeaderboard() {
+    if ((nameSavePanel && !nameSavePanel.hidden) || state==='caveIntro') return;
+    leaderboardReturnState=state;
+    if (state==='playing') { state='paused'; pauseBackgrounds(); menuMusic.pause(); updateLabel(); }
+    storePanel.hidden = true; aboutPanel.hidden = true; guidePanel.hidden = true;
+    leaderboardPanel.hidden = false;
+    refreshLeaderboard(activeLeaderboardBoard);
+  }
+  function closeLeaderboard() {
+    if (leaderboardPanel.hidden) return;
+    leaderboardPanel.hidden=true;
+    if (leaderboardReturnState==='playing' && state==='paused') {
+      state='playing'; updateAccumulator=0; lastTime=0; syncPrev(); playBackgrounds();
+      if (soundOn) menuMusic.play().catch(()=>{});
+    }
+    updateLabel();
+  }
+  leaderboardBtn.addEventListener('click', openLeaderboard);
+  leaderboardCloseBtn.addEventListener('click', closeLeaderboard);
+  leaderboardStatus.addEventListener('click', () => refreshLeaderboard(activeLeaderboardBoard));
+  document.querySelectorAll('.lb-tab').forEach(button => button.addEventListener('click', () => refreshLeaderboard(button.dataset.board)));
+
+  leaderboardNameInput.addEventListener('keydown', event => { if (event.key==='Enter') { event.preventDefault(); saveLeaderboardNameBtn.click(); } });
+  saveLeaderboardNameBtn.addEventListener('click', async () => {
+    const wanted = (leaderboardNameInput.value || '').trim();
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(wanted)) {
+      nameSaveStatus.textContent = 'Use 3–16 characters: letters, numbers or underscores only.';
+      leaderboardNameInput.focus(); return;
+    }
+    if (!Number.isFinite(pendingRunScore)) {
+      nameSaveStatus.textContent = 'No finished run is waiting to be submitted. Play a flight first.';
+      return;
+    }
+    saveLeaderboardNameBtn.disabled = true;
+    nameSaveStatus.textContent = 'Saving your name and submitting your score…';
+    const result = await submitCheddaRun(pendingRunScore, wanted);
+    if (result.ok) {
+      nameSaveStatus.textContent = `Saved as ${result.nickname || wanted}. Your score was sent to all three boards.`;
+      nameSavePanel.hidden = true; pendingRunScore = null;
+      saveLeaderboardNameBtn.disabled = false;
+      showToast('NAME SAVED · SCORE SENT TO ALL 3 LEADERBOARDS');
+      if (leaderboardPanel && !leaderboardPanel.hidden) refreshLeaderboard(activeLeaderboardBoard);
+    } else {
+      nameSaveStatus.textContent = `Not saved online: ${result.error}. Tap Save again to retry.`;
+      saveLeaderboardNameBtn.disabled = false;
+    }
+  });
+
 
   function getStoredOwnedCharacters() {
     try {
@@ -1182,10 +1457,19 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let caveZone = null;
   let caveStartPending = false;
   let cavePipesPassed = 0;
-  let cavePipesUntilEntry = 9 + Math.floor(Math.random() * 5);
+  let cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
   let caveCoins = [];
   let caveCage = null;
   let cageCapture = null;
+  let cannonAttackSurvived = false;
+  let caveCannonQueued = false;
+  let caveEntrySequence = null;
+  let caveExitCelebration = 0;
+  let caveReturnFade = 0;
+  let caveConfetti = [];
+  let caveLengthUnits = 40;
+  let scoreSubmittedThisRun = false;
+  let pendingRunScore = null;
 
   // Canvas clickable zones
   const menuHit = {
@@ -1210,11 +1494,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const paused = state === 'paused';
     pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
     pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
-    pauseBtn.disabled = state === 'ready' || state === 'over';
+    pauseBtn.disabled = state === 'ready' || state === 'over' || state === 'caveIntro';
     pauseBtn.style.opacity = pauseBtn.disabled ? '.45' : '1';
   }
   function updateLabel() {
-    runLabel.textContent = state === 'ready' ? 'Awaiting take-off clearance' : state === 'playing' ? 'In the air — stay sharp' : state === 'paused' ? 'Taking a tiny break' : 'Flight ended';
+    runLabel.textContent = state === 'ready' ? 'Awaiting take-off clearance' : state === 'playing' ? 'In the air — stay sharp' : state === 'paused' ? 'Taking a tiny break' : state === 'caveIntro' ? 'Entered the cave — tap to continue' : 'Flight ended';
     setPauseButton();
     updateActionHud();
   }
@@ -1271,8 +1555,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     magnetActiveTimer = 0;
     worldMagnet = null;
     caveZone = null; caveStartPending = false; cavePipesPassed = 0;
-    cavePipesUntilEntry = 9 + Math.floor(Math.random() * 5);
+    cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
     caveCoins = []; caveCage = null; cageCapture = null;
+    cannonAttackSurvived = false; caveCannonQueued = false; caveEntrySequence = null;
+    caveExitCelebration = 0; caveReturnFade = 0; caveConfetti = []; caveLengthUnits = 40;
+    scoreSubmittedThisRun = false; pendingRunScore = null;
+    nameSavePanel.hidden = true; leaderboardPanel.hidden = true; saveLeaderboardNameBtn.disabled = false;
     magnetSpawnTimer = 13 + Math.random() * 8;
 
     activeBalloon = null;
@@ -1366,6 +1654,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function startFlight() {
     if (state === 'ready') { royalReviveAvailable = selectedCharacterId === 'royal-roast'; royalRevivedThisRun = false; }
     state = 'playing';
+    startCheddaRun();
     if (soundOn && menuMusic.paused) menuMusic.play().catch(()=>{});
     bird.vy = FLAP_IMPULSE;
     flapStrokeBoost = 0.55;
@@ -1437,6 +1726,20 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause();
     if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
     playEffect('death', 155); updateLabel();
+    pendingRunScore = score;
+    if (!cheddaNickname) {
+      leaderboardNameInput.value = '';
+      nameSaveStatus.textContent = 'Your score is ready. Save a nickname to create your online profile.';
+      nameSavePanel.hidden = false;
+      leaderboardNameInput.focus({ preventScroll:true });
+    } else {
+      submitCheddaRun(score, cheddaProfileCreated ? '' : cheddaNickname).then(result => {
+        if (result.ok) {
+          showToast('SCORE SUBMITTED TO ALL 3 LEADERBOARDS');
+          if (leaderboardPanel && !leaderboardPanel.hidden) refreshLeaderboard(activeLeaderboardBoard);
+        } else showToast('ONLINE SCORE NOT SENT — CHECK CONNECTION');
+      });
+    }
   }
 
   // One place decides what a shield hit does: keep the shield for its full 14 s (default) or pop it.
@@ -1444,7 +1747,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (SHIELD_BREAKS_ON_HIT) { shieldActive = false; shieldTimer = 0; }
     shieldGraceTimer = graceSeconds;
   }
-  function isProtectedByGrace() { return shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0; }
+  function isProtectedByGrace() { return shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0 || !!caveEntrySequence || !!(caveZone && caveZone.exiting); }
 
   /* ---------- Action HUD & Consumable Triggers (Real Physical & State Impact) ---------- */
   function activateInstantPulse() {
@@ -2030,11 +2333,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (e.isPrimary === false) return;
     if (e.pointerType === 'mouse' && e.button !== undefined && e.button !== 0) return;
     e.preventDefault();
-    if (!aboutPanel.hidden || !storePanel.hidden || !guidePanel.hidden) return;
+    if (!aboutPanel.hidden || !storePanel.hidden || !guidePanel.hidden || !leaderboardPanel.hidden || !nameSavePanel.hidden) return;
 
     const rect = canvas.getBoundingClientRect();
     const point = { x: (e.clientX - rect.left) * W / rect.width, y: (e.clientY - rect.top) * H / rect.height };
 
+    if (state === 'caveIntro') { continueCaveEntry(); return; }
     if (state === 'ready') {
       if (insideBox(point, menuHit.play)) { startFlight(); playBackgrounds(); }
       else if (insideBox(point, menuHit.store)) { openStore(); }
@@ -2060,6 +2364,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function inputFromKeyboard() {
+    if (state === 'caveIntro') { continueCaveEntry(); return; }
     if (state === 'ready') { startFlight(); playBackgrounds(); return; }
     if (state === 'over') { reset(); startFlight(); return; }
     if (state === 'playing') flap();
@@ -2074,13 +2379,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (!guidePanel.hidden) { closeGuide(); return; }
       if (!storePanel.hidden) { storePanel.hidden = true; return; }
       if (!aboutPanel.hidden) { aboutPanel.hidden = true; return; }
+      if (!leaderboardPanel.hidden) { closeLeaderboard(); return; }
     }
     if (!guidePanel.hidden) {
       if (e.code === 'ArrowLeft') { e.preventDefault(); stepGuide(-1); }
       else if (e.code === 'ArrowRight') { e.preventDefault(); stepGuide(1); }
       return;
     }
-    if (!aboutPanel.hidden || !storePanel.hidden) return;
+    if (!aboutPanel.hidden || !storePanel.hidden || !leaderboardPanel.hidden || !nameSavePanel.hidden) return;
 
     if (e.code === 'KeyH') { e.preventDefault(); collisionDebugActive = !collisionDebugActive; staticFrameDrawn = false; return; }
     if (e.code === 'KeyE') { e.preventDefault(); activateCharacterAbility(); return; }
@@ -2285,6 +2591,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   });
 
   function openStore() {
+    if ((nameSavePanel && !nameSavePanel.hidden) || state==='caveIntro') return;
+    leaderboardPanel.hidden = true;
     updateWallet();
     renderStoreCards();
     storePanel.hidden = false;
@@ -2479,10 +2787,36 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   pipeBodyGrad.addColorStop(0,'#175c2b'); pipeBodyGrad.addColorStop(.22,'#71d45c'); pipeBodyGrad.addColorStop(.58,'#2e9a42'); pipeBodyGrad.addColorStop(1,'#124a29');
   const pipeCapGrad = ctx.createLinearGradient(0,0,PIPE_W,0);
   pipeCapGrad.addColorStop(0,'#1d642f'); pipeCapGrad.addColorStop(.28,'#a2ec71'); pipeCapGrad.addColorStop(1,'#16552b');
+  function drawPipeFlower(cx, cy, scale=1) {
+    ctx.save(); ctx.translate(cx,cy); ctx.scale(scale,scale);
+    ctx.fillStyle='#ffe18a';
+    for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ctx.beginPath();ctx.ellipse(Math.cos(a)*4,Math.sin(a)*4,3.2,2.4,a,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle='#ff8ca0';ctx.beginPath();ctx.arc(0,0,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  function drawPipeGarden(yStart,yEnd,side,seed) {
+    if (yEnd-yStart<54) return;
+    const vineX=side<0?11:PIPE_W-11;
+    ctx.save(); ctx.strokeStyle='#194f2e'; ctx.lineWidth=2.2; ctx.beginPath();
+    ctx.moveTo(vineX,yStart+5);
+    const amp=side<0?5:-5;
+    for(let y=yStart+22;y<yEnd-8;y+=30) ctx.quadraticCurveTo(vineX+amp,y-9,vineX,y);
+    ctx.stroke();
+    let n=0;
+    for(let y=yStart+20;y<yEnd-16;y+=52){
+      const dir=((n++ + seed)%2===0)?1:-1;
+      ctx.fillStyle='#69c96a'; ctx.beginPath(); ctx.ellipse(vineX+dir*8,y,7,3.6,dir*.42,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#b1ed83'; ctx.beginPath(); ctx.ellipse(vineX-dir*7,y+15,6,3.2,-dir*.45,0,Math.PI*2); ctx.fill();
+      if ((n+seed)%3===0) drawPipeFlower(vineX+dir*5,y+25,.72);
+    }
+    ctx.restore();
+  }
   function drawPipe(p) {
     const x = lerp(p.px, p.x, renderAlpha);
     const gapTop = p.center - p.gap/2, gapBottom = p.center + p.gap/2, pw=PIPE_W, cap=CAP_H;
-    ctx.save(); ctx.translate(x, 0);
+    const retractFade = p.retracting ? Math.max(.02,1-(p.retractProgress||0)*.98) : 1;
+    const returnFade = p.caveReturn ? Math.max(0,Math.min(1,1-caveReturnFade/1.8)) : 1;
+    const fade = retractFade * returnFade;
+    ctx.save(); ctx.globalAlpha=fade; ctx.translate(x, 0);
     ctx.save(); ctx.shadowColor='rgba(17,65,65,.18)'; ctx.shadowBlur=7; ctx.shadowOffsetX=2;
     ctx.fillStyle=pipeBodyGrad;
     if (gapTop > 1) roundRect(5,0,pw-10,gapTop,8);
@@ -2493,6 +2827,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.restore();
     if (gapTop > 22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,11,5,Math.max(0,gapTop-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,0,4,Math.max(1,gapTop-cap+2)); }
     if (gapBottom < FLOOR-22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom-4)); }
+    // Vines, leaves and tiny flowers are purely visual; pipe collision geometry is unchanged.
+    drawPipeGarden(8,Math.max(8,gapTop-cap),-1,Math.floor(p.x/17));
+    drawPipeGarden(Math.min(FLOOR,gapBottom+cap),FLOOR-7,1,Math.floor(p.x/17)+1);
+    if (gapTop > 1) { drawPipeFlower(18,gapTop-10,.88); drawPipeFlower(59,gapTop-7,.65); }
+    if (gapBottom < FLOOR-1) { drawPipeFlower(17,gapBottom+10,.85); drawPipeFlower(58,gapBottom+8,.68); }
     if (p.narrow && !p.retracting) { ctx.fillStyle='#ffd166'; if (gapTop > 1) ctx.fillRect(1, gapTop-cap+6, 3, Math.max(6, cap-8)); if (gapBottom < FLOOR-1) ctx.fillRect(pw-4, gapBottom+3, 3, Math.max(6, cap-8)); }
     ctx.restore();
   }
@@ -2876,7 +3215,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function canStartSpecialHazard() {
-    return score >= 4 && !caveStartPending && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw &&
+    const caveNeedsCannon = caveStartPending && !cannonAttackSurvived && nextSpecialHazardType === 'cannon';
+    return score >= 4 && (!caveStartPending || caveNeedsCannon) && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw &&
       !arrowWaveInProgress && arrows.length === 0 && pendingArrowSpawns.length === 0 && bombs.length === 0 &&
       !activeBalloon && !worldMagnet && portalState === 'idle';
   }
@@ -2932,8 +3272,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         } else if (warning.type === 'pipe') {
           startPipeRetractionEncounter(warning.y);
         } else {
-          cannonball = { x: W + 42, px: W + 42, y: warning.y, speed: 370, r: 20 };
-          showToast('CANNONBALL INCOMING! DODGE UP OR DOWN');
+          const cannonX = W - 66;
+          cannonball = { x: cannonX - 18, px: cannonX - 18, y: warning.y, speed: 370, r: 20, cannonX, muzzleTimer:.24, smokeSeed:Math.random()*8 };
+          showToast('CANNON FIRED! DODGE THE CANNONBALL');
         }
         specialHazardWarning = null;
       }
@@ -2945,7 +3286,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (cannonball) {
       cannonball.px = cannonball.x;
       cannonball.x -= cannonball.speed * hazardTimeScale * dt;
+      cannonball.muzzleTimer = Math.max(0, (cannonball.muzzleTimer || 0) - dt);
+      if (caveStartPending && cannonball.x < bird.x - 58) cannonAttackSurvived = true;
       if (cannonball.x < -45) {
+        if (caveStartPending) cannonAttackSurvived = true;
         createExplosion(14, cannonball.y, '#ff9a3d', 18);
         cannonball = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
       }
@@ -2983,12 +3327,34 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       else { ctx.fillStyle='#ff672b'; ctx.fillRect(fireSweep.x, fireSweep.y, fireSweep.w, fireSweep.h); }
       ctx.fillStyle='rgba(255,239,165,.9)';
       for (let i=0;i<9;i++) { const fx=fireSweep.x+((i*31+Math.floor(visualTime*70))%fireSweep.w); ctx.fillRect(fx,fireSweep.y+5+(i%3)*13,5,4); }
+      // Small dragon snout at the right-hand origin makes the flame stream visibly emitted.
+      const sx=fireSweep.x+fireSweep.w-18, sy=fireSweep.y+fireSweep.h/2;
+      ctx.fillStyle='#3c7d55'; ctx.beginPath(); ctx.ellipse(sx+8,sy,22,19,-.08,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#183c37'; ctx.beginPath(); ctx.ellipse(sx-6,sy+2,14,9,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#ff9a3d'; ctx.beginPath(); ctx.moveTo(sx-17,sy-5); ctx.lineTo(sx-48,sy-12); ctx.lineTo(sx-36,sy+1); ctx.lineTo(sx-50,sy+12); ctx.lineTo(sx-16,sy+6); ctx.closePath(); ctx.fill();
+      ctx.fillStyle='#fff1a8'; ctx.fillRect(sx+5,sy-8,5,4);
     }
     if (cannonball) {
-      if (cannonSprite && cannonSprite.complete && cannonSprite.naturalWidth) ctx.drawImage(cannonSprite, W-66, cannonball.y-24, 62, 42);
+      const cannonX = cannonball.cannonX ?? (W-66);
+      if (cannonSprite && cannonSprite.complete && cannonSprite.naturalWidth) ctx.drawImage(cannonSprite, cannonX, cannonball.y-24, 62, 42);
+      else { ctx.fillStyle='#34465a'; roundRect(cannonX,cannonball.y-19,62,34,7); ctx.fillStyle='#182334'; roundRect(cannonX-8,cannonball.y-9,18,14,4); }
+      // Flash and smoke are drawn at the exact projectile origin (the barrel mouth).
+      const muzzleX = cannonX - 3, muzzleY = cannonball.y;
+      if ((cannonball.muzzleTimer || 0) > 0) {
+        const pulse = (cannonball.muzzleTimer || 0) / .24;
+        ctx.save(); ctx.globalAlpha = Math.min(1,pulse*1.6);
+        ctx.fillStyle='#fff3a1'; ctx.beginPath(); ctx.moveTo(muzzleX,muzzleY-4); ctx.lineTo(muzzleX-34,muzzleY-15); ctx.lineTo(muzzleX-23,muzzleY); ctx.lineTo(muzzleX-34,muzzleY+15); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#ff7436'; ctx.beginPath(); ctx.arc(muzzleX-7,muzzleY,11,0,Math.PI*2); ctx.fill(); ctx.restore();
+      }
+      for (let i=0;i<4;i++) {
+        const age = (visualTime*1.8 + i*.23 + (cannonball.smokeSeed||0)) % 1;
+        ctx.globalAlpha = (1-age)*.38; ctx.fillStyle='#c4cbd0';
+        ctx.beginPath(); ctx.arc(muzzleX-12-age*22-i*4,muzzleY+(i%2?1:-1)*(5+age*10),3+age*7,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha=1;
       if (cannonballSprite && cannonballSprite.complete && cannonballSprite.naturalWidth) ctx.drawImage(cannonballSprite, cannonball.x-23, cannonball.y-23, 46, 46);
-      else { ctx.fillStyle='#374355'; ctx.beginPath(); ctx.arc(cannonball.x,cannonball.y,cannonball.r,0,Math.PI*2); ctx.fill(); }
-      ctx.fillStyle='rgba(255,182,65,.82)'; ctx.fillRect(cannonball.x+18,cannonball.y-3,12,6); ctx.fillRect(cannonball.x+30,cannonball.y-1,7,3);
+      else { ctx.fillStyle='#374355'; ctx.beginPath(); ctx.arc(cannonball.x,cannonball.y,cannonball.r,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#f3a34d'; ctx.lineWidth=3; ctx.stroke(); }
+      ctx.fillStyle='rgba(255,182,65,.92)'; ctx.fillRect(cannonball.x-26,cannonball.y-3,12,6); ctx.fillRect(cannonball.x-38,cannonball.y-1,7,3);
     }
     if (pipeSaw) {
       ctx.save(); ctx.translate(pipeSaw.x, pipeSaw.y); ctx.rotate(visualTime * 8.5);
@@ -3029,16 +3395,111 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.restore();
   }
 
-  /* ---------- Variable-length Cave Zone ---------- */
+  /* ---------- Dragon-mouth Cave Entry, Quake Pause, Long Random Cave ---------- */
   const CAVE_SEGMENT_W = 48;
   const CAVE_ENTRY_BASE_GAP = 258;
+  const CAVE_LENGTH_OPTIONS = Object.freeze([{tier:'SHORT',units:40},{tier:'MEDIUM',units:45},{tier:'LONG',units:50},{tier:'MAXIMUM',units:60}]);
+
+  function beginCaveEntrySequence() {
+    if (caveEntrySequence || caveZone || !caveStartPending || !cannonAttackSurvived || state !== 'playing') return;
+    caveEntrySequence = { phase:'approach', timer:0, x:W+170, y:clampNumber(bird.y,250,410), shakeSeed:Math.random()*10 };
+    for (const p of pipes) {
+      if (p.x > bird.x-20) { p.retracting=true; p.retractProgress=Math.max(0,p.retractProgress||0); p.retractBaseGap=p.retractBaseGap||p.gap; }
+    }
+    showToast('THE DRAGON GATE IS OPENING — FLY TOWARD THE MOUTH!');
+    tone(190,.35,'sawtooth',.07);
+  }
+
+  function continueCaveEntry() {
+    if (state !== 'caveIntro' || !caveEntrySequence) return;
+    // Re-enter at the dragon's mouth centre so a low/high earthquake bounce
+    // cannot leave the bird outside the first wide, protected cave segment.
+    const mouthFlightY = caveEntrySequence.y;
+    state='playing';
+    caveEntrySequence=null;
+    updateAccumulator=0; lastTime=0;
+    bird.y=clampNumber(mouthFlightY,250,410);
+    bird.vy=0;
+    beginCaveZone();
+    syncPrev(); updateLabel();
+    showToast('CAVE FLIGHT STARTED — STAY IN THE OPEN CORRIDOR');
+  }
+
+  function updateCaveEntrySequence(dt) {
+    if (!caveEntrySequence) return;
+    const entry=caveEntrySequence;
+    entry.timer += dt;
+    if (entry.phase==='approach') {
+      const t=clampNumber(entry.timer/1.7,0,1), eased=t*t*(3-2*t);
+      entry.x=lerp(W+170,154,eased);
+      if (entry.timer>=1.7) { entry.phase='earthquake'; entry.timer=0; showToast('EARTHQUAKE! HOLD ON!'); tone(76,.6,'sawtooth',.1); }
+    } else if (entry.phase==='earthquake') {
+      if (entry.timer>=1.4) {
+        entry.phase='notice'; entry.timer=0; state='caveIntro';
+        updateLabel(); staticFrameDrawn=false;
+      }
+    }
+  }
+
+  function drawDragonCaveEntrance() {
+    if (!caveEntrySequence || caveEntrySequence.phase==='notice') return;
+    const e=caveEntrySequence, x=e.x, cy=e.y;
+    ctx.save(); ctx.translate(x,cy); ctx.imageSmoothingEnabled=false;
+    // Neck and skull silhouette: a large dragon head whose open mouth is the cave entrance.
+    ctx.fillStyle='#183b37'; ctx.beginPath(); ctx.moveTo(32,-112); ctx.lineTo(128,-150); ctx.lineTo(220,-110); ctx.lineTo(266,-38); ctx.lineTo(244,70); ctx.lineTo(166,131); ctx.lineTo(70,111); ctx.lineTo(26,55); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#397d58'; ctx.beginPath(); ctx.moveTo(19,-100); ctx.lineTo(116,-139); ctx.lineTo(207,-105); ctx.lineTo(244,-37); ctx.lineTo(220,27); ctx.lineTo(120,22); ctx.lineTo(24,18); ctx.closePath(); ctx.fill();
+    // Horns and crown-like ridges.
+    ctx.fillStyle='#d8cda1'; ctx.beginPath(); ctx.moveTo(91,-126); ctx.lineTo(69,-191); ctx.lineTo(125,-148); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(159,-130); ctx.lineTo(177,-190); ctx.lineTo(194,-111); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#6bb56e'; for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(40+i*34,-115-(i%2)*9);ctx.lineTo(55+i*34,-153-(i%2)*7);ctx.lineTo(70+i*34,-108);ctx.closePath();ctx.fill();}
+    // Open dark mouth forms the passage; teeth are decorative and outside the safe travel centre.
+    ctx.fillStyle='#07121d'; ctx.beginPath(); ctx.ellipse(66,17,82,76,-.04,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#8be0a0'; ctx.lineWidth=5; ctx.beginPath(); ctx.ellipse(66,17,86,80,-.04,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#d8e5c4'; for(let i=0;i<6;i++){const tx=18+i*19;ctx.beginPath();ctx.moveTo(tx,-47);ctx.lineTo(tx+8,-23);ctx.lineTo(tx+15,-47);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(tx,70);ctx.lineTo(tx+8,48);ctx.lineTo(tx+15,70);ctx.closePath();ctx.fill();}
+    ctx.fillStyle='#ffce76'; ctx.beginPath(); ctx.ellipse(139,-79,19,12,-.28,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#17202d'; ctx.beginPath(); ctx.arc(145,-79,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(124,225,176,.6)'; ctx.beginPath(); ctx.ellipse(58,18,53,48,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCaveEntryNotice() {
+    if (state!=='caveIntro' || !caveEntrySequence) return;
+    ctx.save();
+    ctx.fillStyle='rgba(3,8,20,.78)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#162c48'; roundRect(34,236,352,174,23);
+    ctx.strokeStyle='#83dfff'; ctx.lineWidth=2; ctx.strokeRect(35,237,350,172);
+    ctx.textAlign='center'; ctx.fillStyle='#ffe39b'; ctx.font='1000 21px system-ui'; ctx.fillText('YOU ENTERED THE CAVE!',210,286);
+    ctx.fillStyle='#dff5ff'; ctx.font='800 11px system-ui'; ctx.fillText('The dragon gate has closed behind you.',210,315);
+    const pulse=.65+.35*Math.sin(visualTime*6);
+    ctx.globalAlpha=pulse; ctx.fillStyle='#8ce6cb'; ctx.font='1000 17px system-ui'; ctx.fillText('TAP TO CONTINUE',210,365);
+    ctx.globalAlpha=1; ctx.fillStyle='#9eb5ce'; ctx.font='700 9px system-ui'; ctx.fillText('YOUR BIRD WILL KEEP FLAPPING · FLIGHT RESUMES ON TAP',210,390);
+    ctx.restore();
+  }
+
+  function spawnCaveConfetti() {
+    caveConfetti=[];
+    const colors=['#ffd166','#8ce6cb','#ff8ca0','#8fcfff','#d6a7ff','#fff1b5'];
+    for(let i=0;i<46;i++) caveConfetti.push({x:Math.random()*W,y:-Math.random()*H*.45,vx:(Math.random()-.5)*95,vy:55+Math.random()*125,rot:Math.random()*6.28,vr:(Math.random()-.5)*7,size:3+Math.random()*5,color:colors[i%colors.length],life:2.8});
+  }
+
+  function drawCaveCelebration() {
+    if (caveExitCelebration<=0) return;
+    ctx.save();
+    for(const p of caveConfetti){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*1.8);ctx.restore();}
+    const alpha=Math.min(1,caveExitCelebration/.45);
+    ctx.globalAlpha=alpha; ctx.fillStyle='rgba(10,23,45,.78)'; roundRect(93,125,234,62,15);
+    ctx.strokeStyle='#ffd166'; ctx.lineWidth=2; ctx.strokeRect(94,126,232,60);
+    ctx.textAlign='center'; ctx.fillStyle='#ffe6a2'; ctx.font='1000 20px system-ui'; ctx.fillText('CAVE CLEARED!',210,163);
+    ctx.restore();
+  }
+
   function clampNumber(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function makeCaveSegment(x, previousCenter, index, entryGap = CAVE_ENTRY_BASE_GAP) {
-    // A generous entry corridor tapers over several panels before the full dynamic section.
-    const firstSafe = index < 6;
-    const center = firstSafe ? previousCenter : clampNumber(previousCenter + (Math.random() * 2 - 1) * 20, 210, 455);
-    const transition = clampNumber((index - 5) / 4, 0, 1);
-    const gap = index < 6 ? entryGap : index < 9 ? lerp(entryGap, 244, transition) : 236 + Math.random() * 16;
+    // The first 18 panels stay broad and straight so the mouth opening is genuinely safe.
+    const firstSafe = index < 18;
+    const center = firstSafe ? previousCenter : clampNumber(previousCenter + (Math.random() * 2 - 1) * 17, 205, 460);
+    const transition = clampNumber((index - 17) / 13, 0, 1);
+    const gap = index < 18 ? Math.max(300,entryGap) : index < 31 ? lerp(Math.max(300,entryGap), 252, transition) : 244 + Math.random() * 18;
     const topJags = Array.from({length:6}, () => 3 + Math.floor(Math.random() * 10));
     const bottomJags = Array.from({length:6}, () => 3 + Math.floor(Math.random() * 10));
     return { x, px:x, center, gap, topJags, bottomJags, index, passed:false };
@@ -3048,8 +3509,11 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const startCenter = clampNumber(bird.y, 210, 455);
     const entryGap = clampNumber(CAVE_ENTRY_BASE_GAP + Math.abs(bird.y - startCenter) * .65, CAVE_ENTRY_BASE_GAP, 340);
     const initialCount = Math.ceil(W / CAVE_SEGMENT_W) + 3;
-    const targetSegments = 12 + Math.floor(Math.random() * 7); // variable length; triggered by pipe progression, not a timer
-    caveZone = { segments:[], targetSegments, generated:0, center:startCenter, transition:0, notice:1.5, speedFactor:1, switchPlaced:false, exited:false };
+    const caveLengthChoice=CAVE_LENGTH_OPTIONS[Math.floor(Math.random()*CAVE_LENGTH_OPTIONS.length)];
+    caveLengthUnits = caveLengthChoice.units;
+    const totalSegments = Math.ceil((caveLengthUnits * PIPE_SPACING) / CAVE_SEGMENT_W);
+    const targetSegments = Math.max(1,totalSegments-initialCount);
+    caveZone = { segments:[], targetSegments, generated:0, center:startCenter, transition:0, notice:2.4, speedFactor:1, switchPlaced:false, exited:false, exiting:false, exitTimer:0, bombCount:0, cageCount:0, lengthUnits:caveLengthUnits, lengthTier:caveLengthChoice.tier };
     for (let i=0;i<initialCount;i++) {
       const seg = makeCaveSegment(i*CAVE_SEGMENT_W-CAVE_SEGMENT_W, startCenter, i, entryGap);
       caveZone.segments.push(seg);
@@ -3060,13 +3524,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bombs = []; activeBalloon = null; worldMagnet = null; magnetActiveTimer = 0;
     fireSweep = null; cannonball = null; pipeSaw = null; specialHazardWarning = null;
     caveCoins = []; caveCage = null; cageCapture = null;
-    cavePipesPassed = 0; caveStartPending = false;
-    showToast('CAVE ZONE — FOLLOW THE MOVING WALLS!');
+    cavePipesPassed = 0; caveStartPending = false; caveCannonQueued = false; cannonAttackSurvived = false;
+    showToast(`CAVE ZONE — ${caveLengthUnits} PIPE SPACES · FOLLOW THE OPEN ROUTE!`);
     tone(260,.2,'triangle',.05);
   }
   function addCaveSegmentContent(seg) {
     // Coin chains are optional puzzle routes, never positioned inside rock collision margins.
-    if (seg.index >= 3 && seg.index % 2 === 1) {
+    if (seg.index >= 18 && seg.index % 8 === 3) {
       const offset = (seg.index % 4 === 1 ? -1 : 1) * (seg.gap * (.13 + Math.random()*.06));
       for (let i=0;i<2;i++) {
         const x = seg.x + 12 + i*22;
@@ -3074,18 +3538,19 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
     }
     // A small number of bombs create a choice, rather than a wall of unavoidable hazards.
-    if (seg.index >= 5 && seg.index % 6 === 2 && bombs.length < 1) {
+    if (seg.index >= 26 && seg.index % 31 === 2 && caveZone.bombCount < 2 && bombs.length < 1) {
       const side = Math.random() < .5 ? -1 : 1;
-      const y = clampNumber(seg.center + side*(seg.gap*.27), 95, FLOOR-65);
+      const y = clampNumber(seg.center + side*(seg.gap*.25), 95, FLOOR-65);
       bombs.push({ x:seg.x+36, px:seg.x+36, y, speed:188*currentDifficulty(), r:15, isCaveBomb:true, fuseSeed:Math.random() });
+      caveZone.bombCount++;
     }
-    // A single visible pressure switch may call one cage trap during the cave run.
-    if (!caveZone.switchPlaced && seg.index >= 7 && seg.index < caveZone.targetSegments+3 && Math.random() < .23) {
+    // At most one clearly signalled cage trap per cave; the opening itself is hazard-free.
+    if (!caveZone.switchPlaced && caveZone.cageCount===0 && seg.index >= 38 && seg.index < caveZone.targetSegments+18 && Math.random() < .035) {
       const side = Math.random() < .5 ? -1 : 1;
       const y = clampNumber(seg.center + side*(seg.gap/2-34), 75, FLOOR-60);
       const x = seg.x + 24;
       caveZone.switchPlate = { x, px:x, y, side, triggered:false, r:15 };
-      caveZone.switchPlaced = true;
+      caveZone.switchPlaced = true; caveZone.cageCount++;
     }
   }
   function beginCaveCageTrap() {
@@ -3105,6 +3570,22 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     caveZone.transition = Math.min(1, caveZone.transition + dt/.7);
     caveZone.notice = Math.max(0,caveZone.notice-dt);
     const scroll = speed * hazardTimeScale;
+    if (caveZone.exiting) {
+      caveZone.exitTimer -= dt;
+      if (caveZone.exitTimer <= 0) {
+        caveZone=null; caveCoins=[]; caveCage=null; cageCapture=null; bombs=[];
+        cavePipesPassed=0; cavePipesUntilEntry=12+Math.floor(Math.random()*13);
+        pipesPassedSinceArrow=0; pipesPassedSinceBomb=0; pipesPassedSinceBalloon=0;
+        specialHazardScheduleTimer=22+Math.random()*10;
+        // Carry the bird out through the arch on a safe centre line before normal hazards resume.
+        bird.y=clampNumber(bird.y,285,385); bird.vy=clampNumber(bird.vy,-175,175);
+        lastGapY=bird.y; nextCenter=null;
+        const firstPipe=spawnPipe(W+265); firstPipe.gap=Math.max(firstPipe.gap,250); firstPipe.center=bird.y; firstPipe.px=firstPipe.x; firstPipe.narrow=false; firstPipe.retracting=false; firstPipe.caveReturn=true; lastGapY=firstPipe.center;
+        pipes=[firstPipe]; caveReturnFade=1.8; caveExitCelebration=2.6; spawnCaveConfetti();
+        showToast('CAVE CLEARED — BACK TO THE PIPES!');
+      }
+      return;
+    }
     for (const seg of caveZone.segments) { seg.px=seg.x; seg.x -= scroll*dt; }
     while (caveZone.segments.length && caveZone.segments[0].x + CAVE_SEGMENT_W < -6) caveZone.segments.shift();
     if (caveZone.generated < caveZone.targetSegments && caveZone.segments.length) {
@@ -3155,16 +3636,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         if (cage.timer<=0 || cage.x+cage.w<-20) caveCage=null;
       }
     }
-    // When the final generated segment scrolls past the player, return to pipes.
+    // A glowing exit arch appears first; only after the bird flies through it do pipes return.
     const last=caveZone.segments[caveZone.segments.length-1];
     if (caveZone.generated>=caveZone.targetSegments && (!last || last.x+CAVE_SEGMENT_W < bird.x-55) && !caveCage) {
-      caveZone=null; caveCoins=[]; caveCage=null;
-      cavePipesPassed=0; cavePipesUntilEntry=10+Math.floor(Math.random()*7);
-      pipesPassedSinceArrow=0; pipesPassedSinceBomb=0; pipesPassedSinceBalloon=0;
-      specialHazardScheduleTimer=22+Math.random()*10;
-      lastGapY=clampNumber(bird.y,250,410); nextCenter=null;
-      pipes=[spawnPipe(W+55)];
-      showToast('CAVE CLEARED — BACK TO THE PIPES!');
+      caveZone.exiting=true; caveZone.exitTimer=2.15; caveZone.exitBanner=2.15;
+      caveZone.segments=[]; caveCoins=[]; bombs=[];
+      for(let i=0;i<24;i++) createAbilityBurst('#ffd166',bird.x+(Math.random()-.5)*110,bird.y+(Math.random()-.5)*100,2);
     }
   }
   function checkCollisionWithCaveWalls() {
@@ -3218,10 +3695,21 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (caveZone.switchPlate && !caveZone.switchPlate.triggered && cavePlateSprite && cavePlateSprite.complete && cavePlateSprite.naturalWidth) {
       const plate=caveZone.switchPlate; ctx.save(); ctx.shadowColor='#ff7867'; ctx.shadowBlur=9; ctx.drawImage(cavePlateSprite,plate.x-16,plate.y-16,32,32); ctx.restore();
     }
-    if (caveZone.notice>0) {
-      ctx.fillStyle='rgba(9,18,35,.84)'; ctx.fillRect(126,128,168,35);
-      ctx.strokeStyle='#69d9ff'; ctx.lineWidth=2; ctx.strokeRect(127,129,166,33);
-      ctx.fillStyle='#d7f7ff'; ctx.font='1000 15px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('CAVE ZONE',210,145);
+    if (caveZone.exiting) {
+      const progress=clampNumber(1-caveZone.exitTimer/2.15,0,1);
+      const eased=progress*progress*(3-2*progress);
+      const exitX=lerp(W+52,bird.x,eased), exitY=lerp(330,bird.y,eased*.35);
+      const pulse=.75+.25*Math.sin(visualTime*7);
+      ctx.save(); ctx.globalAlpha=pulse; ctx.shadowColor='#9df5ff'; ctx.shadowBlur=25;
+      ctx.strokeStyle='#b7f4ff'; ctx.lineWidth=12; ctx.beginPath(); ctx.ellipse(exitX,exitY,48,124,0,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle='#ffd166'; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(exitX,exitY,34,108,0,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle='rgba(105,220,255,.18)'; ctx.beginPath(); ctx.ellipse(exitX,exitY,33,105,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+      ctx.fillStyle='rgba(7,18,33,.78)'; roundRect(119,120,182,36,10);
+      ctx.fillStyle='#ffe6a2'; ctx.textAlign='center'; ctx.font='1000 14px system-ui'; ctx.fillText('CAVE EXIT AHEAD',210,143);
+    } else if (caveZone.notice>0) {
+      ctx.fillStyle='rgba(9,18,35,.84)'; ctx.fillRect(104,128,212,38);
+      ctx.strokeStyle='#69d9ff'; ctx.lineWidth=2; ctx.strokeRect(105,129,210,36);
+      ctx.fillStyle='#d7f7ff'; ctx.font='1000 13px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(`${caveZone.lengthTier} CAVE · ${caveZone.lengthUnits} PIPE SPACES`,210,148);
     }
     ctx.restore();
   }
@@ -3306,7 +3794,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const speed = 188 * currentDifficulty();
     const hazardTimeScale = (curChar.id === 'royal-roast' && timeWarpTimer > 0) ? TIME_WARP_FACTOR : 1;
     groundOffset = (groundOffset + speed*dt) % 34;
+    if (!caveZone && caveStartPending && !cannonAttackSurvived && !caveCannonQueued &&
+        !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw && !arrowWaveInProgress && arrows.length===0 && bombs.length===0) {
+      caveCannonQueued=true; nextSpecialHazardType='cannon'; specialHazardScheduleTimer=.15;
+    }
     if (!caveZone) updateSpecialHazards(dt, hazardTimeScale);
+    if (caveEntrySequence) { updateCaveEntrySequence(dt); if (state!=='playing') return; }
+    if (caveExitCelebration>0) caveExitCelebration=Math.max(0,caveExitCelebration-dt);
+    if (caveReturnFade>0) caveReturnFade=Math.max(0,caveReturnFade-dt);
+    for(let i=caveConfetti.length-1;i>=0;i--){const p=caveConfetti[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;p.life-=dt;if(p.life<=0||p.y>H+20)caveConfetti.splice(i,1);}
 
     const isGliding = (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0);
     if (isGliding) {
@@ -3372,10 +3868,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
       }
 
-      if (!caveStartPending && !caveZone && score >= 9 && cavePipesPassed >= cavePipesUntilEntry &&
+      if (!caveStartPending && !caveZone && !caveEntrySequence && score >= 9 && cavePipesPassed >= cavePipesUntilEntry &&
           !arrowWaveInProgress && arrows.length===0 && pendingArrowSpawns.length===0 &&
           !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw && bombs.length===0 &&
-          !activeBalloon && !worldMagnet && magnetActiveTimer<=0) caveStartPending = true;
+          !activeBalloon && !worldMagnet && magnetActiveTimer<=0) {
+        caveStartPending = true; cannonAttackSurvived = false; caveCannonQueued = false;
+      }
 
       // GENUINE BUBBLE SHIELD: Intercepts lethal pipe collisions
       if (checkCollisionWithPillars(p)) {
@@ -3421,10 +3919,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (state !== 'playing') return;
-    if (caveStartPending && !caveZone && bird.y >= 105 && bird.y <= 585 &&
+    if (caveStartPending && !caveZone && !caveEntrySequence && cannonAttackSurvived && bird.y >= 105 && bird.y <= 585 &&
         !arrowWaveInProgress && arrows.length===0 && pendingArrowSpawns.length===0 &&
         !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw && bombs.length===0 &&
-        !activeBalloon && !worldMagnet && magnetActiveTimer<=0) beginCaveZone();
+        !activeBalloon && !worldMagnet && magnetActiveTimer<=0) beginCaveEntrySequence();
 
     // Update Arrows & Genuine Shield Interception
     for (let i = arrows.length - 1; i >= 0; i--) {
@@ -3509,8 +4007,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (cannonball && checkCollisionWithCannonball(cannonball)) {
       const hit = cannonball; cannonball = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
       createExplosion(hit.x, hit.y, '#ff8a32', 24);
-      if (shieldActive) { absorbShieldHit(0.75); showToast('SHIELD BLOCKED THE CANNONBALL'); }
-      else if (!isProtectedByGrace()) endFlight();
+      if (shieldActive) { absorbShieldHit(0.75); if(caveStartPending)cannonAttackSurvived=true; showToast('SHIELD BLOCKED THE CANNONBALL'); }
+      else if (isProtectedByGrace()) { if(caveStartPending)cannonAttackSurvived=true; }
+      else endFlight();
     }
     if (pipeSaw && checkCollisionWithPipeSaw(pipeSaw)) {
       const hit = pipeSaw; pipeSaw = null; specialHazardScheduleTimer = 30 + Math.random() * 10;
@@ -3613,10 +4112,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px'; ctx.imageSmoothingEnabled = true;
 
     ctx.clearRect(0, 0, W, H);
+    if (caveEntrySequence && caveEntrySequence.phase==='earthquake') {
+      const intensity=Math.max(0,1-caveEntrySequence.timer/1.4);
+      const sx=Math.sin(visualTime*42+caveEntrySequence.shakeSeed)*7*intensity;
+      const sy=Math.cos(visualTime*51+caveEntrySequence.shakeSeed)*5*intensity;
+      ctx.translate(sx,sy);
+    }
     if (caveZone) drawCaveZone(); else drawGround();
     if (state === 'ready') { drawMenu(); return; }
     drawWorldCoins();
     if (!caveZone) for (const p of pipes) drawPipe(p);
+    drawDragonCaveEntrance();
     drawWorldMagnet();
     drawBalloon();
     drawBombs();
@@ -3628,6 +4134,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     drawPortals();
     drawBird();
     drawCaveTrap();
+    drawCaveCelebration();
+    drawCaveEntryNotice();
     drawHud();
     if (state === 'over' && deathAnim >= .76) drawGameOver();
     else if (state === 'over') { ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore(); }
