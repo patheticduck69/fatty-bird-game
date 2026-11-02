@@ -23,7 +23,7 @@
 
 ### 👇 One tap. No download. No account. No mercy. 👇
 
-<a href="https://github.com/patheticduck69/fatty-bird-game/releases/tag/v1.0.0"><b>🐤&nbsp;&nbsp;https://patheticduck69.github.io/fatty-bird-game/&nbsp;&nbsp;🐤</b></a>
+<a href="https://github.com/patheticduck69/fatty-bird-game/releases/tag/v1.0.0"><b>🐤&nbsp;&nbsp;https://github.com/patheticduck69/fatty-bird-game/releases/tag/v1.0.0</b></a>
 
 <!--
   ADD A SCREENSHOT OR GIF HERE (highly recommended):
