@@ -1104,6 +1104,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let standbyIndex = -1;
   let crossfading = false, waitingForStandby = false, bgFadeTimer = 0, gifAdvanceTimer = 0;
   const BG_EARLY_FADE_S = 0.9;
+  const STANDBY_LEAD_S = 6;           // the next clip starts loading this many seconds before the current one ends
+  let gifPrepTimer = 0;
   const gifDurationCache = new Map();
 
   function bgMayPlay() { return state !== 'paused' && !document.hidden; }
@@ -1176,7 +1178,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function handleSlotReady(slot) {
     slot.ready = true;
     if (slot === activeBgSlot) {
-      if (!crossfading) { playBackgrounds(); prepareStandby(); }
+      if (!crossfading) { playBackgrounds(); }
       if (slot.kind === 'gif') scheduleGifAdvance(slot);
     } else if (slot === standbyBgSlot && waitingForStandby) {
       crossfadeToStandby();
@@ -1219,7 +1221,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function crossfadeToStandby() {
     if (crossfading || !standbyReady()) return false;
     crossfading = true; waitingForStandby = false;
-    clearTimeout(gifAdvanceTimer);
+    clearTimeout(gifAdvanceTimer); clearTimeout(gifPrepTimer);
     const outgoing = activeBgSlot, incoming = standbyBgSlot;
     if (incoming.kind === 'video') {
       try { incoming.video.currentTime = 0; incoming.video.playbackRate = 1; } catch (_) {}
@@ -1233,7 +1235,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bgFadeTimer = setTimeout(() => {
       crossfading = false;
       clearBgSlot(outgoing);
-      prepareStandby();
       if (activeBgSlot.kind === 'gif') scheduleGifAdvance(activeBgSlot);
     }, 1000);
     return true;
@@ -1247,6 +1248,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (slot !== activeBgSlot || slot.kind !== 'gif' || crossfading) return;
       const totalMs = Math.max(500, duration * clipPlays());
       const waitMs = Math.max(200, totalMs - 900);
+      clearTimeout(gifPrepTimer);
+      gifPrepTimer = setTimeout(prepareStandby, Math.max(0, waitMs - STANDBY_LEAD_S * 1000));
       gifAdvanceTimer = setTimeout(function tryGifAdvance() {
         if (slot !== activeBgSlot || slot.kind !== 'gif') return;
         if (!bgMayPlay()) { gifAdvanceTimer = setTimeout(tryGifAdvance, 500); return; }
@@ -1274,7 +1277,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const slot = bgSlots.find(s => s.video === video);
     if (slot !== activeBgSlot || slot.kind !== 'video' || crossfading || !bgMayPlay()) return;
     if (bgLoops < clipPlays() - 1 || !video.duration) return;
-    if (video.duration - video.currentTime <= BG_EARLY_FADE_S) crossfadeToStandby();
+    const remaining = video.duration - video.currentTime;
+    if (remaining <= STANDBY_LEAD_S) prepareStandby();
+    if (remaining <= BG_EARLY_FADE_S) crossfadeToStandby();
   }
   function handleSlotError(slot) {
     const failedIndex = slot.clipIndex;
@@ -1318,7 +1323,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     setupBgSlot(activeBgSlot, 0);
     activeBgSlot.element.classList.add('is-active');
     standbyBgSlot.element.classList.remove('is-active');
-    prepareStandby();
   }
   function playBackgrounds() {
     if (!bgMayPlay()) return;
@@ -1723,7 +1727,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function endFlight() {
     if (state !== 'playing') return;
     if (tryRoyalRevival()) { cageCapture = null; caveCage = null; return; }
-    state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause();
+    state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause(); flushCoinSave();
     if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
     playEffect('death', 155); updateLabel();
     pendingRunScore = score;
@@ -2059,8 +2063,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
   }
 
+  let actionHudSig = '';
   function updateActionHud() {
     const char = getSelectedCharConfig();
+    const sig = [state, char.id, char.iconEmoji, Math.ceil(abilityActiveTimer), Math.ceil(abilityCooldownTimer), POWERUP_TEST_MODE ? 1 : 0,
+      reviveGraceTimer > 0 ? reviveGraceTimer.toFixed(1) : 0, royalReviveAvailable ? 1 : 0, pulseCharges, blinkCharges, shieldCharges,
+      shieldActive ? 1 : 0, Math.ceil(magnetActiveTimer), shieldGraceTimer > 0 ? 1 : 0, shieldTimer.toFixed(1), teleportArrivalShieldTimer.toFixed(1)].join('|');
+    if (sig === actionHudSig) return;   // nothing visible changed: no style/layout work this step
+    actionHudSig = sig;
     actionHud.hidden = (state !== 'playing');
     abilityIcon.textContent = char.iconEmoji;
     const abilitySub = abilityBtn.querySelector('.hud-sub');
@@ -2230,13 +2240,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     };
   }
 
+  let coinSaveTimer = 0;
+  function flushCoinSave() { clearTimeout(coinSaveTimer); coinSaveTimer = 0; safeStore.set('fattyBirdCoins', totalCoins); }
+  function saveCoinsSoon() { if (!coinSaveTimer) coinSaveTimer = setTimeout(flushCoinSave, 350); }
+  window.addEventListener('pagehide', flushCoinSave);
   function collectBalloon(balloon) {
     if (balloon.collected) return;
     balloon.collected = true;
 
     coinsRun += 10;
     totalCoins += 10;
-    safeStore.set('fattyBirdCoins', totalCoins);   // earned coins are always saved, also in test mode
+    saveCoinsSoon();   // earned coins are always saved, also in test mode
     updateWallet();
     playEffect('coin', 950);
 
@@ -2422,6 +2436,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   document.addEventListener('visibilitychange', () => {
     lastTime = 0; updateAccumulator = 0;
     if (document.hidden) {
+      flushCoinSave();
       if (state === 'playing') togglePause();
       pauseBackgrounds(); menuMusic.pause();
     } else {
@@ -2621,7 +2636,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (coin.collected) return;
     coin.collected = true;
     coinsRun += 1; totalCoins += 1;
-    safeStore.set('fattyBirdCoins', totalCoins);   // earned coins are always saved, also in test mode
+    saveCoinsSoon();   // earned coins are always saved, also in test mode
     updateWallet();
     for (let i=0;i<10;i++) {
       const a = Math.PI*2*i/10, speed = 42 + (i%3)*14;
@@ -2817,7 +2832,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const returnFade = p.caveReturn ? Math.max(0,Math.min(1,1-caveReturnFade/1.8)) : 1;
     const fade = retractFade * returnFade;
     ctx.save(); ctx.globalAlpha=fade; ctx.translate(x, 0);
-    ctx.save(); ctx.shadowColor='rgba(17,65,65,.18)'; ctx.shadowBlur=7; ctx.shadowOffsetX=2;
+    ctx.save();
     ctx.fillStyle=pipeBodyGrad;
     if (gapTop > 1) roundRect(5,0,pw-10,gapTop,8);
     if (gapBottom < FLOOR-1) roundRect(5,gapBottom,pw-10,FLOOR-gapBottom,8);
@@ -3009,12 +3024,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const bob = Math.sin(t * 7.5) * 2.2;
     if (portalState === 'entering' || portalState === 'warp') {      // short afterimage trail while warping (2 extra draws, 0.3 s)
       ctx.save();
-      ctx.globalAlpha = .22; drawBirdArtwork(bird.x - 34, y + bob, 163, angle * .62, visualTime, false, false);
-      ctx.globalAlpha = .12; drawBirdArtwork(bird.x - 68, y + bob, 163, angle * .62, visualTime, false, false);
+      ctx.globalAlpha = .22; drawBirdArtwork(bird.x - 34, y + bob, 148, angle * .62, visualTime, false, false);
+      ctx.globalAlpha = .12; drawBirdArtwork(bird.x - 68, y + bob, 148, angle * .62, visualTime, false, false);
       ctx.restore();
       ctx.globalAlpha = portalState === 'warp' ? .35 : .7;
     }
-    drawBirdArtwork(bird.x, y+bob, 163, angle*.62, visualTime, state==='over', false);
+    drawBirdArtwork(bird.x, y+bob, 148, angle*.62, visualTime, state==='over', false);
     ctx.globalAlpha = 1;
     if (collisionDebugActive) {            // developer overlay (H key): the exact circles used for collisions
       ctx.save(); ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 2;
