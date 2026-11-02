@@ -1456,6 +1456,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let caveZone = null;
   let caveStartPending = false;
   let caveStartHoldTimer = 0;   // 1.5 s calm, protected start after tapping inside the cave
+  let caveLiftGuard = 0;        // after a lift skill inside a cave, keep the bird clear of the rock ceiling/floor
+  let chuteVis = 0, chuteLastT = 0;   // smooth open/close of the parachute
   let cavePipesPassed = 0;
   let cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
   let caveCoins = [];
@@ -1554,7 +1556,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     magnetActiveTimer = 0;
     worldMagnet = null;
-    caveZone = null; caveStartPending = false; caveStartHoldTimer = 0; cavePipesPassed = 0;
+    caveZone = null; caveStartPending = false; caveStartHoldTimer = 0; caveLiftGuard = 0; chuteVis = 0; cavePipesPassed = 0;
     cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
     caveCoins = []; caveCage = null; cageCapture = null;
     cannonAttackSurvived = false; caveCannonQueued = false; caveEntrySequence = null;
@@ -1665,6 +1667,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function flap() {
     if (state === 'ready') { startFlight(); return; }
     if (state !== 'playing') return;
+    if (caveEntrySequence && caveEntrySequence.phase === 'bite') return;
     if (getSelectedCharConfig().id === 'blueberry-blimp' && abilityActiveTimer > 0) glideDiveTimer = 0;
     bird.vy = FLAP_IMPULSE;
     flapStrokeBoost = 0.55;
@@ -1746,7 +1749,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (SHIELD_BREAKS_ON_HIT) { shieldActive = false; shieldTimer = 0; }
     shieldGraceTimer = graceSeconds;
   }
-  function isProtectedByGrace() { return caveStartHoldTimer > 0 || shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0 || !!caveEntrySequence || !!(caveZone && caveZone.exiting); }
+  function isProtectedByGrace() { return (caveEntrySequence !== null && caveEntrySequence.phase === 'bite') || caveStartHoldTimer > 0 || shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0 || !!caveEntrySequence || !!(caveZone && caveZone.exiting); }
 
   /* ---------- Action HUD & Consumable Triggers (Real Physical & State Impact) ---------- */
   function activateInstantPulse() {
@@ -1768,6 +1771,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     // REAL PHYSICS LIFT: Guaranteed smooth upward surge
     bird.vy = Math.min(bird.vy, FLAP_IMPULSE * PULSE_FRACTION); // real impulse: 60% of a flap, never stacks above a full flap
+    if (caveZone) caveLiftGuard = 0.8;
     flapStrokeBoost = 0.8;
     tone(560, .10, 'triangle', .08);
 
@@ -1819,7 +1823,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (activeBalloon) activeBalloon.x -= d;
     for (const cp of coinParticles) cp.x -= d;
     // refill the course so spacing stays regular after the jump
-    while (!arrowWaveInProgress && pipes.length && pipes[pipes.length - 1].x + PIPE_SPACING < W + 8) {
+    while (!arrowWaveInProgress && !caveEntrySequence && pipes.length && pipes[pipes.length - 1].x + PIPE_SPACING < W + 8) {
       pipes.push(spawnPipe(pipes[pipes.length - 1].x + PIPE_SPACING));
     }
     bird.y = dest.y; bird.vy = Math.min(bird.vy, -120);
@@ -1955,12 +1959,18 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       energyRipples.push({ x: bird.x, y: bird.y, r: 8, maxR: 76, color: '#b58aff', alpha: 1 });
       showToast('TIME WARP ENDED — HAZARDS NORMAL SPEED'); updateActionHud(); return;
     }
+    if (char.id === 'mint-mochi' && shieldActive && abilityActiveTimer > 0) {
+      shieldActive = false; shieldTimer = 0; abilityActiveTimer = 0;
+      createAbilityBurst('#8ce6cb', bird.x, bird.y, 9);
+      showToast('MOCHI SHIELD OFF'); updateActionHud(); return;
+    }
     if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) return;
 
     if (char.id === 'original-fatty') {
       // A real, strong upward impulse plus a short thrust window makes the lift unmistakable.
-      bird.vy = Math.min(bird.vy, FLAP_IMPULSE * 1.32);
-      pulseLiftTimer = 0.26;
+      bird.vy = Math.min(bird.vy, FLAP_IMPULSE * (caveZone ? 0.9 : 1.32));   // gentler inside caves
+      pulseLiftTimer = caveZone ? 0 : 0.26;
+      if (caveZone) caveLiftGuard = 0.8;
       flapStrokeBoost = 0.9;
       energyRipples.push({ x: bird.x, y: bird.y, r: 12, maxR: 72, color: '#ffd166', alpha: 1 });
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
@@ -2067,7 +2077,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (abilityActiveTimer > 0) {
       abilityBtn.classList.remove('is-ready', 'is-disabled');
       abilityBtn.classList.add('is-active-now');
-      if (abilitySub) abilitySub.textContent = (char.id === 'blueberry-blimp' || char.id === 'midnight-dumpling' || char.id === 'royal-roast') ? `ON ${Math.ceil(abilityActiveTimer)}s · TAP OFF` : `ACTIVE ${Math.ceil(abilityActiveTimer)}s`;
+      if (abilitySub) abilitySub.textContent = (char.id === 'blueberry-blimp' || char.id === 'midnight-dumpling' || char.id === 'royal-roast' || char.id === 'mint-mochi') ? `ON ${Math.ceil(abilityActiveTimer)}s · TAP OFF` : `ACTIVE ${Math.ceil(abilityActiveTimer)}s`;
       abilityBtn.setAttribute('aria-pressed','true');
     } else if (!POWERUP_TEST_MODE && abilityCooldownTimer > 0) {
       abilityBtn.classList.remove('is-ready', 'is-active-now');
@@ -2851,19 +2861,19 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const pulse = 0.5 + 0.5 * Math.sin(visualTime * 9);
 
     // Blueberry Blimp: the parachute is now pixel art and corresponds to the real height-hold physics.
-    if (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0) {
-      ctx.save();
-      ctx.globalAlpha = 0.94;
-      ctx.imageSmoothingEnabled = false;
-      const sway = Math.round(Math.sin(visualTime * 3.2) * 3 * scale);
-      if (parachuteSprite && parachuteSprite.complete && parachuteSprite.naturalWidth) {
-        ctx.drawImage(parachuteSprite, x - 48 * scale + sway, y - 146 * scale, 96 * scale, 80 * scale);
+    {
+      const target = (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0) ? 1 : 0;
+      const dtv = Math.min(0.05, Math.max(0, visualTime - chuteLastT)); chuteLastT = visualTime;
+      chuteVis += (target - chuteVis) * Math.min(1, dtv * 9);
+      if (target === 0 && chuteVis < 0.01) chuteVis = 0;
+      if (chuteVis > 0.01 && curChar.id === 'blueberry-blimp' && parachuteSprite && parachuteSprite.complete && parachuteSprite.naturalWidth) {
+        const e = chuteVis * chuteVis * (3 - 2 * chuteVis);
+        const sway = Math.sin(visualTime * 2.2) * 2.5 * scale, k = 0.55 + 0.45 * e;
+        ctx.save(); ctx.globalAlpha = 0.94 * e; ctx.imageSmoothingEnabled = false;
+        ctx.translate(x + sway, y - 66 * scale); ctx.scale(k, k);          // canopy opens upward from the bird's back
+        ctx.drawImage(parachuteSprite, -48 * scale, -80 * scale, 96 * scale, 80 * scale);
+        ctx.restore();
       }
-      ctx.restore();
-      ctx.save(); ctx.translate(x, y); ctx.globalAlpha = 0.55 + pulse * 0.2;
-      ctx.fillStyle = '#8fe4ff'; ctx.imageSmoothingEnabled = false;
-      for (let i = 0; i < 5; i++) { const px = x - 48 * scale + ((i * 19 + Math.floor(visualTime * 22)) % 92) * scale; ctx.fillRect(px - x, (8 + (i % 2) * 8) * scale, 3 * scale, 3 * scale); }
-      ctx.restore();
     }
 
     // Midnight Dumpling: pixel shadow marker while its complete collision envelope is tucked.
@@ -3438,9 +3448,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (entry.phase==='approach') {
       const t=clampNumber(entry.timer/1.7,0,1), eased=t*t*(3-2*t);
       entry.x=lerp(W+170,154,eased);
-      if (entry.timer>=1.7) { entry.phase='earthquake'; entry.timer=0; showToast('EARTHQUAKE! HOLD ON!'); tone(76,.6,'sawtooth',.1); }
-    } else if (entry.phase==='earthquake') {
-      if (entry.timer>=1.4) {
+      if (entry.timer>=1.7) { entry.phase='bite'; entry.timer=0; entry.snapped=false; tone(120,.5,'sawtooth',.06); }
+    } else if (entry.phase==='bite') {
+      if (!entry.snapped && entry.timer>=0.9) { entry.snapped=true; tone(70,.4,'square',.12); tone(190,.12,'sawtooth',.1); }
+      if (entry.timer>=1.7) {
         entry.phase='notice'; entry.timer=0; entry.noticeAt=visualTime; state='caveIntro';
         updateLabel(); staticFrameDrawn=false;
       }
@@ -3459,12 +3470,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.beginPath(); ctx.moveTo(159,-130); ctx.lineTo(177,-190); ctx.lineTo(194,-111); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#6bb56e'; for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(40+i*34,-115-(i%2)*9);ctx.lineTo(55+i*34,-153-(i%2)*7);ctx.lineTo(70+i*34,-108);ctx.closePath();ctx.fill();}
     // Open dark mouth forms the passage; teeth are decorative and outside the safe travel centre.
-    ctx.fillStyle='#07121d'; ctx.beginPath(); ctx.ellipse(66,17,82,76,-.04,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='#8be0a0'; ctx.lineWidth=5; ctx.beginPath(); ctx.ellipse(66,17,86,80,-.04,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle='#d8e5c4'; for(let i=0;i<6;i++){const tx=18+i*19;ctx.beginPath();ctx.moveTo(tx,-47);ctx.lineTo(tx+8,-23);ctx.lineTo(tx+15,-47);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(tx,70);ctx.lineTo(tx+8,48);ctx.lineTo(tx+15,70);ctx.closePath();ctx.fill();}
+    let jaw=0; if (e.phase==='bite') { jaw=clampNumber((e.timer-.9)/.15,0,1); jaw=jaw*jaw*(3-2*jaw); }
+    const mo=1-.85*jaw;   // mouth squashes shut when it bites
+    ctx.fillStyle='#07121d'; ctx.beginPath(); ctx.ellipse(66,17,82,76*mo,-.04,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#8be0a0'; ctx.lineWidth=5; ctx.beginPath(); ctx.ellipse(66,17,86,80*mo,-.04,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#d8e5c4'; for(let i=0;i<6;i++){const tx=18+i*19;const uy=jaw*40, ly=-jaw*31;ctx.beginPath();ctx.moveTo(tx,-47);ctx.lineTo(tx+8,-23+uy);ctx.lineTo(tx+15,-47);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(tx,70);ctx.lineTo(tx+8,48+ly);ctx.lineTo(tx+15,70);ctx.closePath();ctx.fill();}
     ctx.fillStyle='#ffce76'; ctx.beginPath(); ctx.ellipse(139,-79,19,12,-.28,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#17202d'; ctx.beginPath(); ctx.arc(145,-79,5,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(124,225,176,.6)'; ctx.beginPath(); ctx.ellipse(58,18,53,48,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(124,225,176,.6)'; ctx.beginPath(); ctx.ellipse(58,18,53,48*mo,0,0,Math.PI*2); ctx.fill();
     ctx.restore();
   }
 
@@ -3811,7 +3824,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     for(let i=caveConfetti.length-1;i>=0;i--){const p=caveConfetti[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;p.life-=dt;if(p.life<=0||p.y>H+20)caveConfetti.splice(i,1);}
 
     const isGliding = (curChar.id === 'blueberry-blimp' && abilityActiveTimer > 0);
-    if (isGliding) {
+    if (caveEntrySequence && caveEntrySequence.phase === 'bite') {
+      bird.vy = (caveEntrySequence.y - bird.y) * 6;      // scripted: float to the mouth, no gravity, no input
+    } else if (isGliding) {
       // Neutral vertical hold: no forced downward drift. A tap below the bird gives a short controlled descent; a normal flap moves up.
       if (glideDiveTimer > 0) bird.vy = GLIDE_DIVE_SPEED;
       else bird.vy *= Math.exp(-GLIDE_DAMPING * dt);
@@ -3822,6 +3837,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (pulseLiftTimer > 0 && curChar.id === 'original-fatty') bird.vy = Math.max(-760, bird.vy - 470 * dt);
     }
     bird.y += bird.vy * dt;
+    if (caveLiftGuard > 0) {
+      caveLiftGuard = Math.max(0, caveLiftGuard - dt);
+      if (caveZone) {
+        const sg = caveZone.segments.find(v => v.x <= bird.x && v.x + CAVE_SEGMENT_W >= bird.x);
+        if (sg) {
+          const lo = sg.center - sg.gap / 2 + 54, hi = sg.center + sg.gap / 2 - 54;
+          if (bird.y < lo) { bird.y = lo; if (bird.vy < 0) bird.vy = 0; }
+          else if (bird.y > hi) { bird.y = hi; if (bird.vy > 0) bird.vy = 0; }
+        }
+      }
+    }
     const targetAngle = Math.max(-.48, Math.min(1.08, bird.vy / 850));
     bird.angle += (targetAngle - bird.angle) * Math.min(1, dt * 13);
     if (caveZone) { updateCaveZone(dt, speed, hazardTimeScale); if (state !== 'playing') return; }
@@ -4090,7 +4116,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (!caveZone) while (pipes.length && pipes[0].x <= -260) pipes.shift();
-    if (!caveZone && !arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {
+    if (!caveZone && !caveEntrySequence && !arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {   // no new pillars while the dragon gate is arriving
       pipes.push(spawnPipe(W+8));
     }
 
@@ -4119,8 +4145,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px'; ctx.imageSmoothingEnabled = true;
 
     ctx.clearRect(0, 0, W, H);
-    if (caveEntrySequence && caveEntrySequence.phase==='earthquake') {
-      const intensity=Math.max(0,1-caveEntrySequence.timer/1.4);
+    if (caveEntrySequence && caveEntrySequence.phase==='bite' && caveEntrySequence.timer>0.95) {
+      const intensity=Math.max(0,1-(caveEntrySequence.timer-0.95)/0.75);
       const sx=Math.sin(visualTime*42+caveEntrySequence.shakeSeed)*7*intensity;
       const sy=Math.cos(visualTime*51+caveEntrySequence.shakeSeed)*5*intensity;
       ctx.translate(sx,sy);
@@ -4139,7 +4165,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     drawAbilityParticles();
     drawFloatingPopups();
     drawPortals();
-    drawBird();
+    if (caveEntrySequence && caveEntrySequence.phase === 'bite') {
+      const bt = caveEntrySequence, k = clampNumber((bt.timer - 0.35) / 0.45, 0, 1), e = k * k * (3 - 2 * k);
+      if (k < 1) {
+        const by = lerp(bird.py, bird.y, renderAlpha), mx = bt.x + 66, my = bt.y + 17, sc = 1 - 0.75 * e;
+        ctx.save(); ctx.translate(bird.x + (mx - bird.x) * e, by + (my - by) * e); ctx.scale(sc, sc); ctx.translate(-bird.x, -by);
+        drawBird(); ctx.restore();
+      }
+    } else drawBird();
     drawCaveTrap();
     drawCaveCelebration();
     drawCaveEntryNotice();
