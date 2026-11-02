@@ -112,7 +112,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 .btn-buy:disabled{background:rgba(255,255,255,.1);color:#7f8f9e;cursor:not-allowed}
 .btn-equip{background:linear-gradient(140deg,#70e6c6,#38b292);color:#0a2920}
 .btn-equipped{background:rgba(255,209,102,.15);border:1px solid rgba(255,209,102,.4);color:#ffe59b;cursor:default}
-.store-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:9px 18px;border-radius:14px;background:#1e244d;border:1px solid #ffd166;color:#fff;font-size:12px;font-weight:900;box-shadow:0 8px 26px rgba(0,0,0,.6);z-index:99;pointer-events:none;animation:fadeInOut 2.5s forwards}
+.store-toast{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);padding:5px 12px;border-radius:14px;background:rgba(30,36,77,.72);border:1px solid #ffd166;color:#fff;font-size:10.5px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.3);z-index:99;pointer-events:none;animation:fadeInOut 2.5s forwards}
 @keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,10px)}15%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
 
 /* About Modal */
@@ -804,7 +804,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       nameSaveStatus.textContent = `Saved as ${result.nickname || wanted}. Your score was sent to all three boards.`;
       nameSavePanel.hidden = true; pendingRunScore = null;
       saveLeaderboardNameBtn.disabled = false;
-      showToast('NAME SAVED · SCORE SENT TO ALL 3 LEADERBOARDS');
       if (leaderboardPanel && !leaderboardPanel.hidden) refreshLeaderboard(activeLeaderboardBoard);
     } else {
       nameSaveStatus.textContent = `Not saved online: ${result.error}. Tap Save again to retry.`;
@@ -1104,8 +1103,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let standbyIndex = -1;
   let crossfading = false, waitingForStandby = false, bgFadeTimer = 0, gifAdvanceTimer = 0;
   const BG_EARLY_FADE_S = 0.9;
-  const STANDBY_LEAD_S = 6;           // the next clip starts loading this many seconds before the current one ends
-  let gifPrepTimer = 0;
   const gifDurationCache = new Map();
 
   function bgMayPlay() { return state !== 'paused' && !document.hidden; }
@@ -1178,7 +1175,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function handleSlotReady(slot) {
     slot.ready = true;
     if (slot === activeBgSlot) {
-      if (!crossfading) { playBackgrounds(); }
+      if (!crossfading) { playBackgrounds(); prepareStandby(); }
       if (slot.kind === 'gif') scheduleGifAdvance(slot);
     } else if (slot === standbyBgSlot && waitingForStandby) {
       crossfadeToStandby();
@@ -1221,7 +1218,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function crossfadeToStandby() {
     if (crossfading || !standbyReady()) return false;
     crossfading = true; waitingForStandby = false;
-    clearTimeout(gifAdvanceTimer); clearTimeout(gifPrepTimer);
+    clearTimeout(gifAdvanceTimer);
     const outgoing = activeBgSlot, incoming = standbyBgSlot;
     if (incoming.kind === 'video') {
       try { incoming.video.currentTime = 0; incoming.video.playbackRate = 1; } catch (_) {}
@@ -1235,6 +1232,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bgFadeTimer = setTimeout(() => {
       crossfading = false;
       clearBgSlot(outgoing);
+      prepareStandby();
       if (activeBgSlot.kind === 'gif') scheduleGifAdvance(activeBgSlot);
     }, 1000);
     return true;
@@ -1248,8 +1246,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (slot !== activeBgSlot || slot.kind !== 'gif' || crossfading) return;
       const totalMs = Math.max(500, duration * clipPlays());
       const waitMs = Math.max(200, totalMs - 900);
-      clearTimeout(gifPrepTimer);
-      gifPrepTimer = setTimeout(prepareStandby, Math.max(0, waitMs - STANDBY_LEAD_S * 1000));
       gifAdvanceTimer = setTimeout(function tryGifAdvance() {
         if (slot !== activeBgSlot || slot.kind !== 'gif') return;
         if (!bgMayPlay()) { gifAdvanceTimer = setTimeout(tryGifAdvance, 500); return; }
@@ -1277,9 +1273,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const slot = bgSlots.find(s => s.video === video);
     if (slot !== activeBgSlot || slot.kind !== 'video' || crossfading || !bgMayPlay()) return;
     if (bgLoops < clipPlays() - 1 || !video.duration) return;
-    const remaining = video.duration - video.currentTime;
-    if (remaining <= STANDBY_LEAD_S) prepareStandby();
-    if (remaining <= BG_EARLY_FADE_S) crossfadeToStandby();
+    if (video.duration - video.currentTime <= BG_EARLY_FADE_S) crossfadeToStandby();
   }
   function handleSlotError(slot) {
     const failedIndex = slot.clipIndex;
@@ -1323,6 +1317,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     setupBgSlot(activeBgSlot, 0);
     activeBgSlot.element.classList.add('is-active');
     standbyBgSlot.element.classList.remove('is-active');
+    prepareStandby();
   }
   function playBackgrounds() {
     if (!bgMayPlay()) return;
@@ -1460,6 +1455,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let floatingPopups = [];
   let caveZone = null;
   let caveStartPending = false;
+  let caveStartHoldTimer = 0;   // 1.5 s calm, protected start after tapping inside the cave
   let cavePipesPassed = 0;
   let cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
   let caveCoins = [];
@@ -1558,7 +1554,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     magnetActiveTimer = 0;
     worldMagnet = null;
-    caveZone = null; caveStartPending = false; cavePipesPassed = 0;
+    caveZone = null; caveStartPending = false; caveStartHoldTimer = 0; cavePipesPassed = 0;
     cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
     caveCoins = []; caveCage = null; cageCapture = null;
     cannonAttackSurvived = false; caveCannonQueued = false; caveEntrySequence = null;
@@ -1602,13 +1598,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         narrowPipesUntilEligible--;
       } else {
         // A 5.5% roll with two skipped pipes after a hit yields ~5% long-run frequency.
-        narrow = score >= 6 && Math.random() < 0.055;
+        narrow = score >= 10 && Math.random() < 0.02;
       }
-      if (narrow) { gap = Math.max(132, currentGap() - 26); narrowPipesUntilEligible = 2; }
+      if (narrow) { gap = Math.max(132, currentGap() - 26); narrowPipesUntilEligible = 7; }
       center = nextCenter !== null ? nextCenter : rollCenter(gap);
       nextCenter = rollCenter(gap);
     }
-    return { x, px: x, center, gap, narrow, narrowWarned: false, autoTuckTriggered: false, passed: false, coins: null, nextCenter };
+    return { x, px: x, seed: Math.floor(Math.random()*997), center, gap, narrow, narrowWarned: false, autoTuckTriggered: false, passed: false, coins: null, nextCenter };
   }
 
   function addGapFormation(p) {
@@ -1727,7 +1723,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function endFlight() {
     if (state !== 'playing') return;
     if (tryRoyalRevival()) { cageCapture = null; caveCage = null; return; }
-    state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause(); flushCoinSave();
+    state = 'over'; overAt = performance.now(); deathAnim = 0; bird.vy = 0; menuMusic.pause();
     if (score > best) { best = score; safeStore.set('fattyBirdBest', best); }
     playEffect('death', 155); updateLabel();
     pendingRunScore = score;
@@ -1739,9 +1735,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     } else {
       submitCheddaRun(score, cheddaProfileCreated ? '' : cheddaNickname).then(result => {
         if (result.ok) {
-          showToast('SCORE SUBMITTED TO ALL 3 LEADERBOARDS');
           if (leaderboardPanel && !leaderboardPanel.hidden) refreshLeaderboard(activeLeaderboardBoard);
-        } else showToast('ONLINE SCORE NOT SENT — CHECK CONNECTION');
+        }
       });
     }
   }
@@ -1751,7 +1746,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (SHIELD_BREAKS_ON_HIT) { shieldActive = false; shieldTimer = 0; }
     shieldGraceTimer = graceSeconds;
   }
-  function isProtectedByGrace() { return shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0 || !!caveEntrySequence || !!(caveZone && caveZone.exiting); }
+  function isProtectedByGrace() { return caveStartHoldTimer > 0 || shieldGraceTimer > 0 || blinkPhaseTimer > 0 || teleportArrivalShieldTimer > 0 || reviveGraceTimer > 0 || !!caveEntrySequence || !!(caveZone && caveZone.exiting); }
 
   /* ---------- Action HUD & Consumable Triggers (Real Physical & State Impact) ---------- */
   function activateInstantPulse() {
@@ -2063,14 +2058,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
   }
 
-  let actionHudSig = '';
   function updateActionHud() {
     const char = getSelectedCharConfig();
-    const sig = [state, char.id, char.iconEmoji, Math.ceil(abilityActiveTimer), Math.ceil(abilityCooldownTimer), POWERUP_TEST_MODE ? 1 : 0,
-      reviveGraceTimer > 0 ? reviveGraceTimer.toFixed(1) : 0, royalReviveAvailable ? 1 : 0, pulseCharges, blinkCharges, shieldCharges,
-      shieldActive ? 1 : 0, Math.ceil(magnetActiveTimer), shieldGraceTimer > 0 ? 1 : 0, shieldTimer.toFixed(1), teleportArrivalShieldTimer.toFixed(1)].join('|');
-    if (sig === actionHudSig) return;   // nothing visible changed: no style/layout work this step
-    actionHudSig = sig;
     actionHud.hidden = (state !== 'playing');
     abilityIcon.textContent = char.iconEmoji;
     const abilitySub = abilityBtn.querySelector('.hud-sub');
@@ -2240,17 +2229,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     };
   }
 
-  let coinSaveTimer = 0;
-  function flushCoinSave() { clearTimeout(coinSaveTimer); coinSaveTimer = 0; safeStore.set('fattyBirdCoins', totalCoins); }
-  function saveCoinsSoon() { if (!coinSaveTimer) coinSaveTimer = setTimeout(flushCoinSave, 350); }
-  window.addEventListener('pagehide', flushCoinSave);
   function collectBalloon(balloon) {
     if (balloon.collected) return;
     balloon.collected = true;
 
     coinsRun += 10;
     totalCoins += 10;
-    saveCoinsSoon();   // earned coins are always saved, also in test mode
+    safeStore.set('fattyBirdCoins', totalCoins);   // earned coins are always saved, also in test mode
     updateWallet();
     playEffect('coin', 950);
 
@@ -2351,6 +2336,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     const rect = canvas.getBoundingClientRect();
     const point = { x: (e.clientX - rect.left) * W / rect.width, y: (e.clientY - rect.top) * H / rect.height };
+    if (point.x < 0 || point.x > W || point.y < 0 || point.y > H) return;   // black side bars never flap
 
     if (state === 'caveIntro') { continueCaveEntry(); return; }
     if (state === 'ready') {
@@ -2385,6 +2371,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   canvas.addEventListener('pointerdown', handleStagePointer, { passive: false });
+  stage.addEventListener('pointerdown', e => { if (e.target === stage || e.target === stageBoard) e.preventDefault(); });
   stage.addEventListener('contextmenu', e => e.preventDefault());
 
   document.addEventListener('keydown', e => {
@@ -2436,7 +2423,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   document.addEventListener('visibilitychange', () => {
     lastTime = 0; updateAccumulator = 0;
     if (document.hidden) {
-      flushCoinSave();
       if (state === 'playing') togglePause();
       pauseBackgrounds(); menuMusic.pause();
     } else {
@@ -2636,7 +2622,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (coin.collected) return;
     coin.collected = true;
     coinsRun += 1; totalCoins += 1;
-    saveCoinsSoon();   // earned coins are always saved, also in test mode
+    safeStore.set('fattyBirdCoins', totalCoins);   // earned coins are always saved, also in test mode
     updateWallet();
     for (let i=0;i<10;i++) {
       const a = Math.PI*2*i/10, speed = 42 + (i%3)*14;
@@ -2808,45 +2794,52 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ctx.beginPath();ctx.ellipse(Math.cos(a)*4,Math.sin(a)*4,3.2,2.4,a,0,Math.PI*2);ctx.fill();}
     ctx.fillStyle='#ff8ca0';ctx.beginPath();ctx.arc(0,0,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
   }
-  function drawPipeGarden(yStart,yEnd,side,seed) {
-    if (yEnd-yStart<54) return;
-    const vineX=side<0?11:PIPE_W-11;
-    ctx.save(); ctx.strokeStyle='#194f2e'; ctx.lineWidth=2.2; ctx.beginPath();
-    ctx.moveTo(vineX,yStart+5);
-    const amp=side<0?5:-5;
-    for(let y=yStart+22;y<yEnd-8;y+=30) ctx.quadraticCurveTo(vineX+amp,y-9,vineX,y);
-    ctx.stroke();
-    let n=0;
-    for(let y=yStart+20;y<yEnd-16;y+=52){
-      const dir=((n++ + seed)%2===0)?1:-1;
-      ctx.fillStyle='#69c96a'; ctx.beginPath(); ctx.ellipse(vineX+dir*8,y,7,3.6,dir*.42,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#b1ed83'; ctx.beginPath(); ctx.ellipse(vineX-dir*7,y+15,6,3.2,-dir*.45,0,Math.PI*2); ctx.fill();
-      if ((n+seed)%3===0) drawPipeFlower(vineX+dir*5,y+25,.72);
+  /* Christmas-style garland: static colours, no glow, no animation. Seeded per pipe so it never flickers. */
+  const PIPE_LIGHT_COLORS=['#ff5a5f','#ffd166','#5fd37a','#5ab8ff'];
+  function drawPipeLights(yStart,yEnd,seed) {
+    if (yEnd-yStart<40) return;
+    const bulbs=[[],[],[],[]];
+    ctx.strokeStyle='#0f3a22'; ctx.lineWidth=1.6; ctx.beginPath();
+    let k=0;
+    for (let y=yStart+8;y<yEnd-18;y+=34) {
+      const x0=9,x1=PIPE_W-9,cy=y+16,y0=y,y1=y+(((k+seed)&1)?3:0);
+      ctx.moveTo(x0,y0); ctx.quadraticCurveTo(PIPE_W/2,cy,x1,y1);
+      for (let b=1;b<=3;b++) {
+        const t=b/4,u=1-t;
+        bulbs[(k*3+b+seed)&3].push(u*u*x0+2*u*t*(PIPE_W/2)+t*t*x1, u*u*y0+2*u*t*cy+t*t*y1+2.5);
+      }
+      k++;
     }
-    ctx.restore();
+    ctx.stroke();
+    for (let c=0;c<4;c++) {
+      const a=bulbs[c]; if (!a.length) continue;
+      ctx.fillStyle=PIPE_LIGHT_COLORS[c]; ctx.beginPath();
+      for (let n=0;n<a.length;n+=2) { ctx.moveTo(a[n]+2.6,a[n+1]); ctx.arc(a[n],a[n+1],2.6,0,Math.PI*2); }
+      ctx.fill();
+    }
   }
   function drawPipe(p) {
     const x = lerp(p.px, p.x, renderAlpha);
+    if (x > W + 4 || x < -PIPE_W - 4) return;
     const gapTop = p.center - p.gap/2, gapBottom = p.center + p.gap/2, pw=PIPE_W, cap=CAP_H;
-    const retractFade = p.retracting ? Math.max(.02,1-(p.retractProgress||0)*.98) : 1;
+    const rp = p.retracting ? Math.min(1,p.retractProgress||0) : 0;
+    const retractFade = 1 - rp*rp*(3-2*rp);
     const returnFade = p.caveReturn ? Math.max(0,Math.min(1,1-caveReturnFade/1.8)) : 1;
     const fade = retractFade * returnFade;
+    if (fade <= 0.01) return;
+    const seed = p.seed|0;
     ctx.save(); ctx.globalAlpha=fade; ctx.translate(x, 0);
-    ctx.save();
     ctx.fillStyle=pipeBodyGrad;
     if (gapTop > 1) roundRect(5,0,pw-10,gapTop,8);
     if (gapBottom < FLOOR-1) roundRect(5,gapBottom,pw-10,FLOOR-gapBottom,8);
     ctx.fillStyle=pipeCapGrad;
-    if (gapTop > 1) roundRect(0,gapTop-cap+2,pw,cap,7);
-    if (gapBottom < FLOOR-1) roundRect(0,gapBottom-2,pw,cap,7);
-    ctx.restore();
+    if (gapTop > -cap) roundRect(0,gapTop-cap+2,pw,cap,7);
+    if (gapBottom < FLOOR+cap) roundRect(0,gapBottom-2,pw,cap,7);
     if (gapTop > 22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,11,5,Math.max(0,gapTop-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,0,4,Math.max(1,gapTop-cap+2)); }
     if (gapBottom < FLOOR-22) { ctx.fillStyle='rgba(255,255,255,.22)'; roundRect(13,gapBottom+12,5,Math.max(0,FLOOR-gapBottom-22),3); ctx.fillStyle='rgba(4,48,15,.24)'; ctx.fillRect(pw-12,gapBottom+4,4,Math.max(1,FLOOR-gapBottom-4)); }
-    // Vines, leaves and tiny flowers are purely visual; pipe collision geometry is unchanged.
-    drawPipeGarden(8,Math.max(8,gapTop-cap),-1,Math.floor(p.x/17));
-    drawPipeGarden(Math.min(FLOOR,gapBottom+cap),FLOOR-7,1,Math.floor(p.x/17)+1);
-    if (gapTop > 1) { drawPipeFlower(18,gapTop-10,.88); drawPipeFlower(59,gapTop-7,.65); }
-    if (gapBottom < FLOOR-1) { drawPipeFlower(17,gapBottom+10,.85); drawPipeFlower(58,gapBottom+8,.68); }
+    // Garland lights are purely visual; pipe collision geometry is unchanged.
+    drawPipeLights(8,gapTop-cap,seed);
+    drawPipeLights(gapBottom+cap,FLOOR-7,seed+1);
     if (p.narrow && !p.retracting) { ctx.fillStyle='#ffd166'; if (gapTop > 1) ctx.fillRect(1, gapTop-cap+6, 3, Math.max(6, cap-8)); if (gapBottom < FLOOR-1) ctx.fillRect(pw-4, gapBottom+3, 3, Math.max(6, cap-8)); }
     ctx.restore();
   }
@@ -2928,8 +2921,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
     const birdImage = frameImg && frameImg.complete && frameImg.naturalWidth ? frameImg : bodyImg;
     if (birdImage && birdImage.complete && birdImage.naturalWidth) {
-      ctx.shadowColor = 'rgba(5,8,20,.28)';
-      ctx.shadowBlur = 10;
       ctx.drawImage(birdImage, 0, 0, 1024, 769);
     } else {
       ctx.fillStyle = '#ffd166';
@@ -3024,12 +3015,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const bob = Math.sin(t * 7.5) * 2.2;
     if (portalState === 'entering' || portalState === 'warp') {      // short afterimage trail while warping (2 extra draws, 0.3 s)
       ctx.save();
-      ctx.globalAlpha = .22; drawBirdArtwork(bird.x - 34, y + bob, 148, angle * .62, visualTime, false, false);
-      ctx.globalAlpha = .12; drawBirdArtwork(bird.x - 68, y + bob, 148, angle * .62, visualTime, false, false);
+      ctx.globalAlpha = .22; drawBirdArtwork(bird.x - 34, y + bob, 163, angle * .62, visualTime, false, false);
+      ctx.globalAlpha = .12; drawBirdArtwork(bird.x - 68, y + bob, 163, angle * .62, visualTime, false, false);
       ctx.restore();
       ctx.globalAlpha = portalState === 'warp' ? .35 : .7;
     }
-    drawBirdArtwork(bird.x, y+bob, 148, angle*.62, visualTime, state==='over', false);
+    drawBirdArtwork(bird.x, y+bob, 163, angle*.62, visualTime, state==='over', false);
     ctx.globalAlpha = 1;
     if (collisionDebugActive) {            // developer overlay (H key): the exact circles used for collisions
       ctx.save(); ctx.strokeStyle = '#00ff66'; ctx.lineWidth = 2;
@@ -3107,7 +3098,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function drawHud() {
-    ctx.save(); ctx.shadowColor='rgba(7,10,30,.3)'; ctx.shadowBlur=12;
+    ctx.save();
     ctx.fillStyle='rgba(18,22,54,.84)'; roundRect(151,19,118,64,17);
     ctx.restore();
     ctx.textAlign='center'; ctx.fillStyle='#ffe8a5'; ctx.font='900 9px system-ui'; ctx.letterSpacing='2px'; ctx.fillText('SCORE',210,40);
@@ -3386,9 +3377,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       const fire = specialHazardWarning.type === 'fire';
       const pipe = specialHazardWarning.type === 'pipe';
       const sprite = fire ? hazardWarningSprite : pipe ? pipeSawSprite : cannonWarningSprite;
-      const alpha = 0.72 + Math.abs(Math.sin(visualTime * 13)) * 0.28;
+      const alpha = 0.8;   // steady, no flashing
       ctx.globalAlpha = alpha;
-      ctx.fillStyle='rgba(16,20,45,.94)'; ctx.fillRect(34,124,352,66);
+      ctx.fillStyle='rgba(16,20,45,.62)'; ctx.fillRect(34,124,352,66);
       ctx.strokeStyle=fire?'#ff8b35':pipe?'#91c7ff':'#ffcf69'; ctx.lineWidth=3; ctx.strokeRect(35.5,125.5,349,63);
       if (sprite && sprite.complete && sprite.naturalWidth) ctx.drawImage(sprite, fire ? 48 : 334, 140, 34, 34);
       ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.font='900 13px system-ui';
@@ -3400,9 +3391,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       ctx.fillText(Math.ceil(specialHazardWarning.timer).toString(),304,157);
     }
     if (narrowWarningTimer > 0) {
-      const alpha = Math.min(1,narrowWarningTimer*2);
+      const alpha = Math.min(1,narrowWarningTimer*2)*.7;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle='rgba(15,24,35,.9)'; ctx.fillRect(110,200,200,34);
+      ctx.fillStyle='rgba(15,24,35,.55)'; ctx.fillRect(110,200,200,34);
       ctx.strokeStyle='#ffd166'; ctx.lineWidth=2; ctx.strokeRect(111,201,198,32);
       if (narrowGapSprite && narrowGapSprite.complete && narrowGapSprite.naturalWidth) ctx.drawImage(narrowGapSprite,118,204,28,28);
       ctx.fillStyle='#ffe08a'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='950 11px system-ui'; ctx.fillText('RARE NARROW GAP AHEAD!',224,217);
@@ -3421,12 +3412,12 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     for (const p of pipes) {
       if (p.x > bird.x-20) { p.retracting=true; p.retractProgress=Math.max(0,p.retractProgress||0); p.retractBaseGap=p.retractBaseGap||p.gap; }
     }
-    showToast('THE DRAGON GATE IS OPENING — FLY TOWARD THE MOUTH!');
     tone(190,.35,'sawtooth',.07);
   }
 
   function continueCaveEntry() {
     if (state !== 'caveIntro' || !caveEntrySequence) return;
+    if (visualTime - (caveEntrySequence.noticeAt || 0) < 0.5) return;   // ignore taps from the earthquake
     // Re-enter at the dragon's mouth centre so a low/high earthquake bounce
     // cannot leave the bird outside the first wide, protected cave segment.
     const mouthFlightY = caveEntrySequence.y;
@@ -3436,8 +3427,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bird.y=clampNumber(mouthFlightY,250,410);
     bird.vy=0;
     beginCaveZone();
+    caveStartHoldTimer = 1.5;
     syncPrev(); updateLabel();
-    showToast('CAVE FLIGHT STARTED — STAY IN THE OPEN CORRIDOR');
   }
 
   function updateCaveEntrySequence(dt) {
@@ -3450,7 +3441,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (entry.timer>=1.7) { entry.phase='earthquake'; entry.timer=0; showToast('EARTHQUAKE! HOLD ON!'); tone(76,.6,'sawtooth',.1); }
     } else if (entry.phase==='earthquake') {
       if (entry.timer>=1.4) {
-        entry.phase='notice'; entry.timer=0; state='caveIntro';
+        entry.phase='notice'; entry.timer=0; entry.noticeAt=visualTime; state='caveIntro';
         updateLabel(); staticFrameDrawn=false;
       }
     }
@@ -3480,14 +3471,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function drawCaveEntryNotice() {
     if (state!=='caveIntro' || !caveEntrySequence) return;
     ctx.save();
+    ctx.globalAlpha=Math.min(1,(visualTime-(caveEntrySequence.noticeAt||visualTime))/.45);
     ctx.fillStyle='rgba(3,8,20,.78)'; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#162c48'; roundRect(34,236,352,174,23);
     ctx.strokeStyle='#83dfff'; ctx.lineWidth=2; ctx.strokeRect(35,237,350,172);
     ctx.textAlign='center'; ctx.fillStyle='#ffe39b'; ctx.font='1000 21px system-ui'; ctx.fillText('YOU ENTERED THE CAVE!',210,286);
     ctx.fillStyle='#dff5ff'; ctx.font='800 11px system-ui'; ctx.fillText('The dragon gate has closed behind you.',210,315);
     const pulse=.65+.35*Math.sin(visualTime*6);
-    ctx.globalAlpha=pulse; ctx.fillStyle='#8ce6cb'; ctx.font='1000 17px system-ui'; ctx.fillText('TAP TO CONTINUE',210,365);
-    ctx.globalAlpha=1; ctx.fillStyle='#9eb5ce'; ctx.font='700 9px system-ui'; ctx.fillText('YOUR BIRD WILL KEEP FLAPPING · FLIGHT RESUMES ON TAP',210,390);
+    ctx.globalAlpha*=pulse; ctx.fillStyle='#8ce6cb'; ctx.font='1000 17px system-ui'; ctx.fillText('TAP TO CONTINUE',210,365);
+    ctx.globalAlpha=Math.min(1,(visualTime-(caveEntrySequence.noticeAt||visualTime))/.45); ctx.fillStyle='#9eb5ce'; ctx.font='700 9px system-ui'; ctx.fillText('YOUR BIRD WILL KEEP FLAPPING · FLIGHT RESUMES ON TAP',210,390);
     ctx.restore();
   }
 
@@ -3540,7 +3532,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     fireSweep = null; cannonball = null; pipeSaw = null; specialHazardWarning = null;
     caveCoins = []; caveCage = null; cageCapture = null;
     cavePipesPassed = 0; caveStartPending = false; caveCannonQueued = false; cannonAttackSurvived = false;
-    showToast(`CAVE ZONE — ${caveLengthUnits} PIPE SPACES · FOLLOW THE OPEN ROUTE!`);
     tone(260,.2,'triangle',.05);
   }
   function addCaveSegmentContent(seg) {
@@ -3553,14 +3544,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
     }
     // A small number of bombs create a choice, rather than a wall of unavoidable hazards.
-    if (seg.index >= 26 && seg.index % 31 === 2 && caveZone.bombCount < 2 && bombs.length < 1) {
+    if (seg.index >= 36 && seg.index % 53 === 2 && caveZone.bombCount < 1 && bombs.length < 1) {
       const side = Math.random() < .5 ? -1 : 1;
       const y = clampNumber(seg.center + side*(seg.gap*.25), 95, FLOOR-65);
       bombs.push({ x:seg.x+36, px:seg.x+36, y, speed:188*currentDifficulty(), r:15, isCaveBomb:true, fuseSeed:Math.random() });
       caveZone.bombCount++;
     }
     // At most one clearly signalled cage trap per cave; the opening itself is hazard-free.
-    if (!caveZone.switchPlaced && caveZone.cageCount===0 && seg.index >= 38 && seg.index < caveZone.targetSegments+18 && Math.random() < .035) {
+    if (!caveZone.switchPlaced && caveZone.cageCount===0 && seg.index >= 46 && seg.index < caveZone.targetSegments+18 && Math.random() < .02) {
       const side = Math.random() < .5 ? -1 : 1;
       const y = clampNumber(seg.center + side*(seg.gap/2-34), 75, FLOOR-60);
       const x = seg.x + 24;
@@ -3597,7 +3588,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         lastGapY=bird.y; nextCenter=null;
         const firstPipe=spawnPipe(W+265); firstPipe.gap=Math.max(firstPipe.gap,250); firstPipe.center=bird.y; firstPipe.px=firstPipe.x; firstPipe.narrow=false; firstPipe.retracting=false; firstPipe.caveReturn=true; lastGapY=firstPipe.center;
         pipes=[firstPipe]; caveReturnFade=1.8; caveExitCelebration=2.6; spawnCaveConfetti();
-        showToast('CAVE CLEARED — BACK TO THE PIPES!');
       }
       return;
     }
@@ -3771,6 +3761,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (reviveGraceTimer > 0) reviveGraceTimer = Math.max(0, reviveGraceTimer - dt);
     if (pulseLiftTimer > 0) pulseLiftTimer = Math.max(0, pulseLiftTimer - dt);
     if (glideDiveTimer > 0) glideDiveTimer = Math.max(0, glideDiveTimer - dt);
+    if (caveStartHoldTimer > 0) caveStartHoldTimer = Math.max(0, caveStartHoldTimer - dt);
     if (narrowWarningTimer > 0) narrowWarningTimer = Math.max(0, narrowWarningTimer - dt);
 
     // Shield timers
@@ -3826,7 +3817,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       else bird.vy *= Math.exp(-GLIDE_DAMPING * dt);
       if (Math.abs(bird.vy) < 5) bird.vy = 0;
     } else {
-      bird.vy = Math.min(650, bird.vy + 1280 * dt);
+      bird.vy = Math.min(650, bird.vy + 1280 * dt * (caveStartHoldTimer > 0 ? 0.15 : 1));
+      if (caveStartHoldTimer > 0) bird.vy *= Math.exp(-3 * dt);
       if (pulseLiftTimer > 0 && curChar.id === 'original-fatty') bird.vy = Math.max(-760, bird.vy - 470 * dt);
     }
     bird.y += bird.vy * dt;
@@ -3840,7 +3832,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     for (const p of pipes) {
       p.x -= speed * hazardTimeScale * dt;
       if (p.retracting && p.retractProgress < 1) {
-        p.retractProgress = Math.min(1, p.retractProgress + dt / 0.62);
+        p.retractProgress = Math.min(1, p.retractProgress + dt / 0.9);
         const eased = p.retractProgress * p.retractProgress * (3 - 2 * p.retractProgress);
         p.gap = lerp(p.retractBaseGap || p.gap, 900, eased);
       }
