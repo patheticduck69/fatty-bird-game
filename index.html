@@ -448,10 +448,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const FINAL_BOSS_SURVIVE_SECONDS = 30;
   const FINAL_BOSS_FIRE_INTERVAL = 0.98;
   const FINAL_BOSS_BULLET_SPEED = 345;
-  const FINAL_BOSS_GUN_X = 282;
+  const FINAL_BOSS_GUN_X = 355; // Boss is pushed to the far right to widen the bird's dodge lane.
   const FINAL_BOSS_MIN_Y = 92;
   const FINAL_BOSS_MAX_Y = 548;
-  const FINAL_BOSS_KILL_CANNON_SPEED = 650;
+  const FINAL_BOSS_KILL_CANNON_SPEED = 760; // Faster, distinct rotating impact sprite.
 
   const stage = document.getElementById('stage');
   const stageBoard = document.getElementById('stageBoard');
@@ -1024,6 +1024,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const FINAL_BOSS_OPEN_SRC = 'assets/ui/boss-shoot.png';
   const finalBossClosedImg = getCachedImage(FINAL_BOSS_CLOSED_SRC);
   const finalBossOpenImg = getCachedImage(FINAL_BOSS_OPEN_SRC);
+  // This image is used ONLY for the special projectile that ends the Ghotokasur fight.
+  const FINAL_BOSS_IMPACT_SRC = 'assets/obstacles/ghotokasur-impact.png';
+  const finalBossImpactImg = getCachedImage(FINAL_BOSS_IMPACT_SRC);
   const cannonSprite = getCachedImage('assets/obstacles/pixel-cannon.png');
   const hazardWarningSprite = getCachedImage('assets/obstacles/pixel-hazard-warning.png');
   const cannonWarningSprite = getCachedImage('assets/obstacles/pixel-cannon-warning.png');
@@ -1550,7 +1553,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     pauseBtn.style.opacity = pauseBtn.disabled ? '.45' : '1';
   }
   function updateLabel() {
-    runLabel.textContent = state === 'ready' ? 'Awaiting take-off clearance' : state === 'playing' ? 'In the air — stay sharp' : state === 'paused' ? 'Taking a tiny break' : state === 'caveIntro' ? 'Entered the cave — tap to continue' : state === 'bossIntro' ? 'Final boss approaching' : state === 'bossFight' ? 'Final boss — survive 30 seconds' : state === 'bossDefeat' ? 'Cannonball incoming — boss defeated' : state === 'bossVictory' ? 'Final boss defeated' : state === 'bossContinue' ? 'Tap continue to keep flying' : state === 'bossLaunch' ? 'FATTY BIRD WINS!' : 'Flight ended';
+    runLabel.textContent = state === 'ready' ? 'Awaiting take-off clearance' : state === 'playing' ? 'In the air — stay sharp' : state === 'paused' ? 'Taking a tiny break' : state === 'caveIntro' ? 'Entered the cave — tap to continue' : state === 'bossIntro' ? 'GHOTOKASUR approaching' : state === 'bossFight' ? 'GHOTOKASUR — survive 30 seconds' : state === 'bossDefeat' ? 'GHOTOKASUR — impact incoming' : state === 'bossVictory' ? 'Final boss defeated' : state === 'bossContinue' ? 'Tap continue to keep flying' : state === 'bossLaunch' ? 'FATTY BIRD WINS!' : 'Flight ended';
     setPauseButton();
     updateActionHud();
   }
@@ -3539,7 +3542,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function beginFinalBossDefeatSequence() {
     if (state !== 'bossFight') return;
     bossBullets = [];
-    bossKillCannonball = { x: 8, y: 448, targetY: 407, speed: FINAL_BOSS_KILL_CANNON_SPEED, spin: 0 };
+    bossKillCannonball = { x: -52, y: 430, targetY: 420, speed: FINAL_BOSS_KILL_CANNON_SPEED, spin: 0 };
     bossOpenTimer = 0.75;
     state = 'bossDefeat';
     updateLabel();
@@ -3553,7 +3556,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bossBullets = [];
     // This one-shot audio plays precisely when the incoming cannonball hits the boss.
     playEffect('finalBossKill', 115);
-    createExplosion(318, 407, '#ff9b38', 34);
+    createExplosion(350, 420, '#ff9b38', 34);
     bossVictoryTimer = 2.0;
     bossOpenTimer = 1.2;
     state = 'bossVictory';
@@ -3702,7 +3705,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         bossKillCannonball.x += bossKillCannonball.speed * dt;
         bossKillCannonball.y += (bossKillCannonball.targetY - bossKillCannonball.y) * Math.min(1, dt * 3.4);
         bossKillCannonball.spin += dt * 10;
-        if (bossKillCannonball.x >= 310) beginFinalBossVictory();
+        if (bossKillCannonball.x >= 350) beginFinalBossVictory();
       }
       return;
     }
@@ -3777,9 +3780,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.lineCap = 'square';
     // Arm reaches from the boss's forward side to the left-facing pistol.
     ctx.strokeStyle = '#641e25'; ctx.lineWidth = 16;
-    ctx.beginPath(); ctx.moveTo(337, 436); ctx.lineTo(handX, handY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(394, 458); ctx.lineTo(handX, handY); ctx.stroke();
     ctx.strokeStyle = '#d34c3f'; ctx.lineWidth = 7;
-    ctx.beginPath(); ctx.moveTo(337, 434); ctx.lineTo(handX, handY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(394, 456); ctx.lineTo(handX, handY); ctx.stroke();
     ctx.translate(handX, handY);
     ctx.rotate(bossGunAngle);
     ctx.fillStyle = '#101a2a'; ctx.fillRect(-77, -13, 83, 27);
@@ -3821,21 +3824,21 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       if (impactAge >= 0 && impactAge < 0.48) {
         const k = impactAge / 0.48;
         ctx.save(); ctx.globalAlpha = 1 - k; ctx.strokeStyle = '#ffb13d'; ctx.lineWidth = 8 - k * 5;
-        ctx.beginPath(); ctx.arc(318, 407, 16 + k * 72, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,116,45,.28)'; ctx.beginPath(); ctx.arc(318, 407, 12 + k * 48, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(350, 420, 16 + k * 72, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,116,45,.28)'; ctx.beginPath(); ctx.arc(350, 420, 12 + k * 48, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
     }
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    const bossX = 218, bossY = 253, bossW = 205, bossH = 282;
+    const bossX = 263, bossY = 319, bossW = 157, bossH = 216; // Far-right pillar position; more open vertical dodge space.
     if (state === 'bossVictory' || state === 'bossContinue') {
       const progress = state === 'bossContinue' ? 1 : clampNumber(1 - bossVictoryTimer / 2.0, 0, 1);
       // The hit knocks the boss off the pillar: the sprite drops down and away while rotating.
-      ctx.translate(321 + progress * 68, 408 + progress * 190);
+      ctx.translate(340 + progress * 82, 427 + progress * 190);
       ctx.rotate(progress * 1.22);
       ctx.globalAlpha = state === 'bossContinue' ? 0 : 1 - progress * 0.35;
-      ctx.translate(-321, -408);
+      ctx.translate(-340, -427);
     }
     if (bossImage && bossImage.complete && bossImage.naturalWidth) {
       ctx.drawImage(bossImage, bossX, bossY, bossW, bossH);
@@ -3862,13 +3865,14 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (bossKillCannonball && state === 'bossDefeat') {
       const shot = bossKillCannonball;
       ctx.save();
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = 0.94;
       ctx.fillStyle = 'rgba(255,126,44,.55)';
-      ctx.beginPath(); ctx.ellipse(shot.x - 28, shot.y, 31, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffd166'; ctx.fillRect(shot.x - 38, shot.y - 3, 19, 6);
+      ctx.beginPath(); ctx.ellipse(shot.x - 33, shot.y, 39, 9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd166'; ctx.fillRect(shot.x - 44, shot.y - 4, 22, 8);
       ctx.save(); ctx.translate(shot.x, shot.y); ctx.rotate(shot.spin);
-      if (cannonballSprite && cannonballSprite.complete && cannonballSprite.naturalWidth) {
-        ctx.drawImage(cannonballSprite, -25, -25, 50, 50);
+      // Dedicated Ghotokasur impact sprite: never used for ordinary game cannonballs.
+      if (finalBossImpactImg && finalBossImpactImg.complete && finalBossImpactImg.naturalWidth) {
+        ctx.drawImage(finalBossImpactImg, -43, -42, 86, 84);
       } else {
         ctx.fillStyle = '#374355'; ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#f3a34d'; ctx.lineWidth = 4; ctx.stroke();
@@ -3889,7 +3893,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.fillStyle = 'rgba(8,13,31,.91)'; roundRect(89, 15, 242, 75, 14);
     ctx.strokeStyle = 'rgba(255,209,102,.62)'; ctx.lineWidth = 1; ctx.strokeRect(89.5, 15.5, 241, 74);
     ctx.textAlign = 'center'; ctx.fillStyle = '#ffd166'; ctx.font = '1000 10px system-ui'; ctx.letterSpacing = '1.6px';
-    ctx.fillText('FINAL BOSS · CANNON CHARGE', 210, 33);
+    ctx.fillText('GHOTOKASUR · CANNON CHARGE', 210, 33);
     const progress = state === 'bossIntro' ? 0 : state === 'bossDefeat' || state === 'bossVictory' || state === 'bossContinue' ? 1 : clampNumber(bossElapsed / FINAL_BOSS_SURVIVE_SECONDS, 0, 1);
     const secondsLeft = Math.max(0, FINAL_BOSS_SURVIVE_SECONDS - bossElapsed);
     ctx.fillStyle = '#fff'; ctx.font = '900 12px system-ui'; ctx.letterSpacing = '0px';
@@ -3911,7 +3915,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (state === 'bossIntro') {
       ctx.fillStyle = 'rgba(5,9,25,.80)'; roundRect(43, 235, 334, 130, 19);
       ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2; ctx.strokeRect(44, 236, 332, 128);
-      ctx.fillStyle = '#ffe7a5'; ctx.font = '1000 25px system-ui'; ctx.fillText('FINAL BOSS!', 210, 277);
+      ctx.fillStyle = '#ffe7a5'; ctx.font = '1000 25px system-ui'; ctx.fillText('GHOTOKASUR!', 210, 277);
       ctx.fillStyle = '#fff'; ctx.font = '900 12px system-ui'; ctx.fillText('SURVIVE FOR 30 SECONDS', 210, 309);
       ctx.fillStyle = '#bcd3e8'; ctx.font = '800 10px system-ui'; ctx.fillText('The boss tracks your height and fires aimed shots.', 210, 334);
     } else if (state === 'bossContinue') {
