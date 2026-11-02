@@ -1020,6 +1020,18 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const shadowTuckSprite = getCachedImage('assets/obstacles/pixel-shadow-tuck.png');
   const parachuteSprite = getCachedImage('assets/obstacles/pixel-parachute.png');
   const narrowGapSprite = getCachedImage('assets/obstacles/pixel-narrow-gap.png');
+  /* Cave monster: loaded and decoded as soon as the page opens, long before it is needed. */
+  const MONSTER_CLOSED_SRC = 'assets/ui/monster-closed.png';
+  const MONSTER_OPEN_SRC = 'assets/ui/monster-open.png';
+  const monsterClosedImg = getCachedImage(MONSTER_CLOSED_SRC);
+  const monsterOpenImg = getCachedImage(MONSTER_OPEN_SRC);
+  let monsterImgFailed = false;
+  for (const im of [monsterClosedImg, monsterOpenImg]) {
+    im.addEventListener('error', () => { monsterImgFailed = true; });
+    try { if (im.decode) im.decode().catch(() => {}); } catch (_) {}
+  }
+  function monsterReady() { return !!(monsterClosedImg.complete && monsterClosedImg.naturalWidth && monsterOpenImg.complete && monsterOpenImg.naturalWidth); }
+  function monsterGaveUp() { return monsterImgFailed || performance.now() > 25000; }   // never block the game on a slow or missing file
   const caveWallSprite = getCachedImage('assets/obstacles/cave-rock-tile.png');
   const cavePlateSprite = getCachedImage('assets/obstacles/cave-pressure-plate.png');
   const caveCageSprite = getCachedImage('assets/obstacles/cave-cage.png');
@@ -1337,7 +1349,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   /* ---------- Audio Setup ---------- */
   const effectTracks = {
     coin: new Audio('assets/audio/gopgopgop%20(mp3cut.net).mp3'),
-    death: new Audio('assets/audio/annoy%20rec%20gali%20(mp3cut.net).mp3')
+    death: new Audio('assets/audio/annoy%20rec%20gali%20(mp3cut.net).mp3'),
+    monster: new Audio('assets/audio/Risa.mp3')
   };
   for (const track of Object.values(effectTracks)) {
     track.preload = 'auto';
@@ -3418,11 +3431,17 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   function beginCaveEntrySequence() {
     if (caveEntrySequence || caveZone || !caveStartPending || !cannonAttackSurvived || state !== 'playing') return;
-    caveEntrySequence = { phase:'approach', timer:0, x:W+170, y:clampNumber(bird.y,250,410), shakeSeed:Math.random()*10 };
+    if (!monsterReady() && !monsterGaveUp()) return;      // art is still downloading: try again next frame
+    caveEntrySequence = { phase:'approach', timer:0, x:W+170, y:clampNumber(bird.y,250,410), shakeSeed:Math.random()*10, useMonster:monsterReady() };
     for (const p of pipes) {
       if (p.x > bird.x-20) { p.retracting=true; p.retractProgress=Math.max(0,p.retractProgress||0); p.retractBaseGap=p.retractBaseGap||p.gap; }
     }
-    tone(190,.35,'sawtooth',.07);
+    if (caveEntrySequence.useMonster) playEffect('monster', 190); else tone(190,.35,'sawtooth',.07);
+  }
+
+  function caveMouthPoint(e) {
+    if (e.useMonster) return { x: e.x + 30, y: e.y + Math.sin(visualTime * 4.5) * 7 };
+    return { x: e.x + 66, y: e.y + 17 };
   }
 
   function continueCaveEntry() {
@@ -3448,9 +3467,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (entry.phase==='approach') {
       const t=clampNumber(entry.timer/1.7,0,1), eased=t*t*(3-2*t);
       entry.x=lerp(W+170,154,eased);
-      if (entry.timer>=1.7) { entry.phase='bite'; entry.timer=0; entry.snapped=false; tone(120,.5,'sawtooth',.06); }
+      if (entry.timer>=1.7) { entry.phase='bite'; entry.timer=0; entry.snapped=false; if (!entry.useMonster) tone(120,.5,'sawtooth',.06); }
     } else if (entry.phase==='bite') {
-      if (!entry.snapped && entry.timer>=0.9) { entry.snapped=true; tone(70,.4,'square',.12); tone(190,.12,'sawtooth',.1); }
+      if (!entry.snapped && entry.timer>=0.9) { entry.snapped=true; if (!entry.useMonster) { tone(70,.4,'square',.12); tone(190,.12,'sawtooth',.1); } else tone(80,.18,'square',.1); }
       if (entry.timer>=1.7) {
         entry.phase='notice'; entry.timer=0; entry.noticeAt=visualTime; state='caveIntro';
         updateLabel(); staticFrameDrawn=false;
@@ -3461,6 +3480,21 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function drawDragonCaveEntrance() {
     if (!caveEntrySequence || caveEntrySequence.phase==='notice') return;
     const e=caveEntrySequence, x=e.x, cy=e.y;
+    if (e.useMonster) {
+      // Flying monster: bobs and tilts in the air, opens its mouth as the bird nears, snaps shut on the bite.
+      const open = (e.phase==='approach' && e.timer>1.15) || (e.phase==='bite' && e.timer<0.9);
+      const img = open ? monsterOpenImg : monsterClosedImg;
+      const mp = caveMouthPoint(e);
+      const h = 270, w = h * img.naturalWidth / img.naturalHeight;
+      const fx = open ? 0.144 : 0.136, fy = open ? 0.765 : 0.69;
+      const snap = (e.phase==='bite' && e.timer>=0.9) ? Math.max(0,1-(e.timer-0.9)/0.25) : 0;
+      const k = 1 + 0.07*snap;
+      ctx.save(); ctx.imageSmoothingEnabled=false;
+      ctx.translate(mp.x, mp.y); ctx.rotate(Math.sin(visualTime*3.1)*0.045); ctx.scale(k,k);
+      ctx.drawImage(img, -fx*w, -fy*h, w, h);
+      ctx.restore();
+      return;
+    }
     ctx.save(); ctx.translate(x,cy); ctx.imageSmoothingEnabled=false;
     // Neck and skull silhouette: a large dragon head whose open mouth is the cave entrance.
     ctx.fillStyle='#183b37'; ctx.beginPath(); ctx.moveTo(32,-112); ctx.lineTo(128,-150); ctx.lineTo(220,-110); ctx.lineTo(266,-38); ctx.lineTo(244,70); ctx.lineTo(166,131); ctx.lineTo(70,111); ctx.lineTo(26,55); ctx.closePath(); ctx.fill();
@@ -4168,7 +4202,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (caveEntrySequence && caveEntrySequence.phase === 'bite') {
       const bt = caveEntrySequence, k = clampNumber((bt.timer - 0.35) / 0.45, 0, 1), e = k * k * (3 - 2 * k);
       if (k < 1) {
-        const by = lerp(bird.py, bird.y, renderAlpha), mx = bt.x + 66, my = bt.y + 17, sc = 1 - 0.75 * e;
+        const by = lerp(bird.py, bird.y, renderAlpha), mp = caveMouthPoint(bt), mx = mp.x, my = mp.y, sc = 1 - 0.75 * e;
         ctx.save(); ctx.translate(bird.x + (mx - bird.x) * e, by + (my - by) * e); ctx.scale(sc, sc); ctx.translate(-bird.x, -by);
         drawBird(); ctx.restore();
       }
