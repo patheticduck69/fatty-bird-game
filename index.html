@@ -51,7 +51,7 @@ body{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-
 canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 
 /* In-Game Action HUD Controls (Ability, Instant Pulse, Sky Blink, Bubble Shield) */
-.action-hud{position:absolute;bottom:78px;right:10px;z-index:4;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:auto;user-select:none}
+.action-hud{position:absolute;bottom:9px;left:50%;right:auto;transform:translateX(-50%);z-index:4;display:flex;flex-direction:row;gap:12px;align-items:center;pointer-events:auto;user-select:none}
 .action-hud[hidden]{display:none}
 .hud-btn{position:relative;width:50px;height:50px;border-radius:50%;border:2px solid rgba(255,214,110,.7);background:radial-gradient(circle at 35% 30%,#2d3568,#131633);box-shadow:0 6px 16px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.3);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;transition:transform .12s,filter .15s}
 .hud-btn:active{transform:scale(.92)}
@@ -4109,16 +4109,30 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   function drawCaveEntryNotice() {
     if (state!=='caveIntro' || !caveEntrySequence) return;
+    const age = visualTime - (caveEntrySequence.noticeAt ?? visualTime), k = sm01(age / .55), k2 = sm01((age - .25) / .5);
     ctx.save();
-    ctx.globalAlpha=Math.min(1,(visualTime-(caveEntrySequence.noticeAt||visualTime))/.45);
-    ctx.fillStyle='rgba(3,8,20,.78)'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#162c48'; roundRect(34,236,352,174,23);
-    ctx.strokeStyle='#83dfff'; ctx.lineWidth=2; ctx.strokeRect(35,237,350,172);
-    ctx.textAlign='center'; ctx.fillStyle='#ffe39b'; ctx.font='1000 38px system-ui'; ctx.fillText('🕳️',210,296);
-    ctx.fillStyle='#dff5ff'; ctx.font='800 11px system-ui'; 
-    const pulse=.65+.35*Math.sin(visualTime*6);
-    ctx.globalAlpha*=pulse; ctx.fillStyle='#8ce6cb'; ctx.font='1000 28px system-ui'; ctx.fillText('👆',210,372);
-    ctx.globalAlpha=Math.min(1,(visualTime-(caveEntrySequence.noticeAt||visualTime))/.45); ctx.fillStyle='#9eb5ce'; ctx.font='700 9px system-ui'; 
+    ctx.globalAlpha = k * .86; ctx.fillStyle = '#02060f'; ctx.fillRect(0, 0, W, H);
+    const vg = ctx.createRadialGradient(210, 330, 60, 210, 330, 420); vg.addColorStop(0, 'rgba(40,110,150,.28)'); vg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = k; ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    ctx.translate(210, 330); const sc = .86 + .14 * k; ctx.scale(sc, sc); ctx.translate(-210, -330);
+    ctx.globalAlpha = k;
+    const g = ctx.createLinearGradient(0, 180, 0, 480); g.addColorStop(0, '#1a3556'); g.addColorStop(1, '#0d1b30');
+    ctx.shadowColor = 'rgba(110,220,255,.45)'; ctx.shadowBlur = 26; ctx.fillStyle = g; roundRect(36, 180, 348, 300, 24); ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#83dfff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(36.5, 180.5, 347, 299, 24) : ctx.rect(36.5, 180.5, 347, 299); ctx.stroke();
+    // cave mouth emblem
+    ctx.fillStyle = '#0a1426'; ctx.beginPath(); ctx.moveTo(172, 262); ctx.lineTo(172, 238); ctx.quadraticCurveTo(210, 190, 248, 238); ctx.lineTo(248, 262); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#6a7f99'; ctx.lineWidth = 5; ctx.stroke();
+    ctx.fillStyle = '#ffd166'; for (let i = 0; i < 3; i++) { const t = (visualTime * 1.4 + i * .33) % 1; ctx.globalAlpha = k * (1 - t) * .9; ctx.beginPath(); ctx.arc(190 + i * 20, 255 - t * 30, 2.4, 0, 6.283); ctx.fill(); }
+    ctx.globalAlpha = k; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffe39b'; ctx.font = '1000 25px system-ui'; ctx.letterSpacing = '3px'; ctx.fillText('CAVE CHALLENGE', 210, 304); ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#9fc5e6'; ctx.font = '800 11px system-ui'; ctx.fillText('The monster dragged you underground', 210, 324);
+    ctx.strokeStyle = 'rgba(131,223,255,.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(70, 340); ctx.lineTo(350, 340); ctx.stroke();
+    const rows = [['🔘', 'Pressure plates drop a cage - leave the zone fast'], ['💣', 'Bombs drift through - steer around them'], ['💎', 'Coins are optional; the path needs no abilities'], ['🌀', 'Survive to the exit, then enter the portal']];
+    rows.forEach((r, i) => { const a = sm01((age - .35 - i * .12) / .35); ctx.globalAlpha = k * a; ctx.textAlign = 'left'; ctx.font = '700 17px system-ui'; ctx.fillText(r[0], 66, 366 + i * 25 + (1 - a) * 8); ctx.fillStyle = '#dff5ff'; ctx.font = '700 11.5px system-ui'; ctx.fillText(r[1], 96, 366 + i * 25 + (1 - a) * 8); });
+    ctx.textAlign = 'center';
+    const pulse = .72 + .28 * Math.sin(visualTime * 5); ctx.globalAlpha = k2 * (age > .5 ? 1 : 0);
+    ctx.fillStyle = 'rgba(140,230,203,' + (.16 + .1 * pulse) + ')'; roundRect(110, 452, 200, 24, 12);
+    ctx.globalAlpha = k2 * pulse; ctx.fillStyle = '#8ce6cb'; ctx.font = '900 11px system-ui'; ctx.letterSpacing = '1.4px'; ctx.fillText('TAP TO CONTINUE', 210, 468); ctx.letterSpacing = '0px';
     ctx.restore();
   }
 
@@ -4415,18 +4429,24 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   function bridgeUp() { return !!bridge && bridge.startX < W + 120; }
   function bridgeCalm() { return !bridgeUp() && !spiderEvent && !bossPortal; }
 
+  function randomLen(final) {            // bridges are not fixed: short hops, medium runs, or minute-plus marches
+    const r = Math.random();
+    if (r < .3) return 4 + Math.floor(Math.random() * 5);
+    if (r < .7) return 9 + Math.floor(Math.random() * 12);
+    return 21 + Math.floor(Math.random() * 28);                       // 21..48 gates (up to about a minute and a half)
+  }
   function planBridges() {
-    const len = 4 + Math.floor(Math.random() * 4);                 // 4..7 gates before the cave
-    cavePipesUntilEntry = Math.max(cavePipesUntilEntry, len + 8);
+    const len = randomLen(true);
+    cavePipesUntilEntry = Math.max(cavePipesUntilEntry, len + 8) + Math.floor(Math.random() * 12);
     const finalStart = Math.max(3, cavePipesUntilEntry - len - 2);
     const zones = [{ start: finalStart, len, final: true }];
     let cursor = 2; const limit = finalStart - 3;
     for (let n = 0; n < 2; n++) {                                  // up to two earlier bridges, different every time
-      const l = 3 + Math.floor(Math.random() * 4), s = cursor + Math.floor(Math.random() * 3);
+      const l = Math.min(3 + Math.floor(Math.random() * 12), 8 + Math.floor(Math.random() * 8)), s = cursor + Math.floor(Math.random() * 3);
       if (s + l + 4 <= limit) { zones.splice(zones.length - 1, 0, { start: s, len: l, final: false }); cursor = s + l + 4; } else break;
     }
     const spiderPass = (limit >= 10 && Math.random() < .6) ? Math.floor(limit * .4 + Math.random() * limit * .45) : -1;
-    bridgePlan = { zones, spawned: 0, finalStarted: false, spiderPass, spiderDone: false };
+    bridgePlan = { zones, spawned: 0, finalStarted: false, spiderPass, spiderDone: false, lastC: undefined };
   }
 
   function createBridge(startX, final) {
@@ -4449,7 +4469,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       p.bk = { kind, cleared: false, claimed: false, help: (first && z.final) ? true : Math.random() < .8,
                octo: octo ? { rise: 0, started: false, dead: false, sink: 0, t: Math.random() * 6 } : null };
       const lo = BRIDGE_UNDER + 44 + p.gap / 2, hi = FLOOR - (octo ? 100 : 44) - p.gap / 2;
-      p.center = Math.max(lo, Math.min(hi, p.center)); p.coins = null;
+      // pick a clearly different height each gate: a random lane position at least 70px away from the previous one, within reach
+      let c = p.center; const prevC = bridgePlan.lastC === undefined || first ? null : bridgePlan.lastC;
+      for (let t = 0; t < 8; t++) {
+        const cand = lo + Math.random() * Math.max(1, hi - lo);
+        c = cand; if (prevC === null || (Math.abs(cand - prevC) >= 70 && Math.abs(cand - prevC) <= 200)) break;
+      }
+      p.center = Math.max(lo, Math.min(hi, c)); bridgePlan.lastC = p.center; p.coins = null;
       if (z.final) bridgePlan.finalStarted = true;
       if (last && !z.final && bridge) bridge.endX = p.x + PIPE_W + 150;
       return;
@@ -4493,7 +4519,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     const o = bk.octo;
     if (o) {
       o.t += dt;
-      if (!o.started && !o.dead && p.x < W - 10) { o.started = true; if (visualTime - lastOctoSndAt > .8) { lastOctoSndAt = visualTime; playOptional('octopus'); } }
+      if (!o.alerted && !o.dead && p.x < W + 110) { o.alerted = true; tone(300, .16, 'square', .06); tone(240, .18, 'square', .06, .18); }
+      if (!o.started && !o.dead && p.x < W - 120) { o.started = true; if (visualTime - lastOctoSndAt > .8) { lastOctoSndAt = visualTime; playOptional('octopus'); } }
       if (o.started && !o.dead) o.rise = Math.min(1, o.rise + dt / .6);
       if (o.dead) o.sink += dt;
     }
@@ -4965,6 +4992,19 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     poolDraw(x - 30, PIPE_W + 60, t);
   }
 
+  function drawOctoAlert(p, x) {
+    const o = p.bk.octo;
+    if (o && !o.dead && !o.started && o.alerted) {                       // separate warning from the bottom of the screen
+      const ax = clampNumber(x + PIPE_W / 2, 26, W - 26), ay = FLOOR - 46 + Math.sin(visualTime * 14) * 3, pl = .6 + .4 * Math.sin(visualTime * 12);
+      ctx.save(); ctx.fillStyle = 'rgba(255,60,60,' + (.18 + .18 * pl) + ')'; ctx.fillRect(ax - 34, FLOOR - 120, 68, 120);
+      ctx.fillStyle = '#ff4b3c'; ctx.beginPath(); ctx.moveTo(ax, ay - 20); ctx.lineTo(ax + 20, ay + 14); ctx.lineTo(ax - 20, ay + 14); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#fff2d0'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '1000 18px system-ui'; ctx.fillText('!', ax, ay + 10);
+      ctx.font = '900 8px system-ui'; ctx.fillStyle = '#ffd6cf'; ctx.fillText('OCTOPUS', ax, ay + 28);
+      ctx.restore();
+    }
+  }
+
   function drawBlockStack(x, y0, y1, kind, rows, from, anchorBottom, seed) {
     if (y1 - y0 < 2) return;
     ctx.save(); ctx.beginPath(); ctx.rect(x, y0, PIPE_W, y1 - y0); ctx.clip();
@@ -4976,6 +5016,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
   function drawBlockGate(p) {
     const x = lerp(p.px, p.x, renderAlpha);
+    if (p.bk.octo) drawOctoAlert(p, x);
     if (x > W + 4 || x < -PIPE_W - 4) return;
     const bk = gateRows(p), top = p.center - p.gap / 2, bot = p.center + p.gap / 2, u = Math.max(0, bridgeUnderY() - 2);
     const rp = p.retracting ? Math.min(1, p.retractProgress || 0) : 0, a = 1 - rp * rp * (3 - 2 * rp);
