@@ -452,7 +452,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   const FINAL_BOSS_SURVIVE_SECONDS = 30;
   const FINAL_BOSS_FIRE_INTERVAL = 0.98;
   const FINAL_BOSS_BULLET_SPEED = 345;
-  const FINAL_BOSS_GUN_X = 355; // Boss is pushed to the far right to widen the bird's dodge lane.
+  const FINAL_BOSS_GUN_X = 307; // Boss is pushed to the far right to widen the bird's dodge lane.
   const FINAL_BOSS_MIN_Y = 92;
   const FINAL_BOSS_MAX_Y = 548;
   /* Boss difficulty ladder. One fight per cave cycle; bullet speed is the main lever (aim lock stays fair at 0.55 s).
@@ -1385,6 +1385,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     monster: new Audio('assets/audio/Risa.mp3'),
     catAppear: new Audio('assets/audio/Meow%20gop%20gop.mp3'),
     catScare: new Audio('assets/audio/Cat%20meow.mp3'),
+    octopus: new Audio('assets/audio/zombie.mp3'),
+    spider: new Audio('assets/audio/spider.mp3'),
     finalBossAppear: new Audio('assets/audio/dragon-studio-deep-sea-monster-roar-329857.mp3'),
     finalBossKill: new Audio('assets/audio/Crossfire%20kill.mp3')
   };
@@ -1456,6 +1458,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let abilityActiveTimer = 0;
   let shieldActive = false;
   let shieldTimer = 0;
+  let bossShieldBlocks = 0;
+  const BOSS_SHIELD_MAX_BLOCKS = 3;   // in the boss fight a shield stops at most 3 of Ghotokasur's shots
   let shieldGraceTimer = 0; // Post-impact invulnerability grace window
   let pulseLiftTimer = 0; // Smooth physical lift thrust window for Original Fatty
   let glideDiveTimer = 0; // Brief player-requested downward movement while parachute is active
@@ -1530,7 +1534,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   let bossLevel = 0, bossRecoil = 0;   // bossLevel = bosses already defeated this run (0..4)
   let bossFireTimer = 0;
   let bossGunAngle = 0;
-  let bossGunY = 430;
+  let bossGunY = 398;
   let bossOpenTimer = 0;
   let bossBullets = [];
   let bossKillCannonball = null;
@@ -1629,13 +1633,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     worldMagnet = null;
     caveZone = null; caveStartPending = false; caveStartHoldTimer = 0; caveLiftGuard = 0; chuteVis = 0; cavePipesPassed = 0;
     cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
-    bridge = null; cat = null; catProps = []; catFx = []; planBridges();
+    bridge = null; cat = null; catProps = []; catFx = []; worldHearts = []; spiderEvent = null; bossPortal = null; caveBlend = 0; bossFadeIn = 0; planBridges();
     caveCoins = []; caveCage = null; cageCapture = null;
     cannonAttackSurvived = false; caveCannonQueued = false; caveEntrySequence = null;
     caveExitCelebration = 0; caveReturnFade = 0; caveConfetti = []; caveLengthUnits = 40;
     finalBossPending = false; finalBossDefeated = false; bossEncounterActive = false; bossLevel = 0; bossRecoil = 0;
     bossElapsed = 0; bossIntroTimer = 0; bossVictoryTimer = 0; bossShotsDodged = 0;
-    bossFireTimer = 0; bossGunAngle = 0; bossGunY = 430; bossOpenTimer = 0;
+    bossFireTimer = 0; bossGunAngle = 0; bossGunY = 398; bossOpenTimer = 0;
     bossBullets = []; bossKillCannonball = null; bossLaunchTimer = 0; bossLaunchStartY = 350; bossTargetY = 350; bossUpHeld = false; bossDownHeld = false; bossPointerActive = false;
     for (const key of ['finalBossAppear','finalBossKill']) { const track = effectTracks[key]; if (track) { try { track.pause(); track.currentTime = 0; } catch (_) {} } }
     scoreSubmittedThisRun = false; pendingRunScore = null;
@@ -1989,7 +1993,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     shieldActive = true;
-    shieldTimer = SHIELD_DURATION;
+    shieldTimer = SHIELD_DURATION; bossShieldBlocks = 0;
     shieldGraceTimer = 0;
 
     if (!POWERUP_TEST_MODE) {
@@ -2068,7 +2072,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       showToast('PARACHUTE HOLD — TAP BELOW TO DESCEND');
     } else if (char.id === 'mint-mochi') {
       shieldActive = true;
-      shieldTimer = SHIELD_DURATION;
+      shieldTimer = SHIELD_DURATION; bossShieldBlocks = 0;
       shieldGraceTimer = 0;
       abilityCooldownTimer = POWERUP_TEST_MODE ? 0.2 : char.cooldown;
       abilityActiveTimer = SHIELD_DURATION;
@@ -2256,7 +2260,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   /* ---------- Collectibles: Magnet & Balloon ---------- */
   function maybeSpawnMagnet() {
-    if (bridge || worldMagnet || magnetActiveTimer > 0 || activeBalloon || arrowWaveInProgress || bombs.length > 0 || specialHazardWarning || fireSweep || cannonball || pipeSaw) return false;
+    if (bridgeUp() || spiderEvent || bossPortal || worldMagnet || magnetActiveTimer > 0 || activeBalloon || arrowWaveInProgress || bombs.length > 0 || specialHazardWarning || fireSweep || cannonball || pipeSaw) return false;
 
     // Aim near the next pipe opening, but choose a fresh reachable height each time.
     // This keeps magnets visible and collectible rather than placing them behind pipes or off-screen.
@@ -2377,6 +2381,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     // Midnight Dumpling's timed Shadow Phase bypasses pipe geometry only.
     if (activeChar.id === 'midnight-dumpling' && abilityActiveTimer > 0) return false;
     const shapes = getBirdCollisionEnvelope();
+    if (p.bk) return gateHit(p, shapes);
     const top = p.center - p.gap / 2, bottom = p.center + p.gap / 2;
     for (const s of shapes) {
       if (hitRectCircle(s.cx, s.cy, s.r, p.x, 0, PIPE_W, top) ||
@@ -3357,7 +3362,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
   function canStartSpecialHazard() {
     const caveNeedsCannon = caveStartPending && !cannonAttackSurvived && nextSpecialHazardType === 'cannon';
-    return score >= 4 && (!caveStartPending || caveNeedsCannon) && (!bridge || caveNeedsCannon) && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw &&
+    return score >= 4 && (!caveStartPending || caveNeedsCannon) && (!bridgeUp() || caveNeedsCannon) && !spiderEvent && !bossPortal && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw &&
       !arrowWaveInProgress && arrows.length === 0 && pendingArrowSpawns.length === 0 && bombs.length === 0 &&
       !activeBalloon && !worldMagnet && portalState === 'idle';
   }
@@ -3551,7 +3556,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     bossShotsDodged = 0;
     bossFireTimer = 0.9;
     bossGunAngle = 0;
-    bossGunY = 430;
+    bossGunY = 398;
     bossOpenTimer = 0;
     bossBullets = [];
     bossKillCannonball = null;
@@ -3631,7 +3636,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     pipes = [safeReturnPipe];
     cavePipesPassed = 0;
     cavePipesUntilEntry = 12 + Math.floor(Math.random() * 13);
-    bridge = null; cat = null; catProps = []; catFx = []; planBridges();
+    bridge = null; cat = null; catProps = []; catFx = []; worldHearts = []; spiderEvent = null; bossPortal = null; caveBlend = 0; bossFadeIn = 0; planBridges();
     caveStartPending = false;
     caveZone = null;
     caveEntrySequence = null;
@@ -3705,15 +3710,15 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
 
       // Boss keeps moving the gun vertically and tracks the bird before every individual shot.
-      bossGunY = 416 + Math.sin(bossElapsed * 1.35) * 92;
+      bossGunY = 398 + Math.sin(bossElapsed * 1.35) * 16;
       const leadY = clampNumber(bird.y + bird.vy * 0.10, FINAL_BOSS_MIN_Y, FINAL_BOSS_MAX_Y);
       const desiredAim = clampNumber(-Math.atan2(leadY - bossGunY, FINAL_BOSS_GUN_X - bird.x), -1.02, 1.02);
       if (bossFireTimer > FINAL_BOSS_LOCK_TIME) bossGunAngle += (desiredAim - bossGunAngle) * Math.min(1, dt * 4.8);   // aim freezes before the shot
       bossFireTimer -= dt;
 
       if (bossFireTimer <= 0 && bossBullets.length === 0) {
-        const muzzleX = FINAL_BOSS_GUN_X - 75 * Math.cos(bossGunAngle);
-        const muzzleY = bossGunY - 75 * Math.sin(bossGunAngle);
+        const muzzleX = FINAL_BOSS_GUN_X - 22 * Math.cos(bossGunAngle);
+        const muzzleY = bossGunY - 22 * Math.sin(bossGunAngle);
         bossBullets.push({
           x: muzzleX, y: muzzleY,
           vx: -Math.cos(bossGunAngle) * BOSS_LEVELS[bossLevel].speed,
@@ -3739,7 +3744,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
           if (shieldActive) {
             absorbShieldHit(0.72);
             createExplosion(shot.x, shot.y, '#8ce6cb', 18);
-            showToast('BUBBLE SHIELD BLOCKED THE BOSS SHOT');
+            bossShieldBlocks++;
+            if (bossShieldBlocks >= BOSS_SHIELD_MAX_BLOCKS) { shieldActive = false; shieldTimer = 0; shieldGraceTimer = Math.max(shieldGraceTimer, .5); showToast('SHIELD BROKE AFTER 3 BLOCKS'); tone(150, .25, 'sawtooth', .06); }
+            else showToast('SHIELD BLOCKED THE BOSS SHOT (' + bossShieldBlocks + '/' + BOSS_SHIELD_MAX_BLOCKS + ')');
           } else if (isProtectedByGrace()) {
             createExplosion(shot.x, shot.y, '#8ce6cb', 12);
           } else {
@@ -3888,7 +3895,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
     ctx.save();
     ctx.imageSmoothingEnabled = false;
-    const bossX = 263, bossY = 319, bossW = 157, bossH = 216; // Far-right pillar position; more open vertical dodge space.
+    const bossW = 174, bossH = 236, bossX = 285 - .16 * bossW, bossY = bossGunY - .42 * bossH; // Far-right pillar position; more open vertical dodge space.
     if (state === 'bossVictory' || state === 'bossContinue') {
       const progress = state === 'bossContinue' ? 1 : clampNumber(1 - bossVictoryTimer / 2.0, 0, 1);
       // The hit knocks the boss off the pillar: the sprite drops down and away while rotating.
@@ -3908,7 +3915,6 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
     ctx.restore();
 
-    if (state === 'bossIntro' || state === 'bossFight') drawFinalBossGun();
 
     for (const shot of bossBullets) {
       ctx.save(); ctx.translate(shot.x, shot.y); ctx.rotate(shot.spin);
@@ -3938,8 +3944,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (state === 'bossFight' && bossFireTimer < FINAL_BOSS_LOCK_TIME + 0.45 && bossBullets.length === 0) {
-      const mx = FINAL_BOSS_GUN_X - 75 * Math.cos(bossGunAngle);
-      const my = bossGunY - 75 * Math.sin(bossGunAngle);
+      const mx = FINAL_BOSS_GUN_X - 22 * Math.cos(bossGunAngle);
+      const my = bossGunY - 22 * Math.sin(bossGunAngle);
       const aimLocked = bossFireTimer <= FINAL_BOSS_LOCK_TIME;   // dotted while tracking, solid red once locked
       ctx.save(); ctx.setLineDash(aimLocked ? [] : [5, 7]); ctx.strokeStyle = aimLocked ? 'rgba(255,60,50,.85)' : 'rgba(255,170,90,.5)'; ctx.lineWidth = aimLocked ? 3 : 2;
       ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx - Math.cos(bossGunAngle) * 360, my - Math.sin(bossGunAngle) * 360); ctx.stroke(); ctx.restore();
@@ -3951,7 +3957,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.fillStyle = 'rgba(8,13,31,.91)'; roundRect(89, 15, 242, 75, 14);
     ctx.strokeStyle = 'rgba(255,209,102,.62)'; ctx.lineWidth = 1; ctx.strokeRect(89.5, 15.5, 241, 74);
     ctx.textAlign = 'center'; ctx.fillStyle = '#ffd166'; ctx.font = '1000 10px system-ui'; ctx.letterSpacing = '1.6px';
-    ctx.font = '1000 13px system-ui'; ctx.letterSpacing = '3px'; ctx.fillText('☠'.repeat(bossLevel + 1), 210, 34);
+    ctx.font = '1000 13px system-ui'; ctx.letterSpacing = '3px'; ctx.fillText('GHOTOKASUR', 210, 34);
     const progress = state === 'bossIntro' ? 0 : state === 'bossDefeat' || state === 'bossVictory' || state === 'bossContinue' ? 1 : clampNumber(bossElapsed / FINAL_BOSS_SURVIVE_SECONDS, 0, 1);
     const secondsLeft = Math.max(0, FINAL_BOSS_SURVIVE_SECONDS - bossElapsed);
     ctx.fillStyle = '#fff'; ctx.font = '900 12px system-ui'; ctx.letterSpacing = '0px';
@@ -4166,6 +4172,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     fireSweep = null; cannonball = null; pipeSaw = null; specialHazardWarning = null;
     caveCoins = []; caveCage = null; cageCapture = null;
     cavePipesPassed = 0; caveStartPending = false; caveCannonQueued = false; cannonAttackSurvived = false;
+    caveZone.trapPlan = makeCavePlan(true, targetSegments); caveZone.bombPlan = makeCavePlan(false, targetSegments); caveBlend = 1;
     tone(260,.2,'triangle',.05);
   }
   function addCaveSegmentContent(seg) {
@@ -4178,14 +4185,18 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       }
     }
     // A small number of bombs create a choice, rather than a wall of unavoidable hazards.
-    if (seg.index >= 36 - 3 * bossLevel && seg.index % (53 - 8 * bossLevel) === 2 && caveZone.bombCount < 1 + bossLevel && bombs.length < 1 + (bossLevel >= 2 ? 1 : 0)) {
+    const bp = caveZone.bombPlan;
+    if (bp && bp.length && seg.index >= bp[0] && bombs.length < 2) {
+      bp.shift();
       const side = Math.random() < .5 ? -1 : 1;
       const y = clampNumber(seg.center + side*(seg.gap*.25), 95, FLOOR-65);
       bombs.push({ x:seg.x+36, px:seg.x+36, y, speed:188*currentDifficulty(), r:15, isCaveBomb:true, fuseSeed:Math.random() });
       caveZone.bombCount++;
     }
-    // At most one clearly signalled cage trap per cave; the opening itself is hazard-free.
-    if (!caveZone.switchPlaced && caveZone.cageCount===0 && seg.index >= 46 && seg.index < caveZone.targetSegments+18 && Math.random() < .02 + .012 * bossLevel) {
+    // Several spread-out cage traps (3-7 in the first cave); each plate is clearly signalled and the opening stays hazard-free.
+    const tp = caveZone.trapPlan, sp = caveZone.switchPlate;
+    if (tp && tp.length && seg.index >= tp[0] && (!sp || sp.triggered) && !caveCage) {
+      tp.shift();
       const side = Math.random() < .5 ? -1 : 1;
       const y = clampNumber(seg.center + side*(seg.gap/2-34), 75, FLOOR-60);
       const x = seg.x + 24;
@@ -4197,7 +4208,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (!caveZone || caveCage || !caveZone.switchPlate || caveZone.switchPlate.triggered) return;
     caveZone.switchPlate.triggered = true;
     const targetY = clampNumber(bird.y - 88, 70, FLOOR - 232);
-    caveCage = { x:bird.x-44, px:bird.x-44, y:-196, targetY, w:88, h:184, phase:'warning', timer:.82, progress:0, caught:false };
+    caveCage = { x:bird.x-44, px:bird.x-44, y:-196, targetY, w:88, h:184, phase:'warning', timer:1.0, progress:0, caught:false };
     showToast('CAGE TRAP! MOVE OUT OF THE DROP ZONE!');
     tone(190,.28,'sawtooth',.07);
   }
@@ -4221,8 +4232,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         bird.y=clampNumber(bird.y,285,385); bird.vy=clampNumber(bird.vy,-175,175);
         lastGapY=bird.y; nextCenter=null;
         const firstPipe=spawnPipe(W+265); firstPipe.gap=Math.max(firstPipe.gap,250); firstPipe.center=bird.y; firstPipe.px=firstPipe.x; firstPipe.narrow=false; firstPipe.retracting=false; firstPipe.caveReturn=true; lastGapY=firstPipe.center;
-        pipes=[firstPipe]; caveReturnFade=1.8; caveExitCelebration=2.6; spawnCaveConfetti();
-        if (!finalBossDefeated) finalBossPending = true;
+        pipes=[firstPipe]; caveReturnFade=1.8; caveExitCelebration=2.6; spawnCaveConfetti(); planBridges();
+        if (!finalBossDefeated) { bossPortal = { x: W + 70, y: clampNumber(bird.y, 260, 440), t: 0, enter: 0 }; pipes = []; bridge = null; cat = null; }
       }
       return;
     }
@@ -4380,94 +4391,176 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   /* ---------- Simulation (Fixed-Step Loop) ---------- */
 
   /* =====================================================================
-     BRIDGE ENCOUNTERS + THE CAT COMPANION
-     A bridge replaces a short run of pipes with block gates (same gap / collision / score rules as pipes).
-     The cat is a free helper on the upper deck: it clears gates, drops rewards, swats a high cannonball
-     and flees before the cave monster's bite. It never touches the bird, its physics or its hitbox.
+     BRIDGES, THE CAT COMPANION, THE OCTOPUS AND THE ROBOTIC SPIDER
+     A bridge arrives fully built from the right edge (after a calm stretch), replaces a short run of
+     pipes with forest block gates (same gap / collision / score rules as pipes), and leaves the same way.
+     The cat is a free helper on the upper deck; it never touches the bird, its physics or its hitbox.
      ===================================================================== */
-  const BRIDGE_UNDER = 172, BRIDGE_THICK = 22;
+  const BRIDGE_UNDER = 172, BRIDGE_THICK = 22, ROW_H = 38;
   const catAtlas = getCachedImage('assets/ui/cat/cat-atlas.png');
+  const creatureFaces = getCachedImage('assets/ui/creatures/faces.png');   // 0..63 spider pilot, 64..127 octopus
   const CAT_FRAMES = {"runR1": [0, 0, 132, 140], "runR2": [132, 0, 132, 140], "runR3": [264, 0, 132, 140], "runR4": [396, 0, 132, 140], "runR5": [528, 0, 132, 140], "runL1": [660, 0, 132, 140], "runL2": [0, 140, 132, 140], "runL3": [132, 140, 132, 140], "runL4": [264, 140, 132, 140], "runL5": [396, 140, 132, 140], "carryBrick": [528, 140, 132, 140], "carryCrate": [660, 140, 132, 140], "throwCrate": [0, 280, 132, 140], "idle": [132, 280, 132, 140], "shock": [264, 280, 132, 140], "sprint1": [396, 280, 132, 140], "sprint2": [528, 280, 132, 140], "j1": [660, 280, 132, 140], "j2": [0, 420, 132, 140], "j3": [132, 420, 132, 140], "j4": [264, 420, 132, 140], "j5": [396, 420, 132, 140], "scared1": [528, 420, 132, 140], "scared2": [660, 420, 132, 140]};
   const CAT_DW = 82, CAT_DH = 87;               // 132x140 atlas cell drawn at about 0.62
-  let bridge = null, bridgePlan = null, cat = null, catProps = [], catFx = [], lastCatMeowAt = -99;
+  const sm01 = k => { k = k < 0 ? 0 : k > 1 ? 1 : k; return k * k * (3 - 2 * k); };
+  const imgReady = im => !!(im && im.complete && im.naturalWidth);
+  let bridge = null, bridgePlan = null, cat = null, catProps = [], catFx = [], worldHearts = [];
+  let spiderEvent = null, bossPortal = null, caveBlend = 0, bossFadeIn = 0, lastCatMeowAt = -99, lastOctoSndAt = -99;
+
+  function playOptional(key) {          // creature songs: silent if the file is missing (no beep fallback)
+    if (!soundOn) return;
+    const t = effectTracks[key]; if (!t) return;
+    try { t.pause(); t.currentTime = 0; const p = t.play(); if (p && p.catch) p.catch(() => {}); } catch (_) {}
+  }
+  function bridgeUnderY() { return bridge ? BRIDGE_UNDER + Math.sin(bridge.t * .9) * 5 : -30; }
+  function bridgeUp() { return !!bridge && bridge.startX < W + 120; }
+  function bridgeCalm() { return !bridgeUp() && !spiderEvent && !bossPortal; }
 
   function planBridges() {
-    const len = 5 + (Math.random() < .5 ? 1 : 0);
-    cavePipesUntilEntry = Math.max(cavePipesUntilEntry, len + 7);
-    const finalStart = Math.max(2, cavePipesUntilEntry - len - 2);
+    const len = 4 + Math.floor(Math.random() * 4);                 // 4..7 gates before the cave
+    cavePipesUntilEntry = Math.max(cavePipesUntilEntry, len + 8);
+    const finalStart = Math.max(3, cavePipesUntilEntry - len - 2);
     const zones = [{ start: finalStart, len, final: true }];
-    const room = finalStart - 3;
-    if (room >= 8) {
-      const l = 4 + Math.floor(Math.random() * 2);
-      zones.unshift({ start: 2 + Math.floor(Math.random() * (room - l - 3)), len: l, final: false });
+    let cursor = 2; const limit = finalStart - 3;
+    for (let n = 0; n < 2; n++) {                                  // up to two earlier bridges, different every time
+      const l = 3 + Math.floor(Math.random() * 4), s = cursor + Math.floor(Math.random() * 3);
+      if (s + l + 4 <= limit) { zones.splice(zones.length - 1, 0, { start: s, len: l, final: false }); cursor = s + l + 4; } else break;
     }
-    bridgePlan = { zones, spawned: 0, finalStarted: false };
+    const spiderPass = (limit >= 10 && Math.random() < .6) ? Math.floor(limit * .4 + Math.random() * limit * .45) : -1;
+    bridgePlan = { zones, spawned: 0, finalStarted: false, spiderPass, spiderDone: false };
+  }
+
+  function createBridge(startX, final) {
+    if (bridge) { if (final) bridge.final = true; bridge.endX = null; return; }
+    bridge = { startX, endX: null, t: 0, scroll: 0, final: !!final, catAllowed: !!final || Math.random() < .8, catDelay: .6 + Math.random() * 1.2, meowed: false, catLock: false };
   }
 
   function decorateBridgePipe(p) {
-    if (!bridgePlan || caveZone || caveEntrySequence || p.caveReturn || bossEncounterActive) return;
+    if (!bridgePlan || caveZone || caveEntrySequence || p.caveReturn || bossEncounterActive || spiderEvent || bossPortal) return;
     const i = bridgePlan.spawned++;
     for (const z of bridgePlan.zones) {
       if (i < z.start || i >= z.start + z.len) continue;
-      const r = Math.random(), first = (i === z.start);
-      const kind = first ? 'crate' : r < .4 ? 'crate' : r < .75 ? 'brick' : 'stone';
-      p.bk = { kind, cleared: false, claimed: false, clearT: 0, gap0: p.gap, final: z.final, help: first && z.final ? true : Math.random() < .78 };
-      p.center = Math.max(BRIDGE_UNDER + 60 + p.gap / 2, Math.min(FLOOR - 60 - p.gap / 2, p.center));
-      p.coins = null;
+      const first = i === z.start, last = i === z.start + z.len - 1;
+      p.x += first ? 230 + Math.random() * 90 : Math.random() * 70; p.px = p.x;       // calm stretch before the deck, uneven spacing inside
+      if (first) createBridge(p.x - 150, z.final);
+      p.gap = Math.round(p.gap * (.92 + Math.random() * .33));
+      const r = Math.random();
+      const kind = r < .3 ? 'crate' : r < .6 ? 'log' : r < .82 ? 'brick' : 'stone';
+      const octo = !first && Math.random() < .22;
+      p.bk = { kind, cleared: false, claimed: false, help: (first && z.final) ? true : Math.random() < .8,
+               octo: octo ? { rise: 0, started: false, dead: false, sink: 0, t: Math.random() * 6 } : null };
+      const lo = BRIDGE_UNDER + 44 + p.gap / 2, hi = FLOOR - (octo ? 100 : 44) - p.gap / 2;
+      p.center = Math.max(lo, Math.min(hi, p.center)); p.coins = null;
       if (z.final) bridgePlan.finalStarted = true;
+      if (last && !z.final && bridge) bridge.endX = p.x + PIPE_W + 150;
       return;
     }
   }
 
-  function bridgeUnderY() {
-    if (!bridge) return -30;
-    const k = bridge.amt * bridge.amt * (3 - 2 * bridge.amt);
-    return lerp(-30, BRIDGE_UNDER + Math.sin(bridge.t * 0.9) * 9, k);
+  /* ----- gates: rows of blocks that break one by one ----- */
+  function gateRows(p) {
+    const bk = p.bk;
+    if (bk.rt === undefined) {
+      const top = p.center - p.gap / 2, bot = p.center + p.gap / 2;
+      bk.rt = Math.max(1, Math.ceil((top - BRIDGE_UNDER) / ROW_H)); bk.rb = Math.max(1, Math.ceil((FLOOR - bot) / ROW_H));
+      bk.bt = 0; bk.bb = 0; bk.q = []; bk.qt = 0;
+    }
+    return bk;
+  }
+  function breakRows(p, nt, nb) {
+    const bk = gateRows(p); bk.cleared = true; bk.qt = 0;
+    for (let i = 0; i < nt; i++) bk.q.push({ side: 0, at: i * .09 });
+    if (!bk.octo) for (let i = 0; i < nb; i++) bk.q.push({ side: 1, at: i * .09 + .045 });
+  }
+  function chunk(x, y, color) {
+    if (catFx.length > 90) return;
+    catFx.push({ x, y, vx: (Math.random() - .5) * 130, vy: -50 - Math.random() * 90, life: .9, max: .9, c: color, s: 4 + Math.random() * 5, rot: Math.random() * 6, vr: (Math.random() - .5) * 12, chunk: true });
+  }
+  function kindColor(k) { return k === 'stone' ? '#8b9098' : k === 'brick' ? '#b5533a' : k === 'log' ? '#8a5a33' : '#a8763f'; }
+  function breakRow(p, side) {
+    const bk = p.bk, top = p.center - p.gap / 2, bot = p.center + p.gap / 2; let y;
+    if (side === 0) { if (bk.bt >= bk.rt) return; y = top - (bk.bt + 1) * ROW_H; bk.bt++; }
+    else { if (bk.bb >= bk.rb) return; y = bot + bk.bb * ROW_H; bk.bb++; }
+    for (let c = 0; c < 2; c++) for (let k = 0; k < 3; k++) chunk(p.x + c * ROW_H + 8 + Math.random() * 22, y + 8 + Math.random() * 22, kindColor(bk.kind));
+    tone(120 + Math.random() * 70, .05, 'square', .03);
+  }
+  function octoTopY(p) { return lerp(FLOOR + 8, p.center + p.gap / 2, sm01(p.bk.octo.rise)); }
+  function updateGate(p, dt) {
+    const bk = gateRows(p);
+    if (bk.q.length) {
+      bk.qt += dt;
+      for (let i = bk.q.length - 1; i >= 0; i--) if (bk.qt >= bk.q[i].at) { const e = bk.q.splice(i, 1)[0]; breakRow(p, e.side); }
+    }
+    const o = bk.octo;
+    if (o) {
+      o.t += dt;
+      if (!o.started && !o.dead && p.x < W - 10) { o.started = true; if (visualTime - lastOctoSndAt > .8) { lastOctoSndAt = visualTime; playOptional('octopus'); } }
+      if (o.started && !o.dead) o.rise = Math.min(1, o.rise + dt / .6);
+      if (o.dead) o.sink += dt;
+    }
+  }
+  // collision for a gate: only blocks that still exist are solid (no invisible leftovers)
+  function gateHit(p, shapes) {
+    const bk = gateRows(p), top = p.center - p.gap / 2, bot = p.center + p.gap / 2;
+    const effTop = bk.bt >= bk.rt ? 0 : top - bk.bt * ROW_H;
+    let by = 0, bh = 0;
+    if (bk.octo) { if (!bk.octo.dead) { by = octoTopY(p); bh = FLOOR - by; } }
+    else { by = bot + bk.bb * ROW_H; bh = bk.bb >= bk.rb ? 0 : FLOOR - by; }
+    for (const s of shapes) {
+      if (effTop > 0 && hitRectCircle(s.cx, s.cy, s.r, p.x, 0, PIPE_W, effTop)) return true;
+      if (bh > 0 && hitRectCircle(s.cx, s.cy, s.r, p.x, by, PIPE_W, bh)) return true;
+    }
+    return false;
+  }
+  function killOcto(g, hx, hy) {
+    const o = g.bk.octo; if (!o || o.dead) return;
+    o.dead = true; o.sink = 0; g.bk.cleared = true;
+    catFx_(hx, hy, '#ffb347', 12, true);
+    for (let i = 0; i < 6; i++) chunk(hx + (Math.random() - .5) * 40, hy + (Math.random() - .5) * 30, i % 2 ? '#e07a35' : '#9b4fa0');
+    tone(95, .18, 'sawtooth', .06);
+    if (visualTime - lastOctoSndAt > .8) { lastOctoSndAt = visualTime; playOptional('octopus'); }
+  }
+  function clearBy(g, hx, hy) {
+    const k = g.bk.kind;
+    if (g.bk.octo) { killOcto(g, hx, hy); return; }
+    if (k === 'stone') breakRows(g, 2, 4); else if (k === 'brick') breakRows(g, 3, 3); else breakRows(g, 3, 0);
+    catFx_(hx, hy, '#ffd166', 4, k === 'brick');
+    tone(k === 'brick' ? 110 : 180, .08, 'square', .04);
   }
 
-  function updateBridge(dt, speed) {
-    if (caveZone || bossEncounterActive || finalBossPending) { bridge = null; cat = null; catProps = []; return; }
-    const blocks = pipes.some(p => p.bk && p.x < W + 420 && p.x + PIPE_W > bird.x - 90);
-    const hold = !!(bridgePlan && bridgePlan.finalStarted);
-    const wanted = blocks || hold;
-    if (!bridge && wanted) {
-      bridge = { amt: 0, t: 0, scroll: 0, final: hold, catAllowed: hold || Math.random() < .75, catDelay: .5 + Math.random() * 1.1, meowed: false, catLock: false };
-    }
+  function updateBridge(dt, sp) {
+    if (caveZone || bossEncounterActive || finalBossPending || bossPortal) { bridge = null; cat = null; catProps = []; spiderEvent = null; return; }
+    updateSpider(dt, sp);
     if (!bridge) return;
-    bridge.t += dt; bridge.scroll += speed * dt;
-    bridge.amt = clampNumber(bridge.amt + (wanted ? 1 : -1) * dt / 1.1, 0, 1);
-    if (!wanted && bridge.amt <= 0) { bridge = null; cat = null; catProps = []; return; }
-    // the upper deck is a soft ceiling: it eases the bird down instead of killing it
-    const lim = bridgeUnderY() + bird.radius;
-    if (bridge.amt > .02 && bird.y < lim) { bird.y = Math.min(lim, bird.y + 320 * dt); if (bird.vy < 0) bird.vy = 0; }
-    for (const p of pipes) {
-      if (!p.bk || !p.bk.cleared || p.bk.clearT >= 1) continue;
-      p.bk.clearT = Math.min(1, p.bk.clearT + dt / .35);
-      const e = p.bk.clearT * p.bk.clearT * (3 - 2 * p.bk.clearT);
-      p.gap = p.bk.gap0 + 110 * e;
+    bridge.t += dt; bridge.scroll += sp * dt; bridge.startX -= sp * dt;
+    if (bridge.endX !== null) bridge.endX -= sp * dt;
+    if (bridge.endX !== null && bridge.endX < -30 && !spiderEvent) { bridge = null; cat = null; catProps = []; return; }
+    // the deck is a soft ceiling that eases the bird down as its leading edge arrives
+    const b = bridge;
+    if (b.startX < bird.x + 130 && (b.endX === null || b.endX > bird.x - 20)) {
+      const pr = clampNumber((bird.x + 130 - b.startX) / 130, 0, 1), lim = pr * (bridgeUnderY() + bird.radius);
+      if (bird.y < lim) { bird.y = Math.min(lim, bird.y + 320 * dt); if (bird.vy < 0) bird.vy = 0; }
     }
+    for (const p of pipes) if (p.bk) updateGate(p, dt);
   }
 
   function catFx_(x, y, color, n, bomb) {
-    for (let i = 0; i < n && catFx.length < 26; i++) {
+    for (let i = 0; i < n && catFx.length < 90; i++) {
       const a = Math.random() * Math.PI * 2, v = 40 + Math.random() * 90;
       catFx.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: .35, max: .35, c: color, s: 2 + Math.random() * 3 });
     }
-    if (bomb) catFx.push({ x, y, vx: 0, vy: 0, life: .22, max: .22, c: '#ffd166', s: 0, ring: true });
+    if (bomb) catFx.push({ x, y, vx: 0, vy: 0, life: .3, max: .3, c: '#ffd166', s: 0, ring: true });
   }
 
-  function catWorldGate(x0) {   // nearest uncleared block gate that is on screen and ahead of x0
+  /* ----- the cat ----- */
+  function catWorldGate(x0) {
     let best = null;
-    for (const p of pipes) if (p.bk && !p.bk.cleared && !p.bk.claimed && p.x > x0 && p.x < W + 6 && (!best || p.x < best.x)) best = p;
+    for (const p of pipes) {
+      if (!p.bk || p.bk.cleared || p.bk.claimed || p.x <= x0 || p.x >= W + 6) continue;
+      const o = p.bk.octo; if (o && (!o.started || o.dead)) continue;
+      if (!best || p.x < best.x) best = p;
+    }
     return best;
   }
-
-  function clearGate(g, hx, hy, kind) {
-    g.bk.cleared = true;
-    catFx_(hx, hy, kind === 'stone' ? '#9aa0a8' : kind === 'brick' ? '#b5533a' : '#9a6a3c', 9, kind === 'brick');
-    tone(kind === 'brick' ? 110 : 190, .09, 'square', .045);
-  }
-
   function catSeesMonster() {
     if (bridge) bridge.catLock = true;
     catProps = [];
@@ -4477,50 +4570,64 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     try { effectTracks.catAppear.pause(); } catch (_) {}
     playEffect('catScare', 330);
   }
+  function grantHeart() {
+    const r = Math.floor(Math.random() * 3);
+    if (r === 0) pulseCharges++; else if (r === 1) blinkCharges++; else shieldCharges++;
+    savePowerups(); try { updateActionHud(); } catch (_) {}
+    createAbilityBurst('#ff6b81', bird.x, bird.y, 14); tone(780, .12, 'triangle', .07); showToast('Heart collected');
+  }
 
   function updateCat(dt, speed) {
-    // projectiles and sparks run even if the cat is already gone
+    for (let i = worldHearts.length - 1; i >= 0; i--) {
+      const h = worldHearts[i]; h.x -= speed * dt; h.t += dt;
+      if (Math.hypot(h.x - bird.x, h.y + Math.sin(h.t * 4) * 5 - bird.y) < bird.radius + 16) { worldHearts.splice(i, 1); grantHeart(); }
+      else if (h.x < -30) worldHearts.splice(i, 1);
+    }
     for (let i = catProps.length - 1; i >= 0; i--) {
       const pr = catProps[i]; pr.t += dt;
-      if (pr.t >= pr.T) {
-        catProps.splice(i, 1);
-        if (pr.type === 'gate') {
-          const g = pr.g;
-          if (g && g.bk && !g.bk.cleared && Math.abs(g.x + PIPE_W / 2 - pr.x1) < 58) clearGate(g, pr.x1, pr.y1, pr.kind);
-          else if (g && g.bk) { g.bk.claimed = false; catFx_(pr.x1, pr.y1, '#8a6a4a', 4, false); }
-        } else if (pr.type === 'coins') {
-          const g = pr.g;
-          if (g && !g.coins && g.x > bird.x + 40) {
-            g.coins = [-26, 0, 26].map(o => ({ dx: PIPE_W / 2, y: g.center + o, vx: 0, vy: 0, collected: false, spinSeed: Math.random() * 6.28 }));
-            catFx_(pr.x1, pr.y1, '#ffd166', 5, false);
-          }
-        } else if (pr.type === 'magnet') {
-          if (!worldMagnet && magnetActiveTimer <= 0 && !activeBalloon && !caveStartPending) {
-            worldMagnet = { x: pr.x1, px: pr.x1, y: pr.y1, baseY: pr.y1, speed: 135, r: 16 };
-            catFx_(pr.x1, pr.y1, '#ff5b53', 5, false);
-          }
+      if (pr.dyn && spiderEvent) { pr.x1 = spiderEvent.x; pr.y1 = spiderEvent.y; }
+      if (pr.t < pr.T) continue;
+      catProps.splice(i, 1);
+      if (pr.type === 'gate') {
+        const g = pr.g;
+        if (g && g.bk && !g.bk.cleared && Math.abs(g.x + PIPE_W / 2 - pr.x1) < 58) clearBy(g, pr.x1, pr.y1);
+        else if (g && g.bk) { g.bk.claimed = false; catFx_(pr.x1, pr.y1, '#8a6a4a', 4, false); }
+      } else if (pr.type === 'spider') {
+        if (spiderEvent && spiderEvent.phase === 'chase') killSpider();
+      } else if (pr.type === 'coins') {
+        const g = pr.g;
+        if (g && !g.coins && g.x > bird.x + 40) {
+          g.coins = [-26, 0, 26].map(o => ({ dx: PIPE_W / 2, y: g.center + o, vx: 0, vy: 0, collected: false, spinSeed: Math.random() * 6.28 }));
+          catFx_(pr.x1, pr.y1, '#ffd166', 5, false);
         }
+      } else if (pr.type === 'magnet') {
+        if (!worldMagnet && magnetActiveTimer <= 0 && !activeBalloon && !caveStartPending) {
+          worldMagnet = { x: pr.x1, px: pr.x1, y: pr.y1, baseY: pr.y1, speed: 135, r: 16 };
+          catFx_(pr.x1, pr.y1, '#ff5b53', 5, false);
+        }
+      } else if (pr.type === 'heart') {
+        worldHearts.push({ x: pr.x1, y: pr.y1, t: 0 }); catFx_(pr.x1, pr.y1, '#ff6b81', 6, false);
       }
     }
     for (let i = catFx.length - 1; i >= 0; i--) {
-      const f = catFx[i]; f.life -= dt; f.x += (f.vx - speed * .6) * dt; f.y += f.vy * dt; f.vy += 520 * dt;
+      const f = catFx[i]; f.life -= dt; f.x += (f.vx - speed * (f.chunk ? 1 : .6)) * dt; f.y += f.vy * dt; f.vy += (f.chunk ? 760 : 520) * dt;
+      if (f.rot !== undefined) f.rot += f.vr * dt;
       if (f.life <= 0) catFx.splice(i, 1);
     }
     if (!bridge) { cat = null; return; }
     const deck = bridgeUnderY() - BRIDGE_THICK;
     if (!cat) {
       bridge.catDelay -= dt;
-      if (bridge.amt > .8 && bridge.catAllowed && !bridge.catLock && bridge.catDelay <= 0) {
-        cat = { state: 'enter', x: W + 70, y: deck, vx: -speed - 120, face: -1, t: 0, ph: 0, age: 0, stopX: 300 + Math.random() * 70, tt: 0, targetX: 320, prop: null, gate: null, hop: 0, rewardCd: 3 + Math.random() * 3, mode: '' };
+      if (bridge.startX < W - 100 && bridge.catAllowed && !bridge.catLock && bridge.catDelay <= 0) {
+        cat = { state: 'enter', x: W + 70, y: deck, vx: -speed - 120, face: -1, t: 0, ph: 0, age: 0, stopX: 300 + Math.random() * 70, tt: 0, targetX: 320, prop: null, gate: null, hopY: 0, rewardCd: 3 + Math.random() * 3, mode: '', exitAge: 8 + Math.random() * 9 };
         if (!bridge.meowed && visualTime - lastCatMeowAt > 12) { bridge.meowed = true; lastCatMeowAt = visualTime; playEffect('catAppear', 520); }
       }
       return;
     }
     const c = cat; c.y = deck; c.t += dt; c.age += dt;
-    const wanted = pipes.some(p => p.bk && p.x < W + 420 && p.x + PIPE_W > bird.x - 90) || (bridgePlan && bridgePlan.finalStarted);
-    const frozen = c.state === 'scared' || c.state === 'flee';
-    if (!frozen && c.state !== 'exit' && !wanted) { c.state = 'exit'; c.t = 0; }
+    const minX = spiderEvent ? 110 : 200;
     const runFps = vrel => clampNumber(Math.abs(vrel) / 21, 5, 14);
+    if (!['scared', 'flee', 'exit'].includes(c.state) && bridge.endX !== null && bridge.endX < c.x + 40 && !spiderEvent) { c.state = 'exit'; c.t = 0; }
     switch (c.state) {
       case 'enter': {
         c.face = -1; c.vx = -speed - 120; c.ph += runFps(-120) * dt;
@@ -4528,55 +4635,57 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         break; }
       case 'patrol': {
         c.face = 1; c.tt -= dt;
-        if (c.tt <= 0) { c.targetX = 275 + Math.random() * 115; c.tt = 1.2 + Math.random() * 2; }
-        if (specialHazardWarning && specialHazardWarning.type === 'cannon' && bridge.final && !c.cannonPos) { c.targetX = 250; c.tt = 3; c.cannonPos = true; }   // get in position to swat
+        if (c.tt <= 0) { c.targetX = minX + 40 + Math.random() * (398 - minX - 70); c.tt = 1.2 + Math.random() * 2; }
+        if (specialHazardWarning && specialHazardWarning.type === 'cannon' && bridge.final && !c.cannonPos) { c.targetX = 250; c.tt = 3; c.cannonPos = true; }
         if (!specialHazardWarning && !cannonball) c.cannonPos = false;
         const vrel = clampNumber((c.targetX - c.x) * 1.8 + speed, 110, 300);
-        c.vx = vrel - speed; c.ph += runFps(vrel) * dt;
-        c.rewardCd -= dt;
-        // 1) block gate that needs help
+        c.vx = vrel - speed; c.ph += runFps(vrel) * dt; c.rewardCd -= dt;
+        // the spider chase: throw a bomb on it
+        if (spiderEvent && spiderEvent.phase === 'chase' && !spiderEvent.bombing && !spiderEvent.dead) {
+          spiderEvent.bombing = true; c.mode = 'bomb'; c.gate = { spider: true }; c.state = 'pick'; c.t = 0; break;
+        }
         const g = catWorldGate(c.x + 30);
         if (g && g.bk.help && g.x > c.x + 30) {
           g.bk.claimed = true; c.gate = g;
-          const tackle = g.bk.kind === 'crate' && g.x < c.x + 140 && Math.random() < .45;
-          if (tackle) { c.state = 'tackle'; c.t = 0; }
-          else { c.state = 'pick'; c.t = 0; c.mode = g.bk.kind === 'crate' ? 'crate' : g.bk.kind === 'brick' ? 'bomb' : 'mace'; }
+          const k = g.bk.kind;
+          if (!g.bk.octo && (k === 'crate' || k === 'log') && g.x < c.x + 140 && Math.random() < .4) { c.state = 'tackle'; c.t = 0; }
+          else { c.state = 'pick'; c.t = 0; c.mode = g.bk.octo ? 'bomb' : (k === 'crate' || k === 'log') ? 'crate' : k === 'brick' ? 'bomb' : 'mace'; }
           break;
         }
-        // 2) reward drop when nothing needs clearing
-        if (c.rewardCd <= 0 && cavePipesPassed < cavePipesUntilEntry - 2) {
+        if (!spiderEvent && c.rewardCd <= 0 && cavePipesPassed < cavePipesUntilEntry - 2) {
           const np = pipes.filter(q => q.x > c.x + 60 && q.x < W + 6 && !q.coins).sort((a, b) => a.x - b.x)[0];
           if (np) {
             const magnetOk = !worldMagnet && magnetActiveTimer <= 0 && !activeBalloon && !caveStartPending;
-            c.mode = (magnetOk && Math.random() < .4) ? 'magnet' : 'coins'; c.gate = np; c.state = 'pick'; c.t = 0; c.rewardCd = 6 + Math.random() * 5;
+            const r = Math.random();
+            c.mode = (magnetOk && r < .2) ? 'magnet' : r < .55 ? 'heart' : 'coins'; c.gate = np; c.state = 'pick'; c.t = 0; c.rewardCd = 6 + Math.random() * 5;
           } else c.rewardCd = 1.5;
         }
-        // 3) cannonball swat (only a ball flying high enough to be reached)
         if (cannonball && cannonball.x <= c.x + 150 && cannonball.x > c.x - 10 && cannonball.y < bridgeUnderY() + 95 && cannonball.catTry !== false) {
           cannonball.catTry = Math.random() < .9;
           if (cannonball.catTry) { c.state = 'hop'; c.t = 0; }
         }
-        // free roaming: sometimes leave and come back later
-        if (!(bridge.final && caveStartPending) && c.age > 9 + (c.seedExit || (c.seedExit = Math.random() * 8)) && !c.gate) { c.state = 'exit'; c.t = 0; }
+        if (!spiderEvent && !(bridge.final && caveStartPending) && c.age > c.exitAge && !c.gate) { c.state = 'exit'; c.t = 0; }
         break; }
       case 'pick': {
-        const vrel = speed * .5; c.vx = vrel - speed; c.face = 1; c.ph += 4 * dt;
+        c.vx = speed * .5 - speed; c.face = 1; c.ph += 4 * dt;
         if (c.t >= .25) { c.state = 'throw'; c.t = 0; c.launched = false; }
         break; }
       case 'throw': {
-        const vrel = speed * .4; c.vx = vrel - speed; c.face = 1;
+        c.vx = speed * .4 - speed; c.face = 1;
         if (!c.launched && c.t >= .08) {
           c.launched = true;
-          const g = c.gate, T = .35, sx = c.x + 30, sy = c.y - 38;
-          if (c.mode === 'coins' || c.mode === 'magnet') {
+          const g = c.gate, T = spiderEvent && g && g.spider ? .5 : .35, sx = c.x + 30, sy = c.y - 38;
+          if (g && g.spider) {
+            catProps.push({ type: 'spider', kind: 'bomb', x0: sx, y0: sy, x1: spiderEvent ? spiderEvent.x : 60, y1: spiderEvent ? spiderEvent.y : 340, t: 0, T, rot: 0, dyn: true });
+          } else if (c.mode === 'coins' || c.mode === 'magnet' || c.mode === 'heart') {
             if (g && g.x > c.x + 40) {
-              const ex = g.x + PIPE_W / 2 - speed * T, ey = c.mode === 'magnet' ? clampNumber(g.center, 250, 470) : g.center;
+              const ex = g.x + PIPE_W / 2 - speed * T, ey = c.mode === 'coins' ? g.center : clampNumber(g.center, 250, 470);
               catProps.push({ type: c.mode, kind: c.mode, g, x0: sx, y0: sy, x1: ex, y1: ey, t: 0, T, rot: 0 });
             }
           } else if (g && g.bk && !g.bk.cleared) {
             const ex = g.x + PIPE_W / 2 - speed * T, top = g.center - g.gap / 2, bot = g.center + g.gap / 2;
-            const ey = c.mode === 'mace' ? bot + 22 : top - 22;
-            if (ex > c.x - 40) catProps.push({ type: 'gate', kind: g.bk.kind, g, x0: sx, y0: sy, x1: ex, y1: ey, t: 0, T, rot: 0 });
+            const ey = g.bk.octo ? bot + 34 : c.mode === 'mace' ? bot + 22 : top - 22;
+            if (ex > c.x - 40) catProps.push({ type: 'gate', kind: c.mode, g, x0: sx, y0: sy, x1: ex, y1: ey, t: 0, T, rot: 0 });
             else g.bk.claimed = false;
           }
         }
@@ -4586,7 +4695,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         c.face = 1; c.vx = 260; c.ph += 14 * dt;
         const g = c.gate;
         if (!g || !g.bk || g.bk.cleared) { c.state = 'recover'; c.t = 0; break; }
-        if (c.x + 34 >= g.x) { clearGate(g, g.x + 8, g.center - g.gap / 2 - 18, 'crate'); c.state = 'recover'; c.t = 0; }
+        if (c.x + 34 >= g.x) { clearBy(g, g.x + 8, g.center - g.gap / 2 - 18); c.state = 'recover'; c.t = 0; }
         else if (c.t > .6 || c.x > 400) { g.bk.claimed = false; c.state = 'recover'; c.t = 0; }
         break; }
       case 'recover': {
@@ -4595,10 +4704,9 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         break; }
       case 'hop': {
         c.face = 1; c.vx = speed * .45 - speed;
-        const k = c.t / .62; c.hopY = Math.sin(Math.PI * clampNumber(k, 0, 1)) * 26;
+        c.hopY = Math.sin(Math.PI * clampNumber(c.t / .62, 0, 1)) * 26;
         if (cannonball && c.t > .12 && c.t < .45 && Math.abs(cannonball.x - (c.x + 34)) < 62 && cannonball.y < bridgeUnderY() + 95) {
-          catFx_(cannonball.x, cannonball.y, '#ffb347', 10, true);
-          tone(240, .1, 'square', .06);
+          catFx_(cannonball.x, cannonball.y, '#ffb347', 10, true); tone(240, .1, 'square', .06);
           cannonball = null; if (caveStartPending) cannonAttackSurvived = true;
           specialHazardScheduleTimer = 30 + Math.random() * 10;
         }
@@ -4606,7 +4714,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         break; }
       case 'exit': {
         c.face = -1; c.vx = -speed - 130; c.ph += runFps(-130) * dt; c.gate = null;
-        if (c.x < -90) { cat = null; if (bridge) { bridge.catDelay = 3 + Math.random() * 4; bridge.catAllowed = Math.random() < .6 || bridge.final; } return; }
+        if (c.x < -90) { cat = null; if (bridge) { bridge.catDelay = 3 + Math.random() * 4; bridge.catAllowed = Math.random() < .65 || bridge.final; } return; }
         break; }
       case 'scared': {
         c.face = 1; c.vx = -speed; c.ph += 7 * dt;
@@ -4618,17 +4726,150 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         break; }
     }
     c.x += c.vx * dt;
-    if (c.state === 'patrol' || c.state === 'recover' || c.state === 'pick' || c.state === 'throw') c.x = clampNumber(c.x, 200, 398);
+    if (['patrol', 'recover', 'pick', 'throw'].includes(c.state)) c.x = clampNumber(c.x, minX, 398);
   }
 
+  /* ----- the robotic spider (hangs from the deck on a cable, chases from behind for about 7 seconds) ----- */
+  function trySpawnSpider() {
+    if (!bridgePlan || bridgePlan.spiderPass < 0 || bridgePlan.spiderDone || cavePipesPassed < bridgePlan.spiderPass) return;
+    if (bridge || pipes.some(p => p.bk) || caveStartPending || caveZone || caveEntrySequence || finalBossPending || bossPortal || specialHazardWarning || fireSweep ||
+        cannonball || pipeSaw || arrowWaveInProgress || arrows.length || bombs.length || activeBalloon || worldMagnet || portalState !== 'idle') return;
+    const nz = bridgePlan.zones.find(z => z.start >= bridgePlan.spawned);
+    if (nz && nz.start - bridgePlan.spawned < 3) return;
+    if (cavePipesUntilEntry - cavePipesPassed < 6) return;
+    bridgePlan.spiderDone = true;
+    spiderEvent = { phase: 'enter', t: 0, x: W + 100, y: -50, ax: W, legT: 0, swipe: null, swipes: 0, nextSwipe: .9, dead: false, bombing: false, rot: 0, fall: 0, started: false, x0: 0, y0: 0 };
+    createBridge(W + 40, false); bridge.endX = bridge.startX + 1500; bridge.catAllowed = false; bridge.catDelay = 1;
+  }
+  function killSpider() {
+    const s = spiderEvent; if (!s || s.dead) return;
+    s.dead = true; s.phase = 'dead'; s.t = 0; s.swipe = null;
+    catFx_(s.x, s.y, '#ffb347', 22, true); catFx_(s.x, s.y, '#ff6b3c', 12, true);
+    for (let i = 0; i < 10; i++) chunk(s.x + (Math.random() - .5) * 50, s.y + (Math.random() - .5) * 40, i % 3 ? '#8a5a2b' : '#7b8590');
+    tone(90, .3, 'sawtooth', .08); tone(60, .4, 'square', .07);
+    try { effectTracks.spider.pause(); } catch (_) {}
+    worldHearts.push({ x: W - 50, y: clampNumber(s.y, 260, 450), t: 0 });
+  }
+  function updateSpider(dt, sp) {
+    if (!spiderEvent) { trySpawnSpider(); return; }
+    const s = spiderEvent; s.t += dt; if (s.phase !== 'dead') s.legT += dt;
+    const deckTop = bridgeUnderY() - BRIDGE_THICK;
+    if (!s.started) { s.started = true; playOptional('spider'); }
+    if (s.phase === 'enter') {
+      s.x = lerp(W + 100, 200, sm01(s.t / 3.0)); s.y = deckTop - 32; s.ax = s.x;
+      if (s.t >= 3.0) { s.phase = 'drop'; s.t = 0; s.x0 = s.x; s.y0 = s.y; }
+    } else if (s.phase === 'drop') {
+      const k = sm01(s.t / 1.0); s.x = lerp(s.x0, bird.x - 74, k); s.y = lerp(s.y0, clampNumber(bird.y, 250, 470), k * k); s.ax = lerp(s.ax, s.x, Math.min(1, dt * 5));
+      if (s.t >= 1.0) { s.phase = 'chase'; s.t = 0; if (bridge) { bridge.catAllowed = true; bridge.catDelay = .9; } }
+    } else if (s.phase === 'chase') {
+      s.x = lerp(s.x, bird.x - 74, Math.min(1, dt * 4)); s.ax = lerp(s.ax, s.x, Math.min(1, dt * 5));
+      s.y += (clampNumber(bird.y, 240, 480) - s.y) * Math.min(1, dt * 2.2);
+      if (!s.swipe && s.t >= s.nextSwipe && s.swipes < 3) s.swipe = { t: 0, y: bird.y, done: false };
+      if (s.swipe) {
+        const w = s.swipe; w.t += dt;
+        if (w.t < .55) w.y += (bird.y - w.y) * Math.min(1, dt * 5);
+        else if (w.t < .78 && !w.done && Math.abs(bird.y - w.y) < 24 + bird.radius * .5) {
+          w.done = true;
+          if (shieldActive) { absorbShieldHit(.75); catFx_(bird.x, bird.y, '#8ce6cb', 10, false); }
+          else if (!isProtectedByGrace()) { endFlight(); return; }
+        }
+        if (w.t >= 1.0) { s.swipe = null; s.swipes++; s.nextSwipe = s.t + .9 + Math.random() * .5; }
+      }
+      if (s.t >= 5.2) killSpider();                      // safety: the spider never outlives its chase if the cat is missing
+    } else if (s.phase === 'dead') {
+      s.fall += dt; s.y += (60 + s.fall * 280) * dt; s.rot += dt * 2.2;
+      if (s.t >= 1.1) { if (bridge) bridge.endX = Math.min(bridge.endX === null ? 1e9 : bridge.endX, W + 40); spiderEvent = null; }
+    }
+  }
+  function legIK(hx, hy, fx, fy, l1, l2, dir) {
+    let dx = fx - hx, dy = fy - hy, d = Math.hypot(dx, dy) || 1; const maxd = l1 + l2 - 1;
+    if (d > maxd) { fx = hx + dx / d * maxd; fy = hy + dy / d * maxd; dx = fx - hx; dy = fy - hy; d = maxd; }
+    const a = Math.atan2(dy, dx), c = clampNumber((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1), b = Math.acos(c) * dir;
+    return { kx: hx + Math.cos(a + b) * l1, ky: hy + Math.sin(a + b) * l1, fx, fy };
+  }
+  function drawSpider() {
+    const s = spiderEvent; if (!s || !bridge) return;
+    const t = s.legT, cx = s.x, under = bridgeUnderY(), deckTop = under - BRIDGE_THICK;
+    const cy = s.y + (s.phase === 'enter' ? Math.sin(t * 22) * 2 : Math.sin(t * 3) * 3);
+    ctx.save();
+    if (s.phase === 'dead') { ctx.globalAlpha = Math.max(0, 1 - s.t / 1.1); ctx.translate(cx, cy); ctx.rotate(s.rot); ctx.translate(-cx, -cy); }
+    if (s.phase === 'drop' || s.phase === 'chase') {                         // cable from the trolley under the deck
+      ctx.strokeStyle = '#aab1ba'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(s.ax, under); ctx.lineTo(cx, cy - 36); ctx.stroke();
+      ctx.fillStyle = '#4a5058'; ctx.fillRect(s.ax - 7, under - 2, 14, 7);
+    }
+    if (s.swipe && s.swipe.t < .55 && s.phase === 'chase') {                 // telegraph: where the claw will strike
+      ctx.save(); ctx.globalAlpha = .35 + .35 * Math.sin(s.swipe.t * 28); ctx.fillStyle = '#ff4b3c'; ctx.fillRect(cx + 20, s.swipe.y - 3, Math.max(0, bird.x + 40 - cx), 6); ctx.restore();
+    }
+    for (let i = 0; i < 6; i++) {
+      const side = i < 3 ? -1 : 1, idx = i % 3, hx = cx + side * (10 + idx * 6), hy = cy + 14;
+      let fx, fy;
+      if (s.phase === 'enter') { const ph = t * 11 + i * 2.1; fx = cx + side * (34 + idx * 20) + Math.sin(ph) * 13; fy = deckTop - Math.max(0, Math.cos(ph)) * 10; }
+      else if (s.phase === 'dead') { fx = cx + side * (30 + idx * 12); fy = cy + 38 + idx * 6; }
+      else { const ph = t * 4 + i * 1.3; fx = cx + side * (38 + idx * 14) + Math.sin(ph) * 7; fy = cy + 34 + idx * 8 + Math.cos(ph) * 8; }
+      if (i === 5 && s.swipe && s.phase === 'chase') {
+        const w = s.swipe;
+        if (w.t < .55) { fx = cx + 34; fy = cy - 28 - Math.sin(w.t * 18) * 3; }
+        else { const e = sm01((w.t - .55) / .12), ret = sm01((w.t - .8) / .18), k = e * (1 - ret); fx = lerp(cx + 34, bird.x + 26, k); fy = lerp(cy - 28, w.y, k); }
+      }
+      const L = legIK(hx, hy, fx, fy, 30, 38, -side);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#2b3138'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(L.kx, L.ky); ctx.lineTo(L.fx, L.fy); ctx.stroke();
+      ctx.strokeStyle = '#7a8591'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(L.kx, L.ky); ctx.lineTo(L.fx, L.fy); ctx.stroke();
+      ctx.fillStyle = '#4b5563'; ctx.beginPath(); ctx.arc(L.kx, L.ky, 5, 0, 6.283); ctx.fill(); ctx.fillStyle = '#c9d1d9'; ctx.beginPath(); ctx.arc(L.kx, L.ky, 1.6, 0, 6.283); ctx.fill();
+      const ang = Math.atan2(L.fy - L.ky, L.fx - L.kx);                    // pointed claw tip
+      ctx.fillStyle = '#d5dbe3'; ctx.beginPath(); ctx.moveTo(L.fx + Math.cos(ang) * 8, L.fy + Math.sin(ang) * 8); ctx.lineTo(L.fx + Math.cos(ang + 1.9) * 4, L.fy + Math.sin(ang + 1.9) * 4); ctx.lineTo(L.fx + Math.cos(ang - 1.9) * 4, L.fy + Math.sin(ang - 1.9) * 4); ctx.fill();
+    }
+    ctx.fillStyle = '#6b7480'; ctx.beginPath(); ctx.ellipse(cx, cy + 25, 17, 5, 0, 0, 6.283); ctx.fill();
+    const g = ctx.createRadialGradient(cx - 9, cy - 11, 4, cx, cy, 30); g.addColorStop(0, '#dca56c'); g.addColorStop(.6, '#a8672f'); g.addColorStop(1, '#6a3d1a');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, 27, 0, 6.283); ctx.fill(); ctx.strokeStyle = '#4a2810'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#e7c08a'; for (let k = 0; k < 10; k++) { const a = k * .628 + .3; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * 23, cy + Math.sin(a) * 23, 1.7, 0, 6.283); ctx.fill(); }
+    ctx.fillStyle = '#59616b'; ctx.fillRect(cx - 11, cy - 39, 22, 11); ctx.fillStyle = '#2b3138'; ctx.fillRect(cx - 7, cy - 37, 14, 7);
+    ctx.strokeStyle = '#8a929c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx + 11, cy - 34); ctx.lineTo(cx + 19, cy - 40 + Math.sin(t * 6) * 2); ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy + 1, 17, 0, 6.283); ctx.clip();
+    if (imgReady(creatureFaces)) ctx.drawImage(creatureFaces, 0, 0, 64, 64, cx - 17, cy - 16, 34, 34); else { ctx.fillStyle = '#d8a77a'; ctx.fillRect(cx - 17, cy - 17, 34, 34); }
+    ctx.restore();
+    ctx.strokeStyle = '#3d2410'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy + 1, 17.5, 0, 6.283); ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ----- portal into the boss arena (appears after the cave) ----- */
+  function updateBossPortal(dt, speed) {
+    const P = bossPortal; if (!P) return;
+    P.t += dt;
+    if (P.enter > 0) {
+      P.enter += dt; bird.vy = 0; bird.y += (P.y - bird.y) * Math.min(1, dt * 9); bird.x += (P.x - bird.x) * Math.min(1, dt * 7); bird.py = bird.y;
+      if (P.enter >= .55) { bossPortal = null; bird.x = 126; finalBossPending = true; bossFadeIn = 1; }
+      return;
+    }
+    P.x -= speed * dt; P.y += Math.sin(P.t * 1.6) * 8 * dt;
+    if (Math.abs(P.x - bird.x) < 36 && Math.abs(P.y - bird.y) < 78) { P.enter = .0001; tone(520, .25, 'sine', .07); }
+    else if (P.x < bird.x - 70) { bossPortal = null; endFlight(); }   // missed the portal
+  }
+  function drawBossPortal() {
+    const P = bossPortal; if (!P) return;
+    const x = P.x, y = P.y, rx = 38, ry = 78, t = P.t;
+    ctx.save();
+    const g = ctx.createRadialGradient(x, y, 6, x, y, 120); g.addColorStop(0, 'rgba(170,120,255,.55)'); g.addColorStop(1, 'rgba(60,20,120,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - 130, y - 130, 260, 260);
+    for (let k = 0; k < 5; k++) {
+      ctx.strokeStyle = k % 2 ? '#8fe9ff' : '#c9a2ff'; ctx.lineWidth = 3.5 - k * .4; ctx.globalAlpha = .9 - k * .12;
+      ctx.beginPath(); ctx.ellipse(x, y, rx - k * 6, ry - k * 11, 0, t * (2 + k * .6) + k, t * (2 + k * .6) + k + 4.2); ctx.stroke();
+    }
+    ctx.globalAlpha = .85; ctx.fillStyle = '#12082a'; ctx.beginPath(); ctx.ellipse(x, y, rx - 28, ry - 56, 0, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+  function drawFadeOverlays() {
+    if (caveBlend > 0) { ctx.save(); ctx.globalAlpha = caveBlend * .85; ctx.fillStyle = '#030814'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    if (bossFadeIn > 0) { ctx.save(); ctx.globalAlpha = sm01(bossFadeIn); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    if (bossPortal && bossPortal.enter > 0) { ctx.save(); ctx.globalAlpha = sm01(bossPortal.enter / .55); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  }
+
+  /* ----- drawing: props, forest blocks, octopus, deck ----- */
   function drawProp(kind, x, y, rot, s) {
     ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s || 1, s || 1);
     if (kind === 'crate') {
-      ctx.fillStyle = '#9a6a3c'; ctx.fillRect(-13, -13, 26, 26); ctx.strokeStyle = '#4a2f19'; ctx.lineWidth = 2.5; ctx.strokeRect(-12, -12, 24, 24);
+      ctx.fillStyle = '#a8763f'; ctx.fillRect(-13, -13, 26, 26); ctx.strokeStyle = '#4a2f19'; ctx.lineWidth = 2.5; ctx.strokeRect(-12, -12, 24, 24);
       ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.stroke();
-    } else if (kind === 'brick') {
-      ctx.fillStyle = '#b5533a'; ctx.fillRect(-14, -9, 28, 18); ctx.strokeStyle = '#e3c9b4'; ctx.lineWidth = 1.5; ctx.strokeRect(-14, -9, 28, 18);
-      ctx.beginPath(); ctx.moveTo(-14, 0); ctx.lineTo(14, 0); ctx.moveTo(0, -9); ctx.lineTo(0, 0); ctx.moveTo(-7, 0); ctx.lineTo(-7, 9); ctx.moveTo(7, 0); ctx.lineTo(7, 9); ctx.stroke();
     } else if (kind === 'bomb') {
       ctx.fillStyle = '#15151c'; ctx.beginPath(); ctx.arc(0, 0, 11, 0, 6.283); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(-4, -4, 3, 0, 6.283); ctx.fill();
@@ -4639,69 +4880,137 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
       for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); ctx.lineTo(Math.cos(a) * 15, Math.sin(a) * 15); ctx.stroke(); }
       ctx.beginPath(); ctx.arc(0, 0, 10, 0, 6.283); ctx.fill(); ctx.stroke();
     } else if (kind === 'magnet') {
-      if (magnetSprite.complete && magnetSprite.naturalWidth) ctx.drawImage(magnetSprite, -14, -14, 28, 28);
+      if (imgReady(magnetSprite)) ctx.drawImage(magnetSprite, -14, -14, 28, 28);
       else { ctx.strokeStyle = '#e5333f'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(0, 2, 9, Math.PI, 0); ctx.stroke(); }
     } else if (kind === 'coins') {
       drawCoinGlyph(0, 0, 9, visualTime * 8);
+    } else if (kind === 'heart') {
+      ctx.fillStyle = '#ff4d6d'; ctx.beginPath(); ctx.moveTo(0, 10); ctx.bezierCurveTo(-18, -2, -10, -16, 0, -6); ctx.bezierCurveTo(10, -16, 18, -2, 0, 10); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(-6, -6, 2.6, 0, 6.283); ctx.fill();
     }
     ctx.restore();
   }
 
   function blockCell(kind, x, y, s, k) {
-    if (kind === 'crate') {
-      ctx.fillStyle = '#9a6a3c'; ctx.fillRect(x, y, s, s);
-      ctx.fillStyle = '#7a4f2a'; ctx.fillRect(x, y, s, 4); ctx.fillRect(x, y + s - 4, s, 4); ctx.fillRect(x, y, 4, s); ctx.fillRect(x + s - 4, y, 4, s);
+    if (kind === 'crate') {                                   // wooden crate
+      ctx.fillStyle = '#a8763f'; ctx.fillRect(x, y, s, s);
+      ctx.fillStyle = '#7d5128'; ctx.fillRect(x, y, s, 4); ctx.fillRect(x, y + s - 4, s, 4); ctx.fillRect(x, y, 4, s); ctx.fillRect(x + s - 4, y, 4, s);
       ctx.strokeStyle = '#5a3a1c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 6, y + 6); ctx.lineTo(x + s - 6, y + s - 6); ctx.stroke();
       ctx.strokeStyle = '#3b2412'; ctx.lineWidth = 1.5; ctx.strokeRect(x + .75, y + .75, s - 1.5, s - 1.5);
-    } else if (kind === 'brick') {
+    } else if (kind === 'log') {                              // stacked logs, end rings
+      ctx.fillStyle = '#6b4423'; ctx.fillRect(x, y, s, s);
+      ctx.fillStyle = '#c99a5b'; ctx.beginPath(); ctx.arc(x + s / 2, y + s / 2, s / 2 - 3, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = '#8a5a2b'; ctx.lineWidth = 1.5; for (let r = 4; r < s / 2 - 3; r += 5) { ctx.beginPath(); ctx.arc(x + s / 2, y + s / 2, r, 0, 6.283); ctx.stroke(); }
+      ctx.strokeStyle = '#3e2713'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x + s / 2, y + s / 2, s / 2 - 3, 0, 6.283); ctx.stroke();
+    } else if (kind === 'brick') {                            // old red brick
       ctx.fillStyle = '#b5533a'; ctx.fillRect(x, y, s, s);
       ctx.strokeStyle = '#e3c9b4'; ctx.lineWidth = 1.6; ctx.beginPath();
       ctx.moveTo(x, y + s / 2); ctx.lineTo(x + s, y + s / 2);
-      const o = (k & 1) ? s / 4 : s * .75; ctx.moveTo(x + o, y); ctx.lineTo(x + o, y + s / 2);
-      ctx.moveTo(x + s - o, y + s / 2); ctx.lineTo(x + s - o, y + s); ctx.stroke();
+      const o = (k & 1) ? s / 4 : s * .75; ctx.moveTo(x + o, y); ctx.lineTo(x + o, y + s / 2); ctx.moveTo(x + s - o, y + s / 2); ctx.lineTo(x + s - o, y + s); ctx.stroke();
       ctx.strokeStyle = '#7a2f1f'; ctx.lineWidth = 1.5; ctx.strokeRect(x + .75, y + .75, s - 1.5, s - 1.5);
-    } else {
+    } else {                                                   // mossy stone
       ctx.fillStyle = '#8b9098'; ctx.fillRect(x, y, s, s);
       ctx.fillStyle = '#b7bcc4'; ctx.fillRect(x, y, s, 4); ctx.fillStyle = '#5d636c'; ctx.fillRect(x, y + s - 5, s, 5); ctx.fillRect(x + s - 4, y, 4, s);
       ctx.strokeStyle = '#4a4f57'; ctx.lineWidth = 1.5; ctx.strokeRect(x + .75, y + .75, s - 1.5, s - 1.5);
       ctx.beginPath(); ctx.moveTo(x + 9 + (k % 3) * 5, y + 5); ctx.lineTo(x + 15 + (k % 3) * 5, y + 16); ctx.lineTo(x + 11 + (k % 3) * 5, y + 26); ctx.stroke();
     }
+    if (((k * 7) % 5) < 2) {                                   // forest moss and a leaf sprig
+      ctx.fillStyle = '#4f8a3a'; ctx.fillRect(x + 3 + (k % 4) * 6, y, 11, 3); ctx.fillStyle = '#74b84d'; ctx.fillRect(x + 5 + (k % 4) * 6, y, 5, 2);
+      if (k % 3 === 0) { ctx.fillStyle = '#5fa341'; ctx.beginPath(); ctx.ellipse(x + s - 7, y + 6, 4, 2.2, .6, 0, 6.283); ctx.fill(); }
+    }
   }
 
-  function drawBlockStack(x, y0, y1, kind, anchorBottom, seed) {
-    if (y1 - y0 < 2) return;
-    ctx.save(); ctx.beginPath(); ctx.rect(x, y0, PIPE_W, y1 - y0); ctx.clip();
-    const s = 38; let k = seed | 0;
-    if (anchorBottom) { for (let y = y1 - s; y > y0 - s; y -= s, k++) for (let c = 0; c < 2; c++) blockCell(kind, x + c * s, y, s, k + c); }
-    else { for (let y = y0; y < y1; y += s, k++) for (let c = 0; c < 2; c++) blockCell(kind, x + c * s, y, s, k + c); }
+  function poolDraw(x, w, t) {                                   // small water pool cut into the lower deck = the octopus hint
+    ctx.save();
+    ctx.fillStyle = '#12335a'; ctx.fillRect(x, FLOOR - 4, w, 20);
+    ctx.fillStyle = 'rgba(80,170,230,.55)'; ctx.fillRect(x, FLOOR - 4, w, 5);
+    ctx.strokeStyle = 'rgba(190,235,255,.85)'; ctx.lineWidth = 1.6; ctx.beginPath();
+    for (let i = 0; i <= w; i += 6) { const yy = FLOOR - 4 + Math.sin(t * 3 + i * .25) * 1.6; if (i === 0) ctx.moveTo(x + i, yy); else ctx.lineTo(x + i, yy); }
+    ctx.stroke();
+    for (let k = 0; k < 2; k++) { const ph = (t * .9 + k * .5) % 1; ctx.globalAlpha = (1 - ph) * .6; ctx.beginPath(); ctx.ellipse(x + w / 2, FLOOR - 3, 8 + ph * (w / 2 - 6), 2 + ph * 3, 0, 0, 6.283); ctx.stroke(); }
+    ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(220,245,255,.8)';
+    for (let k = 0; k < 3; k++) { const ph = (t * .7 + k * .33) % 1; ctx.beginPath(); ctx.arc(x + w * (.25 + k * .25), FLOOR - 4 - ph * 14, 1.6, 0, 6.283); ctx.fill(); }
     ctx.restore();
   }
 
+  function drawOcto(p, x) {
+    const o = p.bk.octo, t = visualTime + o.t;
+    let top = octoTopY(p), alpha = 1;
+    if (o.dead) { top += o.sink * 90; alpha = Math.max(0, 1 - o.sink / .9); }
+    if (alpha > .02 && o.rise > 0.01 && top < FLOOR + 6) {
+      const hx = x + PIPE_W / 2, hy = top + 33;
+      ctx.save(); ctx.globalAlpha = alpha; ctx.beginPath(); ctx.rect(x - 70, 0, PIPE_W + 140, FLOOR + 2); ctx.clip();
+      for (let i = 0; i < 6; i++) {                                              // tentacles
+        const base = (i - 2.5) * .5, len = 44 + (i % 2) * 10, bx = hx + (i - 2.5) * 11, by = hy + 20;
+        let px = bx, py = by, ang = Math.PI / 2 + base * 1.15;
+        for (let sgm = 0; sgm < 4; sgm++) {
+          ang += Math.sin(t * 3.2 + i * 1.3 + sgm * .9) * .32 * (1 + o.rise * .0);
+          const nx = px + Math.cos(ang) * len / 4, ny = py + Math.sin(ang) * len / 4;
+          ctx.strokeStyle = '#7d3f86'; ctx.lineWidth = 11 - sgm * 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke();
+          ctx.strokeStyle = '#e07a35'; ctx.lineWidth = 8 - sgm * 1.6; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(nx, ny); ctx.stroke();
+          ctx.fillStyle = '#c9a0d4'; ctx.beginPath(); ctx.arc((px + nx) / 2, (py + ny) / 2 + 2, 1.5, 0, 6.283); ctx.fill();
+          px = nx; py = ny;
+        }
+      }
+      const g = ctx.createRadialGradient(hx - 8, hy - 12, 4, hx, hy, 38); g.addColorStop(0, '#f7a95a'); g.addColorStop(.7, '#e07a35'); g.addColorStop(1, '#b3561f');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(hx, hy, 35, 32, 0, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = '#7a3a18'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.fillStyle = 'rgba(140,70,160,.55)'; [[-20, -14, 4], [-10, -22, 3], [18, -16, 4], [24, -4, 3], [-26, 0, 3]].forEach(a => { ctx.beginPath(); ctx.arc(hx + a[0], hy + a[1], a[2], 0, 6.283); ctx.fill(); });
+      ctx.save(); ctx.beginPath(); ctx.arc(hx, hy + 6, 19, 0, 6.283); ctx.clip();
+      if (imgReady(creatureFaces)) ctx.drawImage(creatureFaces, 64, 0, 64, 64, hx - 19, hy - 13, 38, 38); else { ctx.fillStyle = '#d8a77a'; ctx.fillRect(hx - 19, hy - 13, 38, 38); }
+      ctx.restore();
+      ctx.strokeStyle = '#7a3a18'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(hx, hy + 6, 19.5, 0, 6.283); ctx.stroke();
+      ctx.restore();
+    }
+    poolDraw(x - 30, PIPE_W + 60, t);
+  }
+
+  function drawBlockStack(x, y0, y1, kind, rows, from, anchorBottom, seed) {
+    if (y1 - y0 < 2) return;
+    ctx.save(); ctx.beginPath(); ctx.rect(x, y0, PIPE_W, y1 - y0); ctx.clip();
+    for (let r = from; r < rows; r++) {
+      const y = anchorBottom ? y1 - (r + 1) * ROW_H : y0 + r * ROW_H;
+      for (let c = 0; c < 2; c++) blockCell(kind, x + c * ROW_H, y, ROW_H, seed + r * 2 + c);
+    }
+    ctx.restore();
+  }
   function drawBlockGate(p) {
     const x = lerp(p.px, p.x, renderAlpha);
     if (x > W + 4 || x < -PIPE_W - 4) return;
-    const rp = p.retracting ? Math.min(1, p.retractProgress || 0) : 0;
-    const a = (1 - rp * rp * (3 - 2 * rp)) * (1 - p.bk.clearT);
+    const bk = gateRows(p), top = p.center - p.gap / 2, bot = p.center + p.gap / 2, u = Math.max(0, bridgeUnderY() - 2);
+    const rp = p.retracting ? Math.min(1, p.retractProgress || 0) : 0, a = 1 - rp * rp * (3 - 2 * rp);
     if (a <= .02) return;
-    const gapTop = p.center - p.gap / 2, gapBottom = p.center + p.gap / 2, top0 = Math.max(0, bridgeUnderY() - 2);
     ctx.save(); ctx.globalAlpha = a;
-    // top stack hangs from the deck, bottom stack stands on the lower deck
-    drawBlockStack(x, top0, gapTop, p.bk.kind, true, p.seed);
-    drawBlockStack(x, gapBottom, FLOOR, p.bk.kind, false, p.seed + 3);
+    drawBlockStack(x, u, top, bk.kind, bk.rt, bk.bt, true, p.seed);                         // hangs from the deck
+    if (!bk.octo) drawBlockStack(x, bot, FLOOR, bk.kind, bk.rb, bk.bb, false, p.seed + 3);   // stands on the lower deck
+    else drawOcto(p, x);
     ctx.restore();
   }
 
   function drawBridge() {
-    if (!bridge || bridge.amt <= .01) return;
-    const u = bridgeUnderY(), top = u - BRIDGE_THICK, off = bridge.scroll % 46;
+    if (!bridge) return;
+    const sx = Math.max(0, bridge.startX), ex = Math.min(W, bridge.endX === null ? W : bridge.endX);
+    if (ex <= sx) return;
+    const u = bridgeUnderY(), top = u - BRIDGE_THICK, off = bridge.scroll % 46, w = ex - sx;
     ctx.save();
-    ctx.fillStyle = '#3a2a20'; ctx.fillRect(0, top, W, BRIDGE_THICK);
-    ctx.fillStyle = '#6b4a34'; ctx.fillRect(0, top, W, 6);
-    ctx.fillStyle = '#2a1d16'; for (let x = -off; x < W; x += 46) ctx.fillRect(x, top + 6, 2, BRIDGE_THICK - 6);
-    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(0, u, W, 5);
-    ctx.globalAlpha = bridge.amt;
-    ctx.fillStyle = '#3a2a20'; ctx.fillRect(0, FLOOR, W, 14); ctx.fillStyle = '#6b4a34'; ctx.fillRect(0, FLOOR, W, 5);
-    ctx.fillStyle = '#2a1d16'; for (let x = -off; x < W; x += 46) ctx.fillRect(x, FLOOR + 5, 2, 9);
+    // upper deck: log planks with moss, hanging vines
+    ctx.fillStyle = '#3a2a20'; ctx.fillRect(sx, top, w, BRIDGE_THICK);
+    ctx.fillStyle = '#6b4a34'; ctx.fillRect(sx, top, w, 6);
+    ctx.fillStyle = '#4f8a3a'; for (let x = sx - ((bridge.scroll * 1) % 61); x < ex; x += 61) if (x + 20 > sx) ctx.fillRect(Math.max(sx, x), top, 20, 4);
+    ctx.fillStyle = '#2a1d16'; for (let x = sx - (off % 46) + 46; x < ex; x += 46) ctx.fillRect(x, top + 6, 2, BRIDGE_THICK - 6);
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(sx, u, w, 5);
+    ctx.strokeStyle = '#3f7a33'; ctx.lineWidth = 2;
+    for (let x = sx + 10 - (bridge.scroll % 38); x < ex; x += 38) {
+      if (x < sx) continue; const len = 8 + ((Math.floor(x) * 7) % 18), sw = Math.sin(visualTime * 1.6 + x * .08) * 2;
+      ctx.beginPath(); ctx.moveTo(x, u); ctx.quadraticCurveTo(x + sw, u + len / 2, x + sw * 1.4, u + len); ctx.stroke();
+      ctx.fillStyle = '#5fa341'; ctx.beginPath(); ctx.ellipse(x + sw * 1.4, u + len, 3, 2, .5, 0, 6.283); ctx.fill();
+    }
+    // lower deck on the ground
+    ctx.fillStyle = '#3a2a20'; ctx.fillRect(sx, FLOOR, w, 14); ctx.fillStyle = '#6b4a34'; ctx.fillRect(sx, FLOOR, w, 5);
+    ctx.fillStyle = '#2a1d16'; for (let x = sx - (off % 46) + 46; x < ex; x += 46) ctx.fillRect(x, FLOOR + 5, 2, 9);
+    // end posts so the deck reads as a finished structure while it scrolls in or out
+    ctx.fillStyle = '#5a3d27'; if (bridge.startX > 0) { ctx.fillRect(sx, top - 6, 6, BRIDGE_THICK + 6); ctx.fillRect(sx, FLOOR - 6, 6, 20); }
+    if (bridge.endX !== null && bridge.endX < W) { ctx.fillRect(ex - 6, top - 6, 6, BRIDGE_THICK + 6); ctx.fillRect(ex - 6, FLOOR - 6, 6, 20); }
     ctx.restore();
   }
 
@@ -4710,7 +5019,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     switch (c.state) {
       case 'enter': case 'exit': case 'flee': return 'runL' + (1 + ((f % 5) + 5) % 5);
       case 'patrol': return 'runR' + (1 + ((f % 5) + 5) % 5);
-      case 'pick': return c.mode === 'crate' ? 'carryCrate' : c.mode === 'bomb' ? 'idle' : 'idle';
+      case 'pick': return c.mode === 'crate' ? 'carryCrate' : 'idle';
       case 'throw': return 'throwCrate';
       case 'tackle': return (f % 2) ? 'sprint2' : 'sprint1';
       case 'recover': return 'idle';
@@ -4721,28 +5030,44 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function drawCat() {
+    for (const h of worldHearts) { const x = h.x, y = h.y + Math.sin(h.t * 4) * 5; ctx.save(); ctx.shadowColor = '#ff4d6d'; ctx.shadowBlur = 12; drawProp('heart', x, y, 0, 1.15); ctx.restore(); }
     for (const pr of catProps) {
       const k = clampNumber(pr.t / pr.T, 0, 1);
-      const x = lerp(pr.x0, pr.x1, k), y = lerp(pr.y0, pr.y1, k) - Math.sin(Math.PI * k) * 34;
-      drawProp(pr.kind, x, y, pr.t * 12, 1);
+      drawProp(pr.kind, lerp(pr.x0, pr.x1, k), lerp(pr.y0, pr.y1, k) - Math.sin(Math.PI * k) * 34, pr.t * 12, 1);
     }
     if (cat && bridge) {
-      const c = cat, name = catFrameName(), f = CAT_FRAMES[name];
-      const fy = c.y - (c.hopY || 0);
+      const c = cat, f = CAT_FRAMES[catFrameName()], fy = c.y - (c.hopY || 0);
       ctx.save();
-      ctx.globalAlpha = Math.min(1, bridge.amt * 1.4);
-      if (f && catAtlas.complete && catAtlas.naturalWidth) ctx.drawImage(catAtlas, f[0], f[1], f[2], f[3], c.x - CAT_DW / 2, fy - CAT_DH, CAT_DW, CAT_DH);
+      if (imgReady(catAtlas) && f) ctx.drawImage(catAtlas, f[0], f[1], f[2], f[3], c.x - CAT_DW / 2, fy - CAT_DH, CAT_DW, CAT_DH);
       else { ctx.fillStyle = '#ff9a3c'; ctx.beginPath(); ctx.ellipse(c.x, fy - 24, 30, 22, 0, 0, 6.283); ctx.fill(); }
       ctx.restore();
-      if (c.state === 'pick' && (c.mode === 'bomb' || c.mode === 'mace' || c.mode === 'magnet' || c.mode === 'coins')) drawProp(c.mode, c.x + 24, fy - 30, 0, 1);
+      if (c.state === 'pick' && c.mode !== 'crate') drawProp(c.mode, c.x + 24, fy - 30, 0, 1);
     }
     for (const f of catFx) {
       const a = Math.max(0, f.life / f.max);
       ctx.globalAlpha = a;
       if (f.ring) { ctx.strokeStyle = f.c; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(f.x, f.y, 8 + (1 - a) * 18, 0, 6.283); ctx.stroke(); }
+      else if (f.chunk) { ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot); ctx.fillStyle = f.c; ctx.fillRect(-f.s / 2, -f.s / 2, f.s, f.s * .8); ctx.restore(); }
       else { ctx.fillStyle = f.c; ctx.fillRect(f.x - f.s / 2, f.y - f.s / 2, f.s, f.s); }
     }
     ctx.globalAlpha = 1;
+  }
+
+  function drawBossTitle() {
+    if (state !== 'bossIntro') return;
+    const k = clampNumber(1 - bossIntroTimer / 2.0, 0, 1), a = sm01(k * 4) * (1 - sm01((k - .8) * 5));
+    ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 205, W, 96);
+    ctx.shadowColor = '#ff5a2e'; ctx.shadowBlur = 22; ctx.fillStyle = '#ffd9a0'; ctx.font = '1000 46px system-ui'; ctx.letterSpacing = '3px';
+    ctx.fillText('GHOTOKASUR', 210, 265 - (1 - sm01(k * 3)) * 12);
+    ctx.restore();
+  }
+  function makeCavePlan(isTrap, target) {
+    const n = isTrap ? (bossLevel === 0 ? 3 + Math.floor(Math.random() * 5) : 4 + Math.floor(Math.random() * (4 + Math.min(bossLevel, 2))))
+                     : 2 + Math.floor(Math.random() * 3) + Math.min(bossLevel, 2);
+    const start = isTrap ? 26 : 34, end = target + 8, step = (end - start) / n, out = [];
+    for (let i = 0; i < n; i++) out.push(Math.floor(start + step * (i + .2 + Math.random() * .6)));
+    return out;
   }
 
   /* One place for the bird's vertical physics, used by normal flight and by the boss fight. */
@@ -4776,6 +5101,8 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
   }
 
   function update(dt) {
+    if (bossFadeIn > 0 && state !== 'bossIntro') bossFadeIn = Math.max(0, bossFadeIn - dt / .9);
+    else if (bossFadeIn > 0) bossFadeIn = Math.max(0, bossFadeIn - dt / .9);
     if (state === 'over') {
       deathAnim += dt;
       if (cageCapture) { cageCapture.timer += dt; bird.y = cageCapture.startY + (cageCapture.endY-cageCapture.startY)*Math.min(1,cageCapture.timer/.65); }
@@ -4850,8 +5177,10 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     stepBirdPhysics(dt, curChar);
     if (caveZone) { updateCaveZone(dt, speed, hazardTimeScale); if (state !== 'playing') return; }
     if (finalBossPending) { beginFinalBossEncounter(); return; }
-    updateBridge(dt, speed);
-    updateCat(dt, speed);
+    if (caveBlend > 0) caveBlend = Math.max(0, caveBlend - dt / .9);
+    updateBridge(dt, speed * hazardTimeScale);
+    updateCat(dt, speed * hazardTimeScale);
+    updateBossPortal(dt, speed * hazardTimeScale); if (state !== 'playing') return;
 
     const pickup = bird.radius + COIN_R;
 
@@ -4879,7 +5208,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         playScore();
 
         // Check if an arrow event should trigger
-        if (!bridge && !caveStartPending && !caveZone && score >= 4 && pipesPassedSinceArrow >= 5 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
+        if (bridgeCalm() && !caveStartPending && !caveZone && score >= 4 && pipesPassedSinceArrow >= 5 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
           if (Math.random() < 0.60 || pipesPassedSinceArrow >= 8) {
             scheduleArrowWave();
             pipesPassedSinceArrow = 0;
@@ -4887,13 +5216,13 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
         }
 
         // Check if floating bonus balloon should spawn
-        if (!bridge && !caveZone && !caveStartPending && pipesPassedSinceBalloon >= 8 && !activeBalloon && !arrowWaveInProgress) {
+        if (bridgeCalm() && !caveZone && !caveStartPending && pipesPassedSinceBalloon >= 8 && !activeBalloon && !arrowWaveInProgress) {
           maybeSpawnBalloon();
           pipesPassedSinceBalloon = 0;
         }
 
         // Check if Bomb Gate should spawn
-        if (!bridge && !caveZone && !caveStartPending && score >= 5 && pipesPassedSinceBomb >= 6 && bombs.length === 0 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
+        if (bridgeCalm() && !caveZone && !caveStartPending && score >= 5 && pipesPassedSinceBomb >= 6 && bombs.length === 0 && !arrowWaveInProgress && !specialHazardWarning && !fireSweep && !cannonball && !pipeSaw) {
           if (Math.random() < 0.45) {
             maybeSpawnBombGate();
             pipesPassedSinceBomb = 0;
@@ -4999,7 +5328,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
 
       if (checkCollisionWithBomb(b)) {
         createExplosion(b.x, b.y, '#ff4422', 26);
-        playEffect('death', 110);
+        tone(110, .22, 'sawtooth', .07);
         bombs.splice(i, 1);
 
         if (shieldActive) {
@@ -5117,7 +5446,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     }
 
     if (!caveZone) while (pipes.length && pipes[0].x <= -260) pipes.shift();
-    if (!caveZone && !caveEntrySequence && !arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {   // no new pillars while the dragon gate is arriving
+    if (!caveZone && !caveEntrySequence && !spiderEvent && !bossPortal && !arrowWaveInProgress && (!pipes.length || pipes[pipes.length-1].x < W-235)) {   // no new pillars while the dragon gate is arriving
       pipes.push(spawnPipe(W+8));
     }
 
@@ -5148,7 +5477,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     ctx.clearRect(0, 0, W, H);
     if (state === 'bossLaunch') { drawBossLaunchScene(); return; }
     if (bossEncounterActive && (state === 'bossIntro' || state === 'bossFight' || state === 'bossDefeat' || state === 'bossVictory' || state === 'bossContinue' || state === 'over')) {
-      drawFinalBossScene();
+      drawFinalBossScene(); drawBossTitle(); drawFadeOverlays();
       if (state === 'over' && deathAnim >= .76) drawGameOver();
       else if (state === 'over') {
         ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore();
@@ -5164,7 +5493,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     if (caveZone) drawCaveZone(); else drawGround();
     if (state === 'ready') { drawMenu(); return; }
     drawWorldCoins();
-    if (!caveZone) { for (const p of pipes) drawPipe(p); drawBridge(); drawCat(); }
+    if (!caveZone) { for (const p of pipes) drawPipe(p); drawBridge(); drawSpider(); drawCat(); drawBossPortal(); }
     drawDragonCaveEntrance();
     drawWorldMagnet();
     drawBalloon();
@@ -5187,6 +5516,7 @@ canvas{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;
     drawCaveTrap();
     drawCaveCelebration();
     drawCaveEntryNotice();
+    drawFadeOverlays();
     drawHud();
     if (state === 'over' && deathAnim >= .76) drawGameOver();
     else if (state === 'over') { ctx.save(); ctx.textAlign='center'; ctx.fillStyle='#fff2b5'; ctx.font='900 10px system-ui'; ctx.fillText('BRAIN BUFFERING...',210,420); ctx.restore(); }
